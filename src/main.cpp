@@ -1,7 +1,7 @@
 #include <unsupported/Eigen/MatrixFunctions>
 #include <Eigen/Sparse>
 #include <iostream>
-#include "coreMatExpSolver.h"
+#include "coreSolver.h"
 
 using namespace Eigen;
 

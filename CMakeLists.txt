@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD 14)
 add_executable(
 	libowski
 	${SRC_DIR}/main.cpp
-	${SRC_DIR}/coreMatExpSolver.h
-	${SRC_DIR}/coreMatExpSolver.cpp
+	${SRC_DIR}/coreSolver.h
+	${SRC_DIR}/coreSolver.cpp
 )
 

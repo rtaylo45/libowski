@@ -1,4 +1,4 @@
-#include "coreMatExpSolver.h"
+#include "coreSolver.h"
 #include <iostream>
 
 using namespace Eigen;
