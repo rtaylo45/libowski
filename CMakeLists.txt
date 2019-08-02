@@ -9,6 +9,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 # Sets the standard
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "-O3")
 
 # adds the source files
 add_executable(

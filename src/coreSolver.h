@@ -9,6 +9,7 @@ using the CRAM Method. The code was copied from pyne CRAM solver
 */
 
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include <complex>
 
 
@@ -18,6 +19,7 @@ class SolverType {
 	
 	Eigen::Matrix<std::complex<double>,8,1> theta;
 	Eigen::Matrix<std::complex<double>,8,1> alpha;
+	double alpha_0 = 2.1248537104952237488e-16;
 
 	public:
 	SolverType(){
