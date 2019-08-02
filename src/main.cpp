@@ -1,13 +1,13 @@
 #include <unsupported/Eigen/MatrixFunctions>
 #include <Eigen/Sparse>
 #include <iostream>
-#include <chrono> 
+#include "coreMatExpSolver.h"
 
-using namespace std::chrono; 
 using namespace Eigen;
 
 int main()
 {
+	/*
 	for (int i = 0; i < 20; i++){
 		int n = 10;
 		//MatrixXf A = MatrixXf::Random(n,n);
@@ -19,4 +19,10 @@ int main()
 		//std::cout << "n: " << n << " Time: " << duration.count() << std::endl;
 		std::cout << sm1 << std::endl;
 	}
+	*/
+	SolverType ExpSolver;
+	MatrixXd A = MatrixXd::Random(10,10);
+	MatrixXd w0 = MatrixXd::Random(10,0);
+	MatrixXd sol = ExpSolver.solve(A, w0, 0.1);
+
 }
