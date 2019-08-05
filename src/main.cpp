@@ -1,4 +1,4 @@
-#include <unsupported/Eigen/MatrixFunctions>
+//#include <unsupported/Eigen/MatrixFunctions>
 #include <Eigen/Sparse>
 #include <iostream>
 #include "coreSolver.h"
