@@ -24,18 +24,31 @@ set(PROJECT_SOURCES ${SRC_DIR}/coreSolver.h
 					${SRC_DIR}/coreSolver.cpp
 )
 
+# Test directory
+set(PROJECT_TEST ${SRC_DIR}/unitTest)
+
+# Library
+add_library(liblibowski STATIC ${PROJECT_SOURCES})
+message(${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(liblibowski PUBLIC ${PROJECT_SOURCES})
+
 # main excutable
 add_executable(
 	libowski
 	${SRC_DIR}/main.cpp
 	${PROJECT_SOURCES}
 )
+#target_link_libraries(libowski PRIVATE liblibowski)
 
 # unit test
-add_executable(
-	test
-	${SRC_DIR}/main.cpp
-	${PROJECT_SOURCES}
-)
+#add_executable(
+#	test
+#	${SRC_DIR}/test.cpp
+#	${PROJECT_SOURCES}
+#)
+#ENABLE_TESTING()
+#add_executable(tests ${PROJECT_TEST}/test.cpp ${PROJECT_SOURCES})
+#target_link_libraries(tests PRIVATE liblibowski)
+#ADD_TEST(main test.cpp)
 
 

@@ -1,5 +1,5 @@
 //#include <unsupported/Eigen/MatrixFunctions>
-#include <Eigen/Sparse>
+#include <Eigen/Core>
 #include <iostream>
 #include "coreSolver.h"
 #include <chrono>

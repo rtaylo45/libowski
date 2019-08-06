@@ -2,13 +2,12 @@
 #include <iostream>
 
 using namespace Eigen;
-//Eigen::Matrix<std::complex<double>,8,1> theta;
 
 // Solver
 MatrixXd SolverType::solve(MatrixXd A, MatrixXd w0, double t){
 
 	int s = 8;
-	MatrixXd At = A*t; // using auto cause i don't know what type this is
+	MatrixXd At = A*t;
 	MatrixXcd w = 0.*w0;
 	MatrixXcd ident = MatrixXcd::Identity(A.rows(), A.cols());
 
