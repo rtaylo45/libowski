@@ -28,9 +28,9 @@ set(PROJECT_SOURCES ${SRC_DIR}/coreSolver.h
 set(PROJECT_TEST ${SRC_DIR}/unitTest)
 
 # Library
-add_library(liblibowski STATIC ${PROJECT_SOURCES})
-message(${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(liblibowski PUBLIC ${PROJECT_SOURCES})
+#add_library(liblibowski STATIC ${PROJECT_SOURCES})
+#message(${CMAKE_CURRENT_SOURCE_DIR})
+#target_include_directories(liblibowski PUBLIC ${PROJECT_SOURCES})
 
 # main excutable
 add_executable(

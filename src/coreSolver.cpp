@@ -15,7 +15,7 @@ MatrixXd SolverType::solve(MatrixXd A, MatrixXd w0, double t){
 		auto tempA = At - theta(k)*ident;
 		auto tempB = alpha(k)*w0;
 
-		w = w + tempA.llt().solve(tempB);
+		w = w + tempA.colPivHouseholderQr().solve(tempB);
 	}
 	w = 2.*w.real();
 	w = w + alpha_0*w0;
