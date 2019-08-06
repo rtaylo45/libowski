@@ -8,3 +8,5 @@ A is the transition matrix. It containts the coefficients for burnup as well as 
 
 # Usage
 Pull the code to your favorite place and create a `build` folder in the main `libowski` directory. `CD` into the `build` folder and run `cmake ..` to generate the make file. Then run `make all` to build the project. The only dependence is the eigen3 library. It is used for all matrix types and linear algebra functions. It is included in the download.
+
+Testing is done using `ctest`. To run the unit test run `make test` in your build directory.
