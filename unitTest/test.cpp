@@ -10,7 +10,7 @@ using namespace Eigen;
 void testSolverTime(){
 
 	for (int i = 1; i < 20; i++){
-	int n = 1000;
+	int n = 10;
 
 	// Get the solver object
 	SolverType ExpSolver;

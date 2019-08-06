@@ -24,8 +24,13 @@ set(PROJECT_SOURCES ${SRC_DIR}/coreSolver.h
 					${SRC_DIR}/coreSolver.cpp
 )
 
+add_subdirectory(src)
+ENABLE_TESTING()
+add_subdirectory(unitTest)
+
+
 # Test directory
-set(PROJECT_TEST ${SRC_DIR}/unitTest)
+#set(PROJECT_TEST ${SRC_DIR}/unitTest)
 
 # Library
 #add_library(liblibowski STATIC ${PROJECT_SOURCES})
@@ -33,11 +38,11 @@ set(PROJECT_TEST ${SRC_DIR}/unitTest)
 #target_include_directories(liblibowski PUBLIC ${PROJECT_SOURCES})
 
 # main excutable
-add_executable(
-	libowski
-	${SRC_DIR}/main.cpp
-	${PROJECT_SOURCES}
-)
+#add_executable(
+#	libowski
+#	${SRC_DIR}/main.cpp
+#	${PROJECT_SOURCES}
+#)
 #target_link_libraries(libowski PRIVATE liblibowski)
 
 # unit test
