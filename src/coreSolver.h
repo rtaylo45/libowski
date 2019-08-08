@@ -11,17 +11,19 @@ The code was copied from pyne CRAM solver
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 #include <complex>
 
 
 class SolverType {
 
-	private:
-	
+	// Public attributes
+	private:	
 	Eigen::Matrix<std::complex<double>,8,1> theta;
 	Eigen::Matrix<std::complex<double>,8,1> alpha;
 	double alpha_0 = 2.1248537104952237488e-16;
 
+	// Initialization of solver
 	public:
 	SolverType(){
 		std::complex<double> t1(-10.843917078696988026, 19.277446167181652284);
@@ -51,6 +53,11 @@ class SolverType {
 		alpha(4,0) = a5; alpha(5,0) = a6; alpha(6,0) = a7; alpha(7,0) = a8; 
 	}
 
+	// Definition of methods
+	public:
 	// Solver function
-	Eigen::MatrixXd solve(Eigen::MatrixXd, Eigen::MatrixXd, double);
+	Eigen::MatrixXd solve(Eigen::SparseMatrix<double>, Eigen::VectorXcd, double);
+	private:
+	// Builds a sparse identity matrix
+	Eigen::SparseMatrix<double> buildSparseIdentity(int n);
 };
