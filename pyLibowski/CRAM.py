@@ -28,24 +28,24 @@ def solveSystem(A, t, n_0):
     A = A*t
     n = 0*n_0
     #A = sp.csc_matrix(A)
-    #ident = sp.identity(np.shape(A)[0],format="csc")
-    ident = np.identity(np.shape(A)[0])
+    ident = sp.identity(np.shape(A)[0],format="csc")
+    #ident = np.identity(np.shape(A)[0])
 
     for j in xrange(s):
-        #n = n + spla.spsolve(A - theta[j]*ident, alpha[j]*n_0)
-        n = n + np.linalg.solve(A - theta[j]*ident, alpha[j]*n_0)
+        n = n + spla.spsolve(A - theta[j]*ident, alpha[j]*n_0)
+        #n = n + np.linalg.solve(A - theta[j]*ident, alpha[j]*n_0)
 
     n = 2.*n.real
     n = n + alpha_0*n_0
     return n
 
 if __name__ == "__main__":
-    for x in xrange(20):
-        n = 1000
-        #A = sp.random(n,n,density=1.0, format="csc")
-        A = sp.random(n,n)
+    for x in xrange(1):
+        n = 1000000
+        A = sp.random(n,n,density=0.01, format="csc")
+        #A = sp.random(n,n)
         #A = np.random.rand(n,n)
-        t = 10.0
+        t = 0.1
         n0 = np.ones((n,1))
         
         start = time.time()

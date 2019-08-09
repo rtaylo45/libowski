@@ -1,13 +1,13 @@
-/*
-Author: Zack Taylor
-
-Core solver for matrix expotentials. Computes y(t) = exp(A*t)v
-the solution to:
-	y' + Ay = 0
-
-using the CRAM Method. Returns the solution to the system.
-The code was copied from pyne CRAM solver
-*/
+//*****************************************************************************
+// Author: Zack Taylor
+// 
+// Core solver for matrix expotentials. Computes y(t) = exp(A*t)v
+// the solution to:
+// 	y' + Ay = 0
+// 
+// using the CRAM Method. Returns the solution to the system.
+// The code was copied from pyne CRAM solver
+//*****************************************************************************
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
@@ -15,17 +15,26 @@ The code was copied from pyne CRAM solver
 #include <complex>
 
 
+//*****************************************************************************
+// The solver type; an object used to solve the matrix expotenial
+//*****************************************************************************
 class SolverType {
 
-	// Public attributes
-	private:	
+	// Private attributes
+	private:
+	// Poles of the radional function r
 	Eigen::Matrix<std::complex<double>,8,1> theta;
+	// Residues of these poles
 	Eigen::Matrix<std::complex<double>,8,1> alpha;
+	// Limit of r at infinity
 	double alpha_0 = 2.1248537104952237488e-16;
 
+	//*************************************************************************
 	// Initialization of solver
+	//*************************************************************************
 	public:
 	SolverType(){
+		// Defines the complex values
 		std::complex<double> t1(-10.843917078696988026, 19.277446167181652284);
 		std::complex<double> t2(-5.2649713434426468895, 16.220221473167927305);
 		std::complex<double> t3(5.9481522689511774808, 3.5874573620183222829);
@@ -39,6 +48,7 @@ class SolverType {
 		theta(0,0) = t1; theta(1,0) = t2; theta(2,0) = t3; theta(3,0) = t4;
 		theta(4,0) = t5; theta(5,0) = t6; theta(6,0) = t7; theta(7,0) = t8;
 
+		// Defines the complex values
 		std::complex<double> a1(-.0000005090152186522491565,-.00002422001765285228797);
 		std::complex<double> a2(.00021151742182466030907, .0043892969647380673918);
 		std::complex<double> a3(113.39775178483930527, 101.9472170421585645);
@@ -55,9 +65,13 @@ class SolverType {
 
 	// Definition of methods
 	public:
+	//*************************************************************************
 	// Solver function
+	//*************************************************************************
 	Eigen::MatrixXd solve(Eigen::SparseMatrix<double>, Eigen::VectorXcd, double);
 	private:
+	//*************************************************************************
 	// Builds a sparse identity matrix
+	//*************************************************************************
 	Eigen::SparseMatrix<double> buildSparseIdentity(int n);
 };

@@ -3,10 +3,19 @@
 
 using namespace Eigen;
 
-// Solver
+//*****************************************************************************
+// Matrix expotental solver
+//	param A		The coefficient matrix for the system of ODEs
+//	param w0	Initial condition 
+//	param t		Time of the solve
+//	
+//	return w	Solution vector
+//*****************************************************************************
 MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
-	SparseLU<SparseMatrix<std::complex<double>>, COLAMDOrdering<int> >   solver;
+	// The sparse LU solver object
+	SparseLU<SparseMatrix<std::complex<double>>, COLAMDOrdering<int> > solver;
 
+	// Number of poles
 	int s = 8;
 	SparseMatrix<std::complex<double>> At(A.rows(),A.cols()); 
 	SparseMatrix<std::complex<double>> tempA(A.rows(),A.cols()); 
@@ -15,13 +24,13 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 	At = A.cast<std::complex<double>>()*t;
 	w = 0.*w0cd;
 	SparseMatrix<double> ident = buildSparseIdentity(A.rows());
-	// Compute the ordering permutation vector from the structural pattern of A
 
 	for (int k = 0; k < s; k++){
 		tempA = At - theta(k)*ident;
 		tempB = alpha(k)*w0cd;
-		// Compute the numerical factorization
+		// analyze the sparsisty pattern
 		solver.analyzePattern(tempA);
+		// Compute the numerical factorization
 		solver.factorize(tempA);
 
 		w = w + solver.solve(tempB);
@@ -32,7 +41,12 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 	return w.real();
 }
 
+//*****************************************************************************
 // Builds a sparse identity matrix
+//	param n		Square matrix size
+//
+//	return nxn	identity matrix
+//*****************************************************************************
 SparseMatrix<double> SolverType::buildSparseIdentity(int n){
 
 	SparseMatrix<double> ident(n,n);

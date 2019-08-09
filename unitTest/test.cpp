@@ -18,10 +18,16 @@ bool isApprox(double val1, double val2, double tol = 1e-10){
 }
 
 void testSolverTime(){
+//*****************************************************************************
+//	Problem statement:
+//		A is a 100,000 x 100,000 size tridiagonal matrix. The matrix entries
+//		are random numbers between 0 and 1. The problem is ran 20 times to 
+//		ensure each solver time is below 0.8 seconds.
+//
+//*****************************************************************************
 	typedef Eigen::Triplet<double> T;
 	std::default_random_engine gen;
 	std::uniform_real_distribution<double> dist(0.0,1.0);
-
 
 	for (int i = 1; i < 20; i++){
 		int n = 100000;
@@ -41,17 +47,17 @@ void testSolverTime(){
 
 		for (int j = 0; j < n; j++){
 			auto v_ij=dist(gen); //generate random number
-			if(v_ij < 0.001){ tripletList.push_back(T(j,j,v_ij)); };
+			if(v_ij > 0.001){ tripletList.push_back(T(j,j,v_ij)); };
 
 			if(j < n-2)
 			{
 				auto v_ij=dist(gen); //generate random number
-				if(v_ij < 0.001){ tripletList.push_back(T(j,j+2,v_ij)); };
+				if(v_ij > 0.001){ tripletList.push_back(T(j,j+2,v_ij)); };
 			}
 			if(j > 1)
 			{
 				auto v_ij=dist(gen); //generate random number
-				if(v_ij < 0.001){ tripletList.push_back(T(j,j-2,v_ij)); };
+				if(v_ij > 0.001){ tripletList.push_back(T(j,j-2,v_ij)); };
 			}
 
 		}
@@ -65,13 +71,29 @@ void testSolverTime(){
 		auto duration = duration_cast<microseconds>(end - start);
 
 		// Convert to seconds
-		assert(duration.count()/1.e6 < 0.6);
+		assert(duration.count()/1.e6 < 0.8);
 		//std::cout << "Time: " << duration.count()/1.e6 << std::endl;
 
 	}
 }
 
 void tankProblem(){
+//*****************************************************************************
+//	Problem statement:
+//		Let brine tanks 1, 2, 3 be given of volumes 20, 40, 60, It is supposed 
+//		that fluid enters tank A at rate r, drains from A to B at rate r, 
+//		drains from B to C at rate r, then drains from tank C at rate r. Hence 
+//		the volumes of the tanks remain constant. Let r = 10. The problem is 
+//		Let x1(t), x2(t), x3(t) denote the amount of salt at time t in each 
+//		tank. the problem is taken from:
+//		www.math.utah.edu/~gustafso/2250systems-de-1.pdf
+//
+//	Initial conditons:
+//		x1_0 = 1000.0
+//		x2_0 = 1000.0
+//		x3_0 = 1000.0
+//
+//*****************************************************************************
 	typedef Eigen::Triplet<double> T;
     double x1_0 = 1000.0, x2_0 = 0.0, x3_0 = 0.0;
     double t = 0.0; 
@@ -117,25 +139,24 @@ void tankProblem(){
 }
 
 void xenonIodineProblem(){
-
-	/*
-	Problem statement:
-		dN_xe/dt = gamma_xe*Sigma_f*flux - sigma_a*flux*N_xe + lamba_I*N_I 
-			- lambda_xe*N_xe
-
-		dN_I/dt = gamma_I*Sigma_f*flux - lambda_I*N_I
-
-	Initial conditons:
-		N_xe_0 = 0.0
-		N_I_0 = 0.0
-
-	To add the constant source terms we need to add a dummy species to hold the
-	coefficients. 
-		
-		dN_d/dt = 0.0
-		d_0 = 1.0
-	
-	*/
+//*****************************************************************************
+//	Problem statement:
+//		dN_xe/dt = gamma_xe*Sigma_f*flux - sigma_a*flux*N_xe + lamba_I*N_I 
+//			- lambda_xe*N_xe
+//
+//		dN_I/dt = gamma_I*Sigma_f*flux - lambda_I*N_I
+//
+//	Initial conditons:
+//		N_xe_0 = 0.0
+//		N_I_0 = 0.0
+//
+//	To add the constant source terms we need to add a dummy species to hold the
+//	coefficients. 
+//		
+//		dN_d/dt = 0.0
+//		d_0 = 1.0
+//	
+//*****************************************************************************
 
 	typedef Eigen::Triplet<double> T;
     double N_xe_0 = 0.0, N_I_0 = 0.0, N_d_0 = 1.0;
