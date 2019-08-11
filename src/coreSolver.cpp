@@ -12,6 +12,7 @@ using namespace Eigen;
 //	return w	Solution vector
 //*****************************************************************************
 MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
+
 	// The sparse LU solver object
 	SparseLU<SparseMatrix<std::complex<double>>, COLAMDOrdering<int> > solver;
 
@@ -19,22 +20,43 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 	int s = 8;
 	SparseMatrix<std::complex<double>> At(A.rows(),A.cols()); 
 	SparseMatrix<std::complex<double>> tempA(A.rows(),A.cols()); 
-	VectorXcd w, tempB, w0cd; 
+	VectorXcd w, tempB, w0cd, myW; 
 	w0cd = w0.cast<std::complex<double>>();
-	At = A.cast<std::complex<double>>()*t;
-	w = 0.*w0cd;
 	SparseMatrix<double> ident = buildSparseIdentity(A.rows());
 
-	for (int k = 0; k < s; k++){
-		tempA = At - theta(k)*ident;
-		tempB = alpha(k)*w0cd;
-		// analyze the sparsisty pattern
-		solver.analyzePattern(tempA);
-		// Compute the numerical factorization
-		solver.factorize(tempA);
+	// MPI stuff
+	int myid, numprocs, islave;
+	MPI_Status status;
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
-		w = w + solver.solve(tempB);
+	w = 0.*w0cd;
+	At = A.cast<std::complex<double>>()*t;
+
+	for (;;){
+		for (int k = myid; k < s; k += numprocs){
+			tempA = At - theta(k)*ident;
+			tempB = alpha(k)*w0cd;
+			// analyze the sparsisty pattern
+			solver.analyzePattern(tempA);
+			// Compute the numerical factorization
+			solver.factorize(tempA);
+
+			myW = myW + solver.solve(tempB);
+		}
+		if (myid != 0){
+			MPI_Send(&myW, 1, MPI_DOUBLE_COMPLEX, 0, 1, MPI_COMM_WORLD);
+		}
+		else {
+			w = myW;
+			for (islave = 1; islave < numprocs; islave++) {
+				MPI_Recv(&myW, 1, MPI_DOUBLE_COMPLEX, islave, 1, MPI_COMM_WORLD, &status);
+				w += myW;
+			}
+		}
 	}
+	MPI_Finalize();
 	w = 2.*w.real();
 	w = w + alpha_0*w0cd;
 

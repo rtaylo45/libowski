@@ -13,6 +13,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <complex>
+#include <mpi.h>
 
 
 //*****************************************************************************

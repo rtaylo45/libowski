@@ -15,8 +15,13 @@ set(LIB_DIR lib)
 set(EIGEN3_INCLUDE_DIR ${LIB_DIR}/eigen3)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
+find_package(MPI REQUIRED)
+include_directories(${MPI_INCLUDE_PATH})
+
 # Sets the standard
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
 set(CMAKE_CXX_FLAGS "-O3")
 
 # Project sources
