@@ -20,7 +20,7 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 	int s = 8;
 	SparseMatrix<std::complex<double>> At(A.rows(),A.cols()); 
 	SparseMatrix<std::complex<double>> tempA(A.rows(),A.cols()); 
-	VectorXcd w, tempB, w0cd, myW; 
+	MatrixXcd w, tempB, w0cd, myW; 
 	w0cd = w0.cast<std::complex<double>>();
 	SparseMatrix<double> ident = buildSparseIdentity(A.rows());
 
@@ -30,11 +30,12 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 	MPI_Init(NULL, NULL);
 	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
 	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+	std::cout << numprocs << myid << std::endl;
 
 	w = 0.*w0cd;
 	At = A.cast<std::complex<double>>()*t;
 
-	for (;;){
+	//for (;;){
 		for (int k = myid; k < s; k += numprocs){
 			tempA = At - theta(k)*ident;
 			tempB = alpha(k)*w0cd;
@@ -55,7 +56,7 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 				w += myW;
 			}
 		}
-	}
+	//}
 	MPI_Finalize();
 	w = 2.*w.real();
 	w = w + alpha_0*w0cd;

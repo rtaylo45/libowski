@@ -33,6 +33,20 @@ add_subdirectory(src)
 ENABLE_TESTING()
 add_subdirectory(unitTest)
 
+# All sources that also need to be tested in unit tests go into a static library
+#add_library(liblibowski STATIC ${PROJECT_SOURCES})
+#target_include_directories(liblibowski PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# The main program
+#add_executable(libowski ${SRC_DIR}/main.cpp)
+#target_link_libraries(libowski PRIVATE liblibowski ${MPI_LIBRARIES})
+
+
+
+###############################################################################
+# Old cmake stuff
+###############################################################################
+
 
 # Test directory
 #set(PROJECT_TEST ${SRC_DIR}/unitTest)

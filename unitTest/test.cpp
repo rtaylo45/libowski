@@ -72,7 +72,7 @@ void testSolverTime(){
 
 		// Convert to seconds
 		assert(duration.count()/1.e6 < 0.8);
-		//std::cout << "Time: " << duration.count()/1.e6 << std::endl;
+		std::cout << "Time: " << duration.count()/1.e6 << std::endl;
 
 	}
 }
@@ -95,14 +95,14 @@ void tankProblem(){
 //
 //*****************************************************************************
 	typedef Eigen::Triplet<double> T;
-    double x1_0 = 1000.0, x2_0 = 0.0, x3_0 = 0.0;
-    double t = 0.0; 
+   double x1_0 = 1000.0, x2_0 = 0.0, x3_0 = 0.0;
+   double t = 0.0; 
 	double x1, x2, x3;
 	int steps = 100;
 	double totalTime = 50.0;
 	double dt = totalTime/steps;
-    SparseMatrix<double> A(3,3);
-    SparseVector<double> b(3);
+   SparseMatrix<double> A(3,3);
+   SparseVector<double> b(3);
 	MatrixXd sol;
 	std::vector<T> tripletList;
 	tripletList.reserve(5);
@@ -159,8 +159,8 @@ void xenonIodineProblem(){
 //*****************************************************************************
 
 	typedef Eigen::Triplet<double> T;
-    double N_xe_0 = 0.0, N_I_0 = 0.0, N_d_0 = 1.0;
-    double t = 0.0; 
+   double N_xe_0 = 0.0, N_I_0 = 0.0, N_d_0 = 1.0;
+   double t = 0.0; 
 	double N_xe, N_I, N_d;
 	double a, b, c;
 	int steps = 1;
@@ -173,8 +173,8 @@ void xenonIodineProblem(){
 	double flux = 2.5E16;
 	double gamma_xe = 0.002468;
 	double gamma_I = 0.063033;
-    SparseMatrix<double> A(3,3);
-    SparseVector<double> N0(3);
+   SparseMatrix<double> A(3,3);
+   SparseVector<double> N0(3);
 	MatrixXd sol;
 	std::vector<T> tripletList;
 	tripletList.reserve(5);
