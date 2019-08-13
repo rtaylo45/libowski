@@ -1,5 +1,6 @@
 #include "coreSolver.h"
 #include <iostream>
+#define MTAG1 1
 
 using namespace Eigen;
 
@@ -16,48 +17,47 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 	// The sparse LU solver object
 	SparseLU<SparseMatrix<std::complex<double>>, COLAMDOrdering<int> > solver;
 
+	// MPI stuff
+	int myid, numprocs, ierr;
+	//MPI_Init(NULL, NULL);
+	MPI_Status status;
+	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+	int eleCount = A.rows();
+
 	// Number of poles
 	int s = 8;
 	SparseMatrix<std::complex<double>> At(A.rows(),A.cols()); 
 	SparseMatrix<std::complex<double>> tempA(A.rows(),A.cols()); 
-	MatrixXcd w, tempB, w0cd, myW; 
+	VectorXcd w, tempB, w0cd, myW; 
 	w0cd = w0.cast<std::complex<double>>();
 	SparseMatrix<double> ident = buildSparseIdentity(A.rows());
 
-	// MPI stuff
-	int myid, numprocs, islave;
-	MPI_Status status;
-	MPI_Init(NULL, NULL);
-	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-	std::cout << numprocs << myid << std::endl;
 
-	w = 0.*w0cd;
+	myW = 0.*w0cd, w = 0*w0cd;
 	At = A.cast<std::complex<double>>()*t;
 
-	//for (;;){
-		for (int k = myid; k < s; k += numprocs){
-			tempA = At - theta(k)*ident;
-			tempB = alpha(k)*w0cd;
-			// analyze the sparsisty pattern
-			solver.analyzePattern(tempA);
-			// Compute the numerical factorization
-			solver.factorize(tempA);
+	for (int k = myid; k < s; k += numprocs){
+		tempA = At - theta(k)*ident;
+		tempB = alpha(k)*w0cd;
+		// analyze the sparsisty pattern
+		solver.analyzePattern(tempA);
+		// Compute the numerical factorization
+		solver.factorize(tempA);
 
-			myW = myW + solver.solve(tempB);
+		myW = myW + solver.solve(tempB);
+	}
+	if (myid != 0){
+		ierr = MPI_Send(myW.data(), eleCount, MPI::DOUBLE_COMPLEX, 0, MTAG1, MPI_COMM_WORLD);
+	}
+	else {
+		w = myW;
+		for (int islave = 1; islave < numprocs; islave++) {
+			ierr = MPI_Recv(myW.data(), eleCount, MPI::DOUBLE_COMPLEX, islave, MTAG1, MPI_COMM_WORLD, &status);
+			w = w + myW;
 		}
-		if (myid != 0){
-			MPI_Send(&myW, 1, MPI_DOUBLE_COMPLEX, 0, 1, MPI_COMM_WORLD);
-		}
-		else {
-			w = myW;
-			for (islave = 1; islave < numprocs; islave++) {
-				MPI_Recv(&myW, 1, MPI_DOUBLE_COMPLEX, islave, 1, MPI_COMM_WORLD, &status);
-				w += myW;
-			}
-		}
-	//}
-	MPI_Finalize();
+	}
+	//MPI_Finalize();
 	w = 2.*w.real();
 	w = w + alpha_0*w0cd;
 

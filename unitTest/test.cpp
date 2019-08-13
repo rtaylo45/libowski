@@ -6,6 +6,8 @@
 #include <Eigen/Sparse>
 #include <vector>
 #include <random>
+#include <fstream>
+#include <string>
 
 using namespace std::chrono;
 using namespace Eigen;
@@ -28,53 +30,78 @@ void testSolverTime(){
 	typedef Eigen::Triplet<double> T;
 	std::default_random_engine gen;
 	std::uniform_real_distribution<double> dist(0.0,1.0);
+	int numprocs, myid, iters = 100;
+	double simTime = 0.0;
+	std::ofstream outputFile;
 
-	for (int i = 1; i < 20; i++){
-		int n = 100000;
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
-		// Get the solver object
-		SolverType ExpSolver;
+	std::string strNumProcs = std::to_string(numprocs);
+	std::string fileName = strNumProcs + "procs.out";
+	outputFile.open(fileName);
 
-		// Build random dense matrix
-		//MatrixXd A = MatrixXd::Random(n,n);
-		//MatrixXd n0 = MatrixXd::Random(n,1);
+	for (int n = 10; n <= 1e6; n = n*10){
+		if (myid==0){std::cout << "Size: "+std::to_string(n) << std::endl;};
+		if (myid==0){outputFile << "Size: "+std::to_string(n)+"\n";};
+		for (int i = 0; i < iters; i++){
+			if (myid==0){std::cout << "Iter: "+std::to_string(i) << std::endl;};
 
-    	SparseMatrix<double> A(n,n);
-    	SparseVector<double> n0(n);
-		MatrixXd sol;
-		std::vector<T> tripletList;
-		tripletList.reserve(3*n);
+			// Get the solver object
+			SolverType ExpSolver;
 
-		for (int j = 0; j < n; j++){
-			auto v_ij=dist(gen); //generate random number
-			if(v_ij > 0.001){ tripletList.push_back(T(j,j,v_ij)); };
+			// Build random dense matrix
+			//MatrixXd A = MatrixXd::Random(n,n);
+			//MatrixXd n0 = MatrixXd::Random(n,1);
 
-			if(j < n-2)
-			{
+   	 	SparseMatrix<double> A(n,n);
+   	 	SparseVector<double> n0(n);
+			MatrixXd sol;
+			std::vector<T> tripletList;
+			tripletList.reserve(3*n);
+
+			for (int j = 0; j < n; j++){
 				auto v_ij=dist(gen); //generate random number
-				if(v_ij > 0.001){ tripletList.push_back(T(j,j+2,v_ij)); };
+				if(v_ij > 0.001){ tripletList.push_back(T(j,j,v_ij)); };
+
+				if(j < n-2)
+				{
+					auto v_ij=dist(gen); //generate random number
+					if(v_ij > 0.001){ tripletList.push_back(T(j,j+2,v_ij)); };
+				}
+				if(j > 1)
+				{
+					auto v_ij=dist(gen); //generate random number
+					if(v_ij > 0.001){ tripletList.push_back(T(j,j-2,v_ij)); };
+				}
+
 			}
-			if(j > 1)
-			{
-				auto v_ij=dist(gen); //generate random number
-				if(v_ij > 0.001){ tripletList.push_back(T(j,j-2,v_ij)); };
+
+			A.setFromTriplets(tripletList.begin(), tripletList.end());
+
+			// Start time
+			auto start = high_resolution_clock::now();
+			sol = ExpSolver.solve(A, n0, 1.0);
+			auto end = high_resolution_clock::now();
+			auto duration = duration_cast<microseconds>(end - start);
+
+			// Convert to seconds
+			if (myid==0){	
+				//assert(duration.count()/1.e6 < 0.8);
+				simTime = simTime + duration.count()/1.e6;
+				outputFile << "Time: "+std::to_string(duration.count()/1.e6)+"\n";
 			}
 
 		}
-
-		A.setFromTriplets(tripletList.begin(), tripletList.end());
-
-		// Start time
-		auto start = high_resolution_clock::now();
-		sol = ExpSolver.solve(A, n0, 1.0);
-		auto end = high_resolution_clock::now();
-		auto duration = duration_cast<microseconds>(end - start);
-
-		// Convert to seconds
-		assert(duration.count()/1.e6 < 0.8);
-		std::cout << "Time: " << duration.count()/1.e6 << std::endl;
-
+		if (myid==0){
+			outputFile << "Aveg: "+std::to_string(simTime/iters)+"\n";
+			outputFile << "\n";
+			//std::cout << simTime/iters << std::endl;
+		}
 	}
+	outputFile.close();
+	MPI_Finalize();
 }
 
 void tankProblem(){
@@ -224,7 +251,7 @@ void xenonIodineProblem(){
 int main(){
 
 	testSolverTime();
-	tankProblem();
+	//tankProblem();
 	//xenonIodineProblem();
 }
 

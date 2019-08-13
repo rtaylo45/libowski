@@ -13,7 +13,8 @@ void tankProblem(){
    double x1_0 = 1000.0, x2_0 = 0.0, x3_0 = 0.0;
    double t = 0.0; 
 	double x1, x2, x3;
-	int steps = 100;
+	int steps = 1;
+	int myid;
 	double totalTime = 50.0;
 	double dt = totalTime/steps;
    SparseMatrix<double> A(3,3);
@@ -30,7 +31,10 @@ void tankProblem(){
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 
 	// Sets the solver
-    SolverType ExpSolver;
+	MPI_Init(NULL, NULL);
+	//MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+   SolverType ExpSolver;
 
 	for (int i = 0; i < steps; i++){
 
@@ -42,12 +46,16 @@ void tankProblem(){
     	x3 = (3./2.)*x1_0*exp(-t/2.) - 3.*(x3_0 + 2.*x1_0)*exp(-t/4) +
     	    (x3_0 - (3./2.)*x1_0 + 3.*(x2_0 + 2.*x1_0))*exp(-t/6.);
 	
-    	std::cout << x1 << " " << sol(0) << std::endl;
-    	std::cout << x2 << " " << sol(1) << std::endl;
-    	std::cout << x3 << " " << sol(2) << std::endl;
-    	std::cout << " " << std::endl;
+		if (myid == 0){
+			std::cout << x1 << " " << sol(0) << std::endl;
+    		std::cout << x2 << " " << sol(1) << std::endl;
+    		std::cout << x3 << " " << sol(2) << std::endl;
+    		std::cout << " " << std::endl;
+		}
 
 	}
+	MPI_Finalize();
+	
 }
 
 
