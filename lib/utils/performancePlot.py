@@ -46,12 +46,30 @@ for key in df1.keys():
     plotDF = builddf(frames)
                            
                            
-    ax = sns.boxplot(data = plotDF)
+    ax = sns.catplot(data = plotDF, kind='violin')
     plt.ylabel("Run Time (sec)")
     plt.xlabel("Number of Processors")
     plt.title("Matirx Size = "+key +'x'+key)
+    plt.tight_layout()
     plt.savefig("Size"+key+".png", dpi=500)
     plt.close()
+
+    plotdata = []
+    headers = ['1', '2', '3', '4', '5', '6', '7', '8']
+    for header in headers:
+        plotdata.append(plotDF['1']/plotDF[header].mean())
+
+    plt.plot(headers, plotdata)
+    plt.ylabel('Speep up')
+    plt.xlabel('Number of Processors')
+    plt.legend()
+    plt.grid()
+    plt.tight_layout()
+    plt.title("Matirx Size = "+key +'x'+key)
+    plt.savefig("SpeedUpSize"+key+".png", dpi=500)
+    plt.close()
+
+
 
 
 
