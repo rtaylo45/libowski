@@ -18,6 +18,65 @@ bool isApprox(double val1, double val2, double tol = 1e-10){
 	if (diff < tol) { return true; }
 	else { return false; }
 }
+SparseMatrix<double> buildAMatrix(int n){
+	typedef Eigen::Triplet<double> T;
+	std::vector<T> tripletList;
+	tripletList.reserve(3*n);
+   SparseMatrix<double> A(n,n);
+
+	for (int j = 0; j < n; j++){
+		tripletList.push_back(T(j,j,3.0));
+	}
+	for (int j = 0; j < n-1; j++){
+		tripletList.push_back(T(j,j+1,-1.0));
+	}
+	for (int j = n; j < n; j++){
+		tripletList.push_back(T(j,j-1,-1.0));
+	}
+	A.setFromTriplets(tripletList.begin(), tripletList.end());
+	return A
+}
+
+SparseMatrix<double> buildJMatrix(int n){
+	typedef Eigen::Triplet<double> T;
+	std::vector<T> tripletList;
+	tripletList.reserve(3*n);
+   SparseMatrix<double> A(n,n);
+	tripletList.push_back(T(0,0,1.0));
+	tripletList.push_back(T(0,1,-1.0));
+
+	for (int j = 1; j < n-1; j++){
+		tripletList.push_back(T(j,j,2.0/(n**2.)));
+	}
+	for (int j = 1; j < n-1; j++){
+		tripletList.push_back(T(j,j+1,-1.0));
+		tripletList.push_back(T(j,j+1,-1.0));
+	}
+	tripletList.push_back(T(n-1,n-1,1.0));
+	tripletList.push_back(T(n-1,n-2,-1.0));
+
+	}
+	A.setFromTriplets(tripletList.begin(), tripletList.end());
+	return A
+}
+SparseMatrix<double> buildSMatrix(int n){
+	typedef Eigen::Triplet<double> T;
+	std::vector<T> tripletList;
+	tripletList.reserve(3*n);
+   SparseMatrix<double> A(n,n);
+
+	for (int j = 0; j < n; j++){
+		tripletList.push_back(T(j,j,3.0));
+	}
+	for (int j = 0; j < n-1; j++){
+		tripletList.push_back(T(j,j+1,-1.0));
+	}
+	for (int j = 1; j < n; j++){
+		tripletList.push_back(T(j,j-1,-1.0));
+	}
+	A.setFromTriplets(tripletList.begin(), tripletList.end());
+	return A
+}
 
 void testSolverTime(){
 //*****************************************************************************
@@ -42,9 +101,11 @@ void testSolverTime(){
 	std::string fileName = strNumProcs + "procs.out";
 	outputFile.open(fileName);
 
-	for (int n = 10; n <= 1e6; n = n*10){
+	for (int n = 100; n <= 1e7; n = n*10){
 		if (myid==0){std::cout << "Size: "+std::to_string(n) << std::endl;};
 		if (myid==0){outputFile << "Size: "+std::to_string(n)+"\n";};
+   	SparseMatrix<double> A(n,n);
+		A = buildAMatrix(n)
 		for (int i = 0; i < iters; i++){
 			if (myid==0){std::cout << "Iter: "+std::to_string(i) << std::endl;};
 
@@ -55,30 +116,10 @@ void testSolverTime(){
 			//MatrixXd A = MatrixXd::Random(n,n);
 			//MatrixXd n0 = MatrixXd::Random(n,1);
 
-   	 	SparseMatrix<double> A(n,n);
    	 	SparseVector<double> n0(n);
 			MatrixXd sol;
 			std::vector<T> tripletList;
 			tripletList.reserve(3*n);
-
-			for (int j = 0; j < n; j++){
-				auto v_ij=dist(gen); //generate random number
-				if(v_ij > 0.001){ tripletList.push_back(T(j,j,v_ij)); };
-
-				if(j < n-2)
-				{
-					auto v_ij=dist(gen); //generate random number
-					if(v_ij > 0.001){ tripletList.push_back(T(j,j+2,v_ij)); };
-				}
-				if(j > 1)
-				{
-					auto v_ij=dist(gen); //generate random number
-					if(v_ij > 0.001){ tripletList.push_back(T(j,j-2,v_ij)); };
-				}
-
-			}
-
-			A.setFromTriplets(tripletList.begin(), tripletList.end());
 
 			// Start time
 			auto start = high_resolution_clock::now();
