@@ -8,6 +8,7 @@
 #include <random>
 #include <fstream>
 #include <string>
+#include <math.h>
 
 using namespace std::chrono;
 using namespace Eigen;
@@ -34,7 +35,7 @@ SparseMatrix<double> buildAMatrix(int n){
 		tripletList.push_back(T(j,j-1,-1.0));
 	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
-	return A
+	return A;
 }
 
 SparseMatrix<double> buildJMatrix(int n){
@@ -46,7 +47,7 @@ SparseMatrix<double> buildJMatrix(int n){
 	tripletList.push_back(T(0,1,-1.0));
 
 	for (int j = 1; j < n-1; j++){
-		tripletList.push_back(T(j,j,2.0/(n**2.)));
+		tripletList.push_back(T(j,j,2.0/(pow(n,2.0))));
 	}
 	for (int j = 1; j < n-1; j++){
 		tripletList.push_back(T(j,j+1,-1.0));
@@ -55,9 +56,8 @@ SparseMatrix<double> buildJMatrix(int n){
 	tripletList.push_back(T(n-1,n-1,1.0));
 	tripletList.push_back(T(n-1,n-2,-1.0));
 
-	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
-	return A
+	return A;
 }
 SparseMatrix<double> buildSMatrix(int n){
 	typedef Eigen::Triplet<double> T;
@@ -75,7 +75,16 @@ SparseMatrix<double> buildSMatrix(int n){
 		tripletList.push_back(T(j,j-1,-1.0));
 	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
-	return A
+	return A;
+}
+
+SparseVector<double> buildN0Vector(int n){
+	SparseVector<double> n0(n);
+	for (int j = 0; j < n; j++){
+		n0.insert(j) = 1.0;
+	}
+	return n0;
+
 }
 
 void testSolverTime(){
@@ -104,8 +113,12 @@ void testSolverTime(){
 	for (int n = 100; n <= 1e7; n = n*10){
 		if (myid==0){std::cout << "Size: "+std::to_string(n) << std::endl;};
 		if (myid==0){outputFile << "Size: "+std::to_string(n)+"\n";};
+
    	SparseMatrix<double> A(n,n);
-		A = buildAMatrix(n)
+   	SparseVector<double> n0(n);
+		A = buildAMatrix(n);
+		n0 = buildN0Vector(n);
+
 		for (int i = 0; i < iters; i++){
 			if (myid==0){std::cout << "Iter: "+std::to_string(i) << std::endl;};
 
@@ -116,10 +129,7 @@ void testSolverTime(){
 			//MatrixXd A = MatrixXd::Random(n,n);
 			//MatrixXd n0 = MatrixXd::Random(n,1);
 
-   	 	SparseVector<double> n0(n);
 			MatrixXd sol;
-			std::vector<T> tripletList;
-			tripletList.reserve(3*n);
 
 			// Start time
 			auto start = high_resolution_clock::now();
