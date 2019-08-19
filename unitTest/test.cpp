@@ -13,6 +13,9 @@
 using namespace std::chrono;
 using namespace Eigen;
 
+//*****************************************************************************
+// Functions used in unit testing
+//*****************************************************************************
 bool isApprox(double goalVal, double testVal, double rtol = 1e-5, double atol = 1e-8){
 	bool retBool = false;
 
@@ -88,6 +91,30 @@ SparseVector<double> buildN0Vector(int n){
 	return n0;
 
 }
+void writePrecursorSolution(MatrixXd sol, double t){
+	int specs = 7, cells = 16;
+	int s = 0, c = 0;
+	std::ofstream outputFile;
+
+	//std::string strT = std::to_string(t);
+	//std::string fileName = strNumProcs + "procs.out";
+
+	outputFile.open("precursors.out", std::ios_base::app);
+	outputFile << "Time: "+std::to_string(t)+"\n";
+
+	for (int i = 0; i < specs*cells; i++){
+		outputFile << c << " " << s << " " << sol(i) << std::endl;
+
+		if (s == 6) {s = 0; c++;}
+		else {s++;}
+	}
+
+
+}
+
+//*****************************************************************************
+// Unit test
+//*****************************************************************************
 
 void testSolverTime(){
 //*****************************************************************************
@@ -179,7 +206,7 @@ void tankProblem(int myid){
    double t = 0.0; 
 	double x1, x2, x3;
 	int steps = 100;
-	double totalTime = 50.0;
+	double totalTime = 20.0;
 	double dt = totalTime/steps;
    SparseMatrix<double> A(3,3);
    SparseVector<double> b(3);
@@ -212,6 +239,9 @@ void tankProblem(int myid){
     		//std::cout << x2 << " " << sol(1) << std::endl;
     		//std::cout << x3 << " " << sol(2) << std::endl;
     		//std::cout << " " << std::endl;
+			std::cout << abs(x1-sol(0))/sol(0) << std::endl;
+			std::cout << abs(x2-sol(1))/sol(1) << std::endl;
+			std::cout << abs(x3-sol(2))/sol(2) << std::endl;
 
 			assert(isApprox(x1, sol(0)));
 			assert(isApprox(x2, sol(1)));
@@ -294,6 +324,8 @@ void xenonIodineProblem(int myid){
 			//std::cout << N_xe << " " << sol(0) << std::endl;
     		//std::cout << N_I << " " << sol(1) << std::endl;
     		//std::cout << " " << std::endl;
+			std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
+			std::cout << abs(N_I-sol(1))/N_xe << std::endl;
 
 			assert(isApprox(sol(0), N_xe));
 			assert(isApprox(sol(1), N_I));
@@ -333,18 +365,19 @@ void neutronPrecursorProblem(int myid){
 	typedef Eigen::Triplet<double> T;
    double t = 0.0; 
 	int steps = 1000;
+	double totalTime = 100.0;
+	double dt = totalTime/steps;
 	int numOfSpecs = 7;
 	int numOfLvls = 16;
 	int nonZeros = 7*numOfLvls;
 	double lambdaC1 = 0.0125, lambdaC2 = 0.0318, lambdaC3 = 0.109;
 	double lambdaC4 = 0.3170, lambdaC5 = 1.3500, lambdaC6 = 8.640;
-	double totalTime = 10000.0;
-	double dt = totalTime/steps;
+	double val1, val2;
    SparseMatrix<double> A(numOfSpecs*numOfLvls,numOfSpecs*numOfLvls);
    SparseVector<double> N0(numOfSpecs*numOfLvls);
 	MatrixXd sol;
-	MatrixXd coeff(16,6);
-	MatrixXd varCoeff(7);
+	MatrixXd coeff(16,7);
+	VectorXd varCoeff(7);
 	std::vector<T> tripletList;
 	tripletList.reserve(nonZeros);
 
@@ -369,7 +402,7 @@ void neutronPrecursorProblem(int myid){
 	coeff(12,0) = 5.5629E-04, coeff(12,1) = 2.8967E-03, coeff(12,2) = 2.8088E-03;
 	coeff(13,0) = 4.3661E-04, coeff(13,1) = 2.2735E-03, coeff(13,2) = 2.2045E-03;
 	coeff(14,0) = 3.0078E-04, coeff(14,1) = 1.5662E-03, coeff(14,2) = 1.5187E-03;
-	coeff(15,0) = 1.5123E-04, coeff(15,1) = 7.8752E-03, coeff(15,2) = 7.6362E-04;
+	coeff(15,0) = 1.5123E-04, coeff(15,1) = 7.8752E-04, coeff(15,2) = 7.6362E-04;
 
 	coeff(0,3)  = 2.8054E-03, coeff(0,4)  = 8.1466E-04, coeff(0,5)  = 2.8792E-04;
 	coeff(1,3)  = 5.0582E-03, coeff(1,4)  = 1.4688E-03, coeff(1,5)  = 5.1911E-04;
@@ -388,14 +421,36 @@ void neutronPrecursorProblem(int myid){
 	coeff(14,3) = 4.3295E-03, coeff(14,4) = 1.2572E-03, coeff(14,5) = 4.4433E-04;
 	coeff(15,3) = 2.1769E-03, coeff(15,4) = 6.3215E-04, coeff(15,5) = 2.2341E-04;
 
-	int k=0;
-	for (int i = 0; i < numOfSpecs*numOfLvls; i++){
-		val = varCoeff(k);
-		tripletList.push_back(T(i,i,val));
-		if (k == 6) {k = 0;}
-		else {k++;}
-	}
+	coeff(0,6)  = 0.0, coeff(1,6)  = 0.0, coeff(2,6)  = 0.0, coeff(3,6)  = 0.0; 
+	coeff(4,6)  = 0.0, coeff(5,6)  = 0.0, coeff(6,6)  = 0.0, coeff(7,6)  = 0.0; 
+	coeff(8,6)  = 0.0, coeff(9,6)  = 0.0, coeff(10,6) = 0.0, coeff(11,6) = 0.0; 
+	coeff(12,6) = 0.0, coeff(13,6) = 0.0, coeff(14,6) = 0.0, coeff(15,6) = 0.0; 
 
+	int s = 0; // species index
+	int c = 0; // cell  index
+	for (int i = 0; i < numOfSpecs*numOfLvls; i++){
+		val1 = varCoeff(s);
+		val2 = coeff(c,s);
+
+		tripletList.push_back(T(i, i, val1));
+		tripletList.push_back(T(i, A.cols()-1, val2));
+
+		if (s == 6) {s = 0; c++; N0.insert(i,0) = 1.0;}
+		else {s++;}
+	}
+	
+	A.setFromTriplets(tripletList.begin(), tripletList.end());
+
+	// Sets the solver
+   SolverType ExpSolver;
+
+	for (int i = 0; i < steps; i++){
+
+		t = t + dt;
+
+		sol = ExpSolver.solve(A, N0, t);
+		if (myid==0){ writePrecursorSolution(sol, t);}
+	}
 
 }
 
