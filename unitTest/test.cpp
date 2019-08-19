@@ -344,13 +344,14 @@ void neutronPrecursorProblem(int myid){
    SparseVector<double> N0(numOfSpecs*numOfLvls);
 	MatrixXd sol;
 	MatrixXd coeff(16,6);
-	MatrixXd varCoeff(1,6);
+	MatrixXd varCoeff(7);
 	std::vector<T> tripletList;
 	tripletList.reserve(nonZeros);
 
 	// Sets the coefficients for decay
 	varCoeff(0) = -lambdaC1, varCoeff(1) = -lambdaC2, varCoeff(2) = -lambdaC3;
 	varCoeff(3) = -lambdaC4, varCoeff(4) = -lambdaC5, varCoeff(5) = -lambdaC6;
+	varCoeff(6) = 0.0;
 	
 	// Coefficients in order of precursor groups for columns
 	coeff(0,0)  = 1.9490E-04, coeff(0,1)  = 1.0149E-03, coeff(0,2)  = 9.8409E-04;
@@ -387,10 +388,12 @@ void neutronPrecursorProblem(int myid){
 	coeff(14,3) = 4.3295E-03, coeff(14,4) = 1.2572E-03, coeff(14,5) = 4.4433E-04;
 	coeff(15,3) = 2.1769E-03, coeff(15,4) = 6.3215E-04, coeff(15,5) = 2.2341E-04;
 
-
+	int k=0;
 	for (int i = 0; i < numOfSpecs*numOfLvls; i++){
-
-		tripletList.push_back(T(i,i,-val));
+		val = varCoeff(k);
+		tripletList.push_back(T(i,i,val));
+		if (k == 6) {k = 0;}
+		else {k++;}
 	}
 
 

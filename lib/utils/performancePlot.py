@@ -74,8 +74,9 @@ for key in df1.keys():
     for header in headers:
         plotdata.append(plotDF['1'].mean()/plotDF[header].mean())
 
-    #plotDF = builddfSpeedUp(frames)
+    plotDF = builddfSpeedUp(frames)
     plt.plot(headers, plotdata)
+    #ax = sns.catplot(data = plotDF, kind='violin')
     plt.ylabel('Speep up')
     plt.xlabel('Number of Processors')
     plt.legend()
