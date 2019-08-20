@@ -16,6 +16,18 @@ using namespace Eigen;
 //*****************************************************************************
 // Functions used in unit testing
 //*****************************************************************************
+//
+//*****************************************************************************
+// Test if two number are approx equal
+//
+// @param goalVal		The real solution value
+// @param testVal		Test value
+// @param rtol			Relative tolerance
+// @param atol			Absolution tolerance
+//
+// Values for rtol and atol were taken from the default values for numpys 
+// isApprox function.
+//*****************************************************************************
 bool isApprox(double goalVal, double testVal, double rtol = 1e-5, double atol = 1e-8){
 	bool retBool = false;
 
@@ -24,6 +36,11 @@ bool isApprox(double goalVal, double testVal, double rtol = 1e-5, double atol = 
 	if (diff/goalVal < atol) { retBool = true; }
 	return retBool;
 }
+//*****************************************************************************
+// Builds a nonsymmetric square matrix 
+//
+// @param n		Matrix size
+//*****************************************************************************
 SparseMatrix<double> buildAMatrix(int n){
 	typedef Eigen::Triplet<double> T;
 	std::vector<T> tripletList;
@@ -42,7 +59,11 @@ SparseMatrix<double> buildAMatrix(int n){
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 	return A;
 }
-
+//*****************************************************************************
+// Builds a tridiagonal square matrix 
+//
+// @param n		Matrix size
+//*****************************************************************************
 SparseMatrix<double> buildJMatrix(int n){
 	typedef Eigen::Triplet<double> T;
 	std::vector<T> tripletList;
@@ -64,6 +85,11 @@ SparseMatrix<double> buildJMatrix(int n){
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 	return A;
 }
+//*****************************************************************************
+// Builds a tridiagonal square matrix 
+//
+// @param n		Matrix size
+//*****************************************************************************
 SparseMatrix<double> buildSMatrix(int n){
 	typedef Eigen::Triplet<double> T;
 	std::vector<T> tripletList;
@@ -83,6 +109,11 @@ SparseMatrix<double> buildSMatrix(int n){
 	return A;
 }
 
+//*****************************************************************************
+// Builds a sparse vector of ones
+//
+// @param n		Vector size
+//*****************************************************************************
 SparseVector<double> buildN0Vector(int n){
 	SparseVector<double> n0(n);
 	for (int j = 0; j < n; j++){
@@ -91,8 +122,14 @@ SparseVector<double> buildN0Vector(int n){
 	return n0;
 
 }
+//*****************************************************************************
+// Writes the time dependent solution for the neutron precursor problem
+//
+// @param sol	Soltuion at time t
+// @param t		Time over which the solve takes place
+//*****************************************************************************
 void writePrecursorSolution(MatrixXd sol, double t){
-	int specs = 7, cells = 16;
+	int specs = 6, cells = 16;
 	int s = 0, c = 0;
 	std::ofstream outputFile;
 
@@ -102,10 +139,10 @@ void writePrecursorSolution(MatrixXd sol, double t){
 	outputFile.open("precursors.out", std::ios_base::app);
 	outputFile << "Time: "+std::to_string(t)+"\n";
 
-	for (int i = 0; i < specs*cells; i++){
+	for (int i = 0; i < sol.rows()-1; i++){
 		outputFile << c << " " << s << " " << sol(i) << std::endl;
 
-		if (s == 6) {s = 0; c++;}
+		if (s == 5) {s = 0; c++;}
 		else {s++;}
 	}
 
@@ -364,20 +401,21 @@ void neutronPrecursorProblem(int myid){
 //****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double t = 0.0; 
-	int steps = 1000;
+	int steps = 200;
 	double totalTime = 100.0;
 	double dt = totalTime/steps;
-	int numOfSpecs = 7;
+	int numOfSpecs = 6;
 	int numOfLvls = 16;
-	int nonZeros = 7*numOfLvls;
+	int nonZeros = 2*numOfSpecs + 3*numOfSpecs*(numOfLvls-1);
 	double lambdaC1 = 0.0125, lambdaC2 = 0.0318, lambdaC3 = 0.109;
 	double lambdaC4 = 0.3170, lambdaC5 = 1.3500, lambdaC6 = 8.640;
 	double val1, val2;
-   SparseMatrix<double> A(numOfSpecs*numOfLvls,numOfSpecs*numOfLvls);
-   SparseVector<double> N0(numOfSpecs*numOfLvls);
+   SparseMatrix<double> A(numOfSpecs*numOfLvls+1,numOfSpecs*numOfLvls+1);
+   SparseVector<double> N0(numOfSpecs*numOfLvls+1);
 	MatrixXd sol;
 	MatrixXd coeff(16,7);
 	VectorXd varCoeff(7);
+	double flux = 0.2;
 	std::vector<T> tripletList;
 	tripletList.reserve(nonZeros);
 
@@ -428,16 +466,24 @@ void neutronPrecursorProblem(int myid){
 
 	int s = 0; // species index
 	int c = 0; // cell  index
-	for (int i = 0; i < numOfSpecs*numOfLvls; i++){
-		val1 = varCoeff(s);
-		val2 = coeff(c,s);
+	for (int i = 0; i < numOfSpecs*numOfLvls;){
+		if (c != 0 and s < 6){tripletList.push_back(T(i, i-6, flux));} 
 
-		tripletList.push_back(T(i, i, val1));
-		tripletList.push_back(T(i, A.cols()-1, val2));
+		if (s < 6){
+			val1 = varCoeff(s) - flux;
+			val2 = coeff(c,s);
 
-		if (s == 6) {s = 0; c++; N0.insert(i,0) = 1.0;}
-		else {s++;}
+			tripletList.push_back(T(i, i, val1));
+			tripletList.push_back(T(i, A.cols()-1, val2));
+			s++;
+			i++;
+		}
+		else{
+			s = 0;
+			c++;
+		}
 	}
+	N0.insert(A.cols()-1) = 1.0;
 	
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 

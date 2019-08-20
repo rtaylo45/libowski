@@ -32,16 +32,19 @@ cwd = os.getcwd()
 imgd = cwd+'/precursorImages'
 os.chdir(imgd)
 
-for key in results.keys():
+for count, key in enumerate(results.keys()):
     data = results[key]
-   
+ 
+    print "Image Count: ", count, 'Out Of: ', len(results.keys())-1
     plt.grid()
     for spec in xrange(data.shape[1]-1):
         plt.plot(xaxis,data[::,spec],label='C' + str(spec+1))
     plt.xlabel('Reactor height')
     plt.ylabel('Precursor Concentration')
+    plt.title('Time: ' + key + ' sec')
     plt.legend()
     figName = 'precursorst=_'+key+'.png'
     plt.savefig(figName, dpi=800)
+    plt.close()
 
 
