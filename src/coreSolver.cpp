@@ -7,7 +7,7 @@ using namespace Eigen;
 //*****************************************************************************
 // Matrix expotental solver
 //	param A		The coefficient matrix for the system of ODEs
-//	param w0	Initial condition 
+//	param w0		Initial condition 
 //	param t		Time of the solve
 //	
 //	return w	Solution vector
@@ -19,7 +19,6 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 
 	// MPI stuff
 	int myid, numprocs, ierr;
-	//MPI_Init(NULL, NULL);
 	MPI_Status status;
 	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
 	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -27,16 +26,17 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 
 	// Number of poles
 	int s = 8;
-	SparseMatrix<std::complex<double>> At(A.rows(),A.cols()); 
+	SparseMatrix<std::complex<double>> At(A.rows(),A.cols());
 	SparseMatrix<std::complex<double>> tempA(A.rows(),A.cols()); 
 	VectorXcd w, tempB, w0cd, myW; 
 	w0cd = w0.cast<std::complex<double>>();
 	SparseMatrix<double> ident = buildSparseIdentity(A.rows());
 
-
 	myW = 0.*w0cd, w = 0*w0cd;
 	At = A.cast<std::complex<double>>()*t;
 
+	// Loops over the imaginary poles. This is a linear solve over 8 lineary 
+	// independent systems. The sum of all the independent solutions is w.
 	for (int k = myid; k < s; k += numprocs){
 		tempA = At - theta(k)*ident;
 		tempB = alpha(k)*w0cd;
@@ -48,16 +48,17 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 		myW = myW + solver.solve(tempB);
 	}
 	if (myid != 0){
+		// Sends solution data to the master node 
 		ierr = MPI_Send(myW.data(), eleCount, MPI::DOUBLE_COMPLEX, 0, MTAG1, MPI_COMM_WORLD);
 	}
 	else {
 		w = myW;
+		// Receives data from the slave nodes
 		for (int islave = 1; islave < numprocs; islave++) {
 			ierr = MPI_Recv(myW.data(), eleCount, MPI::DOUBLE_COMPLEX, islave, MTAG1, MPI_COMM_WORLD, &status);
 			w = w + myW;
 		}
 	}
-	//MPI_Finalize();
 	w = 2.*w.real();
 	w = w + alpha_0*w0cd;
 

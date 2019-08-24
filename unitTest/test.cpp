@@ -1,9 +1,10 @@
 #include <Eigen/Core>
+#include <Eigen/Sparse>
+#include <Eigen/Eigenvalues>
 #include "coreSolver.h"
 #include <chrono>
 #include <assert.h>
 #include <iostream>
-#include <Eigen/Sparse>
 #include <vector>
 #include <random>
 #include <fstream>
@@ -148,6 +149,43 @@ void writePrecursorSolution(MatrixXd sol, double t){
 
 
 }
+//*****************************************************************************
+// Builds the species matrix for precursor problem
+//
+//*****************************************************************************
+SparseMatrix<double> BuildSpeciesMatrix(MatrixXd coeff, MatrixXd varCoeff,
+	int numOfSpecs, int numOfLvls, double flux){
+
+	typedef Eigen::Triplet<double> T;
+	std::vector<T> tripletList;
+	int nonZeros = 2*numOfSpecs + 3*numOfSpecs*(numOfLvls-1);
+	tripletList.reserve(nonZeros);
+   SparseMatrix<double> A(numOfSpecs*numOfLvls+1,numOfSpecs*numOfLvls+1);
+	double val1, val2;
+	int s = 0; // species index
+	int c = 0; // cell  index
+
+	for (int i = 0; i < numOfSpecs*numOfLvls;){
+		if (c != 0 and s < numOfSpecs){tripletList.push_back(T(i, i-numOfSpecs, 
+				flux));} 
+
+		if (s < numOfSpecs){
+			val1 = varCoeff(s) - flux;
+			val2 = coeff(c,s);
+
+			tripletList.push_back(T(i, i, val1));
+			tripletList.push_back(T(i, A.cols()-1, val2));
+			s++;
+			i++;
+		}
+		else{
+			s = 0;
+			c++;
+		}
+	}
+	A.setFromTriplets(tripletList.begin(), tripletList.end());
+	return A;
+}
 
 //*****************************************************************************
 // Unit test
@@ -259,7 +297,7 @@ void tankProblem(int myid){
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 
 	// Sets the solver
-    SolverType ExpSolver;
+   SolverType ExpSolver;
 
 	for (int i = 0; i < steps; i++){
 
@@ -276,9 +314,9 @@ void tankProblem(int myid){
     		//std::cout << x2 << " " << sol(1) << std::endl;
     		//std::cout << x3 << " " << sol(2) << std::endl;
     		//std::cout << " " << std::endl;
-			std::cout << abs(x1-sol(0))/sol(0) << std::endl;
-			std::cout << abs(x2-sol(1))/sol(1) << std::endl;
-			std::cout << abs(x3-sol(2))/sol(2) << std::endl;
+			//std::cout << abs(x1-sol(0))/sol(0) << std::endl;
+			//std::cout << abs(x2-sol(1))/sol(1) << std::endl;
+			//std::cout << abs(x3-sol(2))/sol(2) << std::endl;
 
 			assert(isApprox(x1, sol(0)));
 			assert(isApprox(x2, sol(1)));
@@ -361,8 +399,8 @@ void xenonIodineProblem(int myid){
 			//std::cout << N_xe << " " << sol(0) << std::endl;
     		//std::cout << N_I << " " << sol(1) << std::endl;
     		//std::cout << " " << std::endl;
-			std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
-			std::cout << abs(N_I-sol(1))/N_xe << std::endl;
+			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
+			//std::cout << abs(N_I-sol(1))/N_xe << std::endl;
 
 			assert(isApprox(sol(0), N_xe));
 			assert(isApprox(sol(1), N_I));
@@ -400,9 +438,9 @@ void neutronPrecursorProblem(int myid){
 //	
 //****************************************************************************
 	typedef Eigen::Triplet<double> T;
-   double t = 0.0; 
-	int steps = 200;
-	double totalTime = 100.0;
+   double t = 0.0, tnew = 0.0; 
+	int steps = 140;
+	double totalTime = 140.0;
 	double dt = totalTime/steps;
 	int numOfSpecs = 6;
 	int numOfLvls = 16;
@@ -411,11 +449,12 @@ void neutronPrecursorProblem(int myid){
 	double lambdaC4 = 0.3170, lambdaC5 = 1.3500, lambdaC6 = 8.640;
 	double val1, val2;
    SparseMatrix<double> A(numOfSpecs*numOfLvls+1,numOfSpecs*numOfLvls+1);
-   SparseVector<double> N0(numOfSpecs*numOfLvls+1);
+   //SparseVector<double> N0(numOfSpecs*numOfLvls+1);
+   VectorXd N0(numOfSpecs*numOfLvls+1);
 	MatrixXd sol;
 	MatrixXd coeff(16,7);
 	VectorXd varCoeff(7);
-	double flux = 0.2;
+	double flux = 0.2, diff = 0.0;
 	std::vector<T> tripletList;
 	tripletList.reserve(nonZeros);
 
@@ -464,39 +503,38 @@ void neutronPrecursorProblem(int myid){
 	coeff(8,6)  = 0.0, coeff(9,6)  = 0.0, coeff(10,6) = 0.0, coeff(11,6) = 0.0; 
 	coeff(12,6) = 0.0, coeff(13,6) = 0.0, coeff(14,6) = 0.0, coeff(15,6) = 0.0; 
 
-	int s = 0; // species index
-	int c = 0; // cell  index
-	for (int i = 0; i < numOfSpecs*numOfLvls;){
-		if (c != 0 and s < 6){tripletList.push_back(T(i, i-6, flux));} 
-
-		if (s < 6){
-			val1 = varCoeff(s) - flux;
-			val2 = coeff(c,s);
-
-			tripletList.push_back(T(i, i, val1));
-			tripletList.push_back(T(i, A.cols()-1, val2));
-			s++;
-			i++;
-		}
-		else{
-			s = 0;
-			c++;
-		}
-	}
-	N0.insert(A.cols()-1) = 1.0;
+	A = BuildSpeciesMatrix(coeff, varCoeff, numOfSpecs, numOfLvls, flux);
+	N0(A.cols()-1) = 1.0;
 	
-	A.setFromTriplets(tripletList.begin(), tripletList.end());
 
 	// Sets the solver
    SolverType ExpSolver;
 
-	for (int i = 0; i < steps; i++){
+	//auto start = high_resolution_clock::now();
+	for (int i = 0; i < 80; i++){
 
 		t = t + dt;
 
 		sol = ExpSolver.solve(A, N0, t);
 		if (myid==0){ writePrecursorSolution(sol, t);}
 	}
+
+	flux = 0.08;
+	N0 = sol;
+	A = BuildSpeciesMatrix(0.8*coeff, varCoeff, numOfSpecs, numOfLvls, 
+		flux);
+
+	for (int i = 80; i < steps; i++){
+
+		t = t + dt;
+		tnew = tnew + dt;
+
+		sol = ExpSolver.solve(A, N0, tnew);
+		if (myid==0){ writePrecursorSolution(sol, t);}
+	}
+	//auto end = high_resolution_clock::now();
+	//auto duration = duration_cast<microseconds>(end - start);
+	//std::cout << myid << " " << duration.count()/1.e6 << std::endl;
 
 }
 
@@ -508,8 +546,8 @@ int main(){
 	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
 	//testSolverTime();
-	//tankProblem(myid);
-	//xenonIodineProblem(myid);
+	tankProblem(myid);
+	xenonIodineProblem(myid);
 	neutronPrecursorProblem(myid);
 
 	MPI_Finalize();
