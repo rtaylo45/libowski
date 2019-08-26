@@ -15,7 +15,15 @@ set(LIB_DIR lib)
 set(EIGEN3_INCLUDE_DIR ${LIB_DIR}/eigen3)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-# Sets the standard
+find_package(MPI)
+if(${MPI_FOUND})
+	include_directories(${MPI_INCLUDE_PATH})
+endif()
+
+if(${MPI_FOUND})
+	set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+	set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "-O3")
 
@@ -27,6 +35,20 @@ set(PROJECT_SOURCES ${SRC_DIR}/coreSolver.h
 add_subdirectory(src)
 ENABLE_TESTING()
 add_subdirectory(unitTest)
+
+# All sources that also need to be tested in unit tests go into a static library
+#add_library(liblibowski STATIC ${PROJECT_SOURCES})
+#target_include_directories(liblibowski PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# The main program
+#add_executable(libowski ${SRC_DIR}/main.cpp)
+#target_link_libraries(libowski PRIVATE liblibowski ${MPI_LIBRARIES})
+
+
+
+###############################################################################
+# Old cmake stuff
+###############################################################################
 
 
 # Test directory

@@ -1,11 +1,20 @@
 project(libowski_prog)
 
-set(PROJECT_SOURCES coreSolver.h coreSolver.cpp)
+set(PROJECT_SOURCES coreSolver.cpp mpiProcess.cpp)
 
 # All sources that also need to be tested in unit tests go into a static library
 add_library(liblibowski STATIC ${PROJECT_SOURCES})
 target_include_directories(liblibowski PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+if(${MPI_FOUND})
+	target_compile_definitions(liblibowski PRIVATE HAVE_MPI)
+endif()
 
 # The main program
 add_executable(libowski main.cpp)
-target_link_libraries(libowski PRIVATE liblibowski)
+if(${MPI_FOUND})
+	target_link_libraries(libowski PRIVATE liblibowski ${MPI_LIBRARIES})
+	target_compile_definitions(libowski PRIVATE HAVE_MPI)
+else()
+	target_link_libraries(libowski PRIVATE liblibowski)
+endif()
+	
