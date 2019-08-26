@@ -1,6 +1,7 @@
 #include <Eigen/Sparse>
 #include <iostream>
 #include "coreSolver.h"
+#include "mpiProcess.h"
 #include <chrono>
 #include <math.h>
 
@@ -31,9 +32,7 @@ void tankProblem(){
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 
 	// Sets the solver
-	MPI_Init(NULL, NULL);
-	//MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+	myid = mpi.rank;
    SolverType ExpSolver;
 
 	for (int i = 0; i < steps; i++){
@@ -54,7 +53,7 @@ void tankProblem(){
 		}
 
 	}
-	MPI_Finalize();
+	mpi.finalize();
 	
 }
 

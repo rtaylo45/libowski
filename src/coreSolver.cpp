@@ -1,4 +1,5 @@
 #include "coreSolver.h"
+#include "mpiProcess.h"
 #include <iostream>
 #define MTAG1 1
 
@@ -18,10 +19,8 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 	SparseLU<SparseMatrix<std::complex<double>>, COLAMDOrdering<int> > solver;
 
 	// MPI stuff
-	int myid, numprocs, ierr;
-	MPI_Status status;
-	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+	int myid = mpi.rank;
+	int numprocs = mpi.size;
 	int eleCount = A.rows();
 
 	// Number of poles
@@ -49,13 +48,13 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 	}
 	if (myid != 0){
 		// Sends solution data to the master node 
-		ierr = MPI_Send(myW.data(), eleCount, MPI::DOUBLE_COMPLEX, 0, MTAG1, MPI_COMM_WORLD);
+		mpi.send(myW, eleCount, 0, MTAG1);
 	}
 	else {
 		w = myW;
 		// Receives data from the slave nodes
 		for (int islave = 1; islave < numprocs; islave++) {
-			ierr = MPI_Recv(myW.data(), eleCount, MPI::DOUBLE_COMPLEX, islave, MTAG1, MPI_COMM_WORLD, &status);
+			myW = mpi.recv(myW, eleCount, islave, MTAG1);
 			w = w + myW;
 		}
 	}

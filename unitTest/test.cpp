@@ -2,6 +2,7 @@
 #include <Eigen/Sparse>
 #include <Eigen/Eigenvalues>
 #include "coreSolver.h"
+#include "mpiProcess.h"
 #include <chrono>
 #include <assert.h>
 #include <iostream>
@@ -191,7 +192,7 @@ SparseMatrix<double> BuildSpeciesMatrix(MatrixXd coeff, MatrixXd varCoeff,
 // Unit test
 //*****************************************************************************
 
-void testSolverTime(){
+void testSolverTime(int myid, int numprocs){
 //*****************************************************************************
 //	Problem statement:
 //		A is a 100,000 x 100,000 size tridiagonal matrix. The matrix entries
@@ -202,13 +203,9 @@ void testSolverTime(){
 	typedef Eigen::Triplet<double> T;
 	std::default_random_engine gen;
 	std::uniform_real_distribution<double> dist(0.0,1.0);
-	int numprocs, myid, iters = 100;
+	int iters = 100;
 	double simTime = 0.0;
 	std::ofstream outputFile;
-
-	MPI_Init(NULL, NULL);
-	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
 	std::string strNumProcs = std::to_string(numprocs);
 	std::string fileName = strNumProcs + "procs.out";
@@ -256,7 +253,6 @@ void testSolverTime(){
 		}
 	}
 	outputFile.close();
-	MPI_Finalize();
 }
 
 void tankProblem(int myid){
@@ -539,18 +535,16 @@ void neutronPrecursorProblem(int myid){
 }
 
 int main(){
+	int myid = mpi.rank;
+	int numprocs = mpi.size;
 
-	int myid;
 
-	MPI_Init(NULL, NULL);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-
-	//testSolverTime();
+	//testSolverTime(myid, numprocs);
 	tankProblem(myid);
 	xenonIodineProblem(myid);
 	neutronPrecursorProblem(myid);
 
-	MPI_Finalize();
+	mpi.finalize();
 }
 
 
