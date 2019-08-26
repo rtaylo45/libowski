@@ -22,6 +22,7 @@ void mpiProcess::initMPI(){
 void mpiProcess::finalize(){
 #ifdef HAVE_MPI
 	MPI_Finalize();
+	isInit = false;
 #endif
 }
 
@@ -37,8 +38,8 @@ void mpiProcess::send(VectorXcd x, int count, int id, int MTAG){
 #ifdef HAVE_MPI
 	MPI_Send(x.data(), count, MPI::DOUBLE_COMPLEX, id, MTAG, MPI_COMM_WORLD);
 #endif
-
 }
+
 //**************************************************************************
 // Receives complex eigen vector data
 //
@@ -46,6 +47,10 @@ void mpiProcess::send(VectorXcd x, int count, int id, int MTAG){
 // @param count	Number of vector elements
 // @param id		Processor ID
 // @param MTAG		Message tag
+//
+// MPI requires me to pass in the actual vector to recieve the data. Thats
+// why the data that you recieve is an input argument to the method. If 
+// HAVE_MPI is not defined then the method just returns an empty vector.
 //**************************************************************************
 VectorXcd mpiProcess::recv(VectorXcd x, int count, int islave, int MTAG){
 	// Inits a zero return vector
@@ -57,6 +62,5 @@ VectorXcd mpiProcess::recv(VectorXcd x, int count, int islave, int MTAG){
 	xRet = x;
 #endif
 	return xRet;
-
 }
 
