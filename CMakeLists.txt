@@ -5,7 +5,6 @@ project(libowski)
 set(SRC_DIR src)
 set(LIB_DIR lib)
 
-
 # The find cmake flag. I have included eigen3 with my softwar now
 # so the user doesn't need to install it.
 #find_package(Eigen3 REQUIRED)
@@ -27,24 +26,12 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "-O3")
 
-# Project sources
-set(PROJECT_SOURCES ${SRC_DIR}/coreSolver.h
-					${SRC_DIR}/coreSolver.cpp
-)
-
+# Add the source directory
 add_subdirectory(src)
+# Enable testing
 ENABLE_TESTING()
+# Add unit test directory
 add_subdirectory(unitTest)
-
-# All sources that also need to be tested in unit tests go into a static library
-#add_library(liblibowski STATIC ${PROJECT_SOURCES})
-#target_include_directories(liblibowski PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-# The main program
-#add_executable(libowski ${SRC_DIR}/main.cpp)
-#target_link_libraries(libowski PRIVATE liblibowski ${MPI_LIBRARIES})
-
-
 
 ###############################################################################
 # Old cmake stuff
