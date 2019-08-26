@@ -1,6 +1,6 @@
 project(libowski_prog)
 
-set(PROJECT_SOURCES coreSolver.cpp mpiProcess.cpp)
+set(PROJECT_SOURCES coreSolver.cpp mpiProcess.cpp ModelMeshType.cpp)
 
 # All sources that also need to be tested in unit tests go into a static library
 add_library(liblibowski STATIC ${PROJECT_SOURCES})
