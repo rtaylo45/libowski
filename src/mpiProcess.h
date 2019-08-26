@@ -25,8 +25,11 @@ class mpiProcess{
 
 	// Public attributes
 	public:
+	// logical for initilization
 	bool isInit = false;
+	// Number of total processors
 	int size = 1;
+	// ID of the current processor
 	int rank = 0;
 
 	//**************************************************************************
@@ -42,11 +45,11 @@ class mpiProcess{
 	//**************************************************************************
 	void finalize();
 	//**************************************************************************
-	// Sends MPI data
+	// Sends complex eigen vector data
 	//**************************************************************************
 	void send(VectorXcd, int, int, int);
 	//**************************************************************************
-	// Receives  MPI data
+	// Receives complex eigen vector data
 	//**************************************************************************
 	VectorXcd recv(VectorXcd, int, int, int);
 

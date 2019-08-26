@@ -4,6 +4,9 @@
 // Global mpi object
 mpiProcess mpi;
 
+//**************************************************************************
+// Init the mpi process
+//**************************************************************************
 void mpiProcess::initMPI(){
 #ifdef HAVE_MPI
 	MPI_Init(NULL, NULL);
@@ -13,12 +16,23 @@ void mpiProcess::initMPI(){
 #endif
 }
 
+//**************************************************************************
+// Finalize the mpi process
+//**************************************************************************
 void mpiProcess::finalize(){
 #ifdef HAVE_MPI
 	MPI_Finalize();
 #endif
 }
 
+//**************************************************************************
+// Sends complex eigen vector data
+//
+// @param x			Complex eigen vector to send
+// @param count	Number of vector elements
+// @param id		Processor ID
+// @param MTAG		Message tag
+//**************************************************************************
 void mpiProcess::send(VectorXcd x, int count, int id, int MTAG){
 #ifdef HAVE_MPI
 	MPI_Send(x.data(), count, MPI::DOUBLE_COMPLEX, id, MTAG, MPI_COMM_WORLD);
@@ -26,9 +40,15 @@ void mpiProcess::send(VectorXcd x, int count, int id, int MTAG){
 
 }
 //**************************************************************************
-// Receives  MPI data
+// Receives complex eigen vector data
+//
+// @param x			Complex eigen vector to send
+// @param count	Number of vector elements
+// @param id		Processor ID
+// @param MTAG		Message tag
 //**************************************************************************
 VectorXcd mpiProcess::recv(VectorXcd x, int count, int islave, int MTAG){
+	// Inits a zero return vector
 	VectorXcd xRet;
 #ifdef HAVE_MPI
 	MPI_Status status;
