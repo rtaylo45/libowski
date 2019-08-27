@@ -63,6 +63,12 @@ void modelMesh::connectCells(){
 			cell->southCellPtr = getCellByLoc(i,j-1);
 			cell->westCellPtr = getCellByLoc(i-1,j);
 			cell->eastCellPtr = getCellByLoc(i+1,j);
+
+			// Hope i got this part right
+			cell->eastFacePtr = &meshCellFaces[i*(2*numOfyCells+1) + j];
+			cell->westFacePtr = &meshCellFaces[(i+1)*(2*numOfyCells+1) + j];
+			cell->southFacePtr = &meshCellFaces[numOfyCells*(2*i+1) + i + j];
+			cell->northFacePtr = &meshCellFaces[numOfyCells*(2*i+1) + i + j + 1];
 			//std::cout << "Current Node " << Node->i << ' ' << Node->j << std::endl;
 			//if (Node->northPtr != nullptr)
 			//	std::cout << "North Node " <<Node->northPtr->i << ' ' << Node->northPtr->j << std::endl;
