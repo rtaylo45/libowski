@@ -1,6 +1,6 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include "coreSolver.h"
+#include "CRAM.h"
 #include "mpiProcess.h"
 #include "modelMesh.h"
 #include <assert.h>
@@ -15,6 +15,10 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	modelMesh dude(1, 5, 1.0, 1.0);
+	modelMesh dude(2, 5, 1.0, 1.0);
+	dude.setConstantXVelocity(2.0, 0);
+	dude.setConstantXVelocity(2.0, 1);
 	dude.setConstantXVelocity(2.0);
+	dude.setConstantYVelocity(0.1);
+	dude.setConstantYVelocity(0.2, 4);
 }

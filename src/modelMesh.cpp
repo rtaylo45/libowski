@@ -15,7 +15,7 @@ void modelMesh::buildGeometry(){
 	createCells();
 	
 	// Creates the cell faces
-	//createCellFaces();
+	createCellFaces();
 
 	// Connects the mesh cells
 	connectCells();
@@ -67,26 +67,27 @@ void modelMesh::createCellFaces(){
 void modelMesh::connectCells(){
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
+			//std::cout << i << " " << j << std::endl;
 			meshCell* cell = getCellByLoc(i,j);
-			std::cout << i << " " << j << std::endl;
-			std::cout << "Current Node " << cell->i << ' ' << cell->j << std::endl;
-			//cell->northCellPtr = getCellByLoc(i,j+1);
-			//cell->southCellPtr = getCellByLoc(i,j-1);
-			//cell->westCellPtr = getCellByLoc(i-1,j);
-			//cell->eastCellPtr = getCellByLoc(i+1,j);
+			//std::cout << cell<< std::endl;
+			//std::cout << "Current Node " << cell->i << ' ' << cell->j << std::endl;
+			cell->northCellPtr = getCellByLoc(i,j+1);
+			cell->southCellPtr = getCellByLoc(i,j-1);
+			cell->westCellPtr = getCellByLoc(i-1,j);
+			cell->eastCellPtr = getCellByLoc(i+1,j);
 
 			// Hope i got this part right
-			//int kEast = i*(2*numOfyCells+1) + j;
-			//int kWest = (i+1)*(2*numOfyCells+1) + j;
-			//int kSouth = numOfyCells*(2*i+1) + i + j;
-			//int kNorth = numOfyCells*(2*i+1) + i + j + 1;
+			int kEast = i*(2*numOfyCells+1) + j;
+			int kWest = (i+1)*(2*numOfyCells+1) + j;
+			int kSouth = numOfyCells*(2*i+1) + i + j;
+			int kNorth = numOfyCells*(2*i+1) + i + j + 1;
 		
-			//std::cout << i << " " << j << " " << kEast << " " << 
+			//std::cout << i << " " << j << " " << kEast << " " << kWest << " " <<
 			//	kSouth << " " << kNorth << std::endl;	
-			//cell->eastFacePtr = &meshCellFaces[kEast];
-			//cell->westFacePtr = &meshCellFaces[kWest];
-			//cell->southFacePtr = &meshCellFaces[kSouth];
-			//cell->northFacePtr = &meshCellFaces[kNorth];
+			cell->eastFacePtr = &meshCellFaces[kEast];
+			cell->westFacePtr = &meshCellFaces[kWest];
+			cell->southFacePtr = &meshCellFaces[kSouth];
+			cell->northFacePtr = &meshCellFaces[kNorth];
 
 			//if (Node->northPtr != nullptr)
 			//	std::cout << "North Node " <<Node->northPtr->i << ' ' << Node->northPtr->j << std::endl;
@@ -99,7 +100,6 @@ void modelMesh::connectCells(){
 			//std::cout << " " << std::endl;
 		}
 	}
-	std::cout << meshCellFaces.size() << std::endl;
 }
 
 //*****************************************************************************
@@ -145,7 +145,7 @@ bool modelMesh::checkCellLoc(int i, int j){
 		return false;
 	else if (j < 0)
 		return false;
-	else if (j >= numOfxCells)
+	else if (j >= numOfyCells)
 		return false;
 	else
 		return true;
@@ -159,10 +159,47 @@ void modelMesh::setConstantXVelocity(double velocity){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			
-			//std::cout << i << j << std::endl;
-			//cell->northFacePtr->xVl = velocity;
-			//cell->southFacePtr->xVl = velocity;
+			cell->northFacePtr->xVl = velocity;
+			cell->southFacePtr->xVl = velocity;
 		}
+	}
+}
+
+//*****************************************************************************
+// Sets a constant x velocity across a channel
+//*****************************************************************************
+void modelMesh::setConstantXVelocity(double velocity, int column){
+	for (int j = 0; j < numOfyCells; j++){
+		meshCell* cell = getCellByLoc(column,j);
+		
+		cell->northFacePtr->xVl = velocity;
+		cell->southFacePtr->xVl = velocity;
+	}
+}
+
+//*****************************************************************************
+// Sets a constant y velocity across the whole problem
+//*****************************************************************************
+void modelMesh::setConstantYVelocity(double velocity){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			
+			cell->northFacePtr->yVl = velocity;
+			cell->southFacePtr->yVl = velocity;
+		}
+	}
+}
+
+//*****************************************************************************
+// Sets a constant x velocity across a channel
+//*****************************************************************************
+void modelMesh::setConstantYVelocity(double velocity, int row){
+	for (int i = 0; i < numOfxCells; i++){
+		meshCell* cell = getCellByLoc(i,row);
+		
+		cell->northFacePtr->yVl = velocity;
+		cell->southFacePtr->yVl = velocity;
 	}
 }
 

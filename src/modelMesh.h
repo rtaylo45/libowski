@@ -51,12 +51,21 @@ class modelMesh {
 		buildGeometry();
 	}
 
+	public:
 	// Builds the geometry
 	void buildGeometry();
 	// Gets the node by location from i,j
 	meshCell* getCellByLoc(int, int);
 	// Gets the node by location from absolution index k
 	meshCell* getCellByLoc(int);
+	// Sets a constant x velocity across the whole problem
+	void setConstantXVelocity(double);
+	// Sets a constant x velocity across a column of cells
+	void setConstantXVelocity(double, int);
+	// Sets a constant y velocity across the whole problem
+	void setConstantYVelocity(double);
+	// Sets a constant y velocity across a row of cells
+	void setConstantYVelocity(double, int);
 
 	private:
 	// Creates the cells
@@ -68,7 +77,4 @@ class modelMesh {
 	// Checks the i,j for validity
 	bool checkCellLoc(int, int);
 
-	public:
-	// Sets a constant x velocity across the whole problem
-	void setConstantXVelocity(double);
 };
