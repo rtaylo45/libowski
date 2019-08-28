@@ -11,23 +11,23 @@ class modelMesh {
 
 	public:
 	// Total length in x direction
-	double xLength;
+	double xLength = 0.0;
 	// Total length in y direction
-	double yLength;
+	double yLength = 0.0;
 	// Number of cells in the x direction
-	int numOfxCells;
+	int numOfxCells = 0;
 	// Number of cells in the y direction
-	int numOfyCells;
+	int numOfyCells = 0;
 	// Total number of cells
-	int numOfTotalCells;
+	int numOfTotalCells = 0;
 	// Vector of all cells
 	std::vector<meshCell> meshCells;
 	// Vector of all cell faces
 	std::vector<meshCellFace> meshCellFaces;
 	// Change in x direction
-	double dx;
+	double dx = 0.0;
 	// Change in y direction
-	double dy;
+	double dy = 0.0;
 	
 	public:
 	//**************************************************************************
@@ -66,6 +66,8 @@ class modelMesh {
 	void setConstantYVelocity(double);
 	// Sets a constant y velocity across a row of cells
 	void setConstantYVelocity(double, int);
+	// Cleans the model
+	void clean();
 
 	private:
 	// Creates the cells

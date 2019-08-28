@@ -203,3 +203,18 @@ void modelMesh::setConstantYVelocity(double velocity, int row){
 	}
 }
 
+//*****************************************************************************
+// Cleans the model
+//*****************************************************************************
+void modelMesh::clean(){
+
+	xLength = 0.0;
+	yLength = 0.0;
+	numOfxCells = 0;
+	numOfyCells = 0;
+	numOfTotalCells = 0;
+	meshCells.clear();
+	meshCellFaces.clear();
+	dx = 0.0;
+	dy = 0.0;
+}
