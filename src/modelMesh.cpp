@@ -185,8 +185,8 @@ void modelMesh::setConstantYVelocity(double velocity){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			
-			cell->northFacePtr->yVl = velocity;
-			cell->southFacePtr->yVl = velocity;
+			cell->westFacePtr->yVl = velocity;
+			cell->eastFacePtr->yVl = velocity;
 		}
 	}
 }
@@ -198,8 +198,8 @@ void modelMesh::setConstantYVelocity(double velocity, int row){
 	for (int i = 0; i < numOfxCells; i++){
 		meshCell* cell = getCellByLoc(i,row);
 		
-		cell->northFacePtr->yVl = velocity;
-		cell->southFacePtr->yVl = velocity;
+		cell->westFacePtr->yVl = velocity;
+		cell->eastFacePtr->yVl = velocity;
 	}
 }
 
