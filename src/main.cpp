@@ -1,6 +1,6 @@
 #include <Eigen/Sparse>
 #include <iostream>
-#include "coreSolver.h"
+#include "CRAM.h"
 #include "mpiProcess.h"
 #include <chrono>
 #include <math.h>

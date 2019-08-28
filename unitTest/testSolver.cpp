@@ -1,7 +1,7 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <Eigen/Eigenvalues>
-#include "coreSolver.h"
+#include "CRAM.h"
 #include "mpiProcess.h"
 #include <chrono>
 #include <assert.h>

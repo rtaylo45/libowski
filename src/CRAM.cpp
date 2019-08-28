@@ -1,4 +1,4 @@
-#include "coreSolver.h"
+#include "CRAM.h"
 #include "mpiProcess.h"
 #include <iostream>
 #define MTAG1 1
