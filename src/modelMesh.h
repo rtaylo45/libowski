@@ -3,7 +3,7 @@
 // 
 // The model mesh. Houses info on the problem domain
 //*****************************************************************************
-#include "MeshCellDataType.h"
+#include "meshCellData.h"
 #include <vector>
 #include <assert.h>
 
@@ -67,4 +67,8 @@ class modelMesh {
 	void createCellFaces();
 	// Checks the i,j for validity
 	bool checkCellLoc(int, int);
+
+	public:
+	// Sets a constant x velocity across the whole problem
+	void setConstantXVelocity(double);
 };

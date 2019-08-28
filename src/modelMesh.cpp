@@ -4,7 +4,7 @@
 // The mesh class. Houses info on the problem domain
 //*****************************************************************************
 #include <iostream>
-#include "ModelMeshType.h"
+#include "modelMesh.h"
 
 //*****************************************************************************
 // Builds the problem mesh
@@ -14,6 +14,9 @@ void modelMesh::buildGeometry(){
 	// Creates the mesh cells
 	createCells();
 	
+	// Creates the cell faces
+	//createCellFaces();
+
 	// Connects the mesh cells
 	connectCells();
 }
@@ -39,10 +42,17 @@ void modelMesh::createCells(){
 // Creates the cell faces
 //*****************************************************************************
 void modelMesh::createCellFaces(){
-	int absIndex = 0;
+	int absIndex = 0, jmax;
 	
-	for (int i = 0; i < numOfxCells+1; i++){
-		for (int j = 0; j < numOfyCells+1; j++){
+	//int k = (numOfxCells+1)*(2*numOfyCells+1) + numOfxCells;
+	for (int i = 0; i <= 2*numOfxCells; i++){
+		if (i%2){
+			jmax = numOfyCells+1;
+		}
+		else{
+			jmax = numOfyCells;
+		}
+		for (int j = 0; j < jmax; j++){
 			meshCellFace face(i, j, absIndex);
 			meshCellFaces.push_back(face);
 			absIndex++;
@@ -58,18 +68,26 @@ void modelMesh::connectCells(){
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
-			
-			cell->northCellPtr = getCellByLoc(i,j+1);
-			cell->southCellPtr = getCellByLoc(i,j-1);
-			cell->westCellPtr = getCellByLoc(i-1,j);
-			cell->eastCellPtr = getCellByLoc(i+1,j);
+			std::cout << i << " " << j << std::endl;
+			std::cout << "Current Node " << cell->i << ' ' << cell->j << std::endl;
+			//cell->northCellPtr = getCellByLoc(i,j+1);
+			//cell->southCellPtr = getCellByLoc(i,j-1);
+			//cell->westCellPtr = getCellByLoc(i-1,j);
+			//cell->eastCellPtr = getCellByLoc(i+1,j);
 
 			// Hope i got this part right
-			cell->eastFacePtr = &meshCellFaces[i*(2*numOfyCells+1) + j];
-			cell->westFacePtr = &meshCellFaces[(i+1)*(2*numOfyCells+1) + j];
-			cell->southFacePtr = &meshCellFaces[numOfyCells*(2*i+1) + i + j];
-			cell->northFacePtr = &meshCellFaces[numOfyCells*(2*i+1) + i + j + 1];
-			//std::cout << "Current Node " << Node->i << ' ' << Node->j << std::endl;
+			//int kEast = i*(2*numOfyCells+1) + j;
+			//int kWest = (i+1)*(2*numOfyCells+1) + j;
+			//int kSouth = numOfyCells*(2*i+1) + i + j;
+			//int kNorth = numOfyCells*(2*i+1) + i + j + 1;
+		
+			//std::cout << i << " " << j << " " << kEast << " " << 
+			//	kSouth << " " << kNorth << std::endl;	
+			//cell->eastFacePtr = &meshCellFaces[kEast];
+			//cell->westFacePtr = &meshCellFaces[kWest];
+			//cell->southFacePtr = &meshCellFaces[kSouth];
+			//cell->northFacePtr = &meshCellFaces[kNorth];
+
 			//if (Node->northPtr != nullptr)
 			//	std::cout << "North Node " <<Node->northPtr->i << ' ' << Node->northPtr->j << std::endl;
 			//if (Node->southPtr != nullptr)
@@ -81,6 +99,7 @@ void modelMesh::connectCells(){
 			//std::cout << " " << std::endl;
 		}
 	}
+	std::cout << meshCellFaces.size() << std::endl;
 }
 
 //*****************************************************************************
@@ -131,3 +150,19 @@ bool modelMesh::checkCellLoc(int i, int j){
 	else
 		return true;
 }
+
+//*****************************************************************************
+// Sets a constant x velocity across the whole problem
+//*****************************************************************************
+void modelMesh::setConstantXVelocity(double velocity){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			
+			//std::cout << i << j << std::endl;
+			//cell->northFacePtr->xVl = velocity;
+			//cell->southFacePtr->xVl = velocity;
+		}
+	}
+}
+
