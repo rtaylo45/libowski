@@ -67,23 +67,21 @@ void modelMesh::createCellFaces(){
 void modelMesh::connectCells(){
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
-			//std::cout << i << " " << j << std::endl;
 			meshCell* cell = getCellByLoc(i,j);
-			//std::cout << cell<< std::endl;
-			//std::cout << "Current Node " << cell->i << ' ' << cell->j << std::endl;
+
+			// Sets pointer to the cells
 			cell->northCellPtr = getCellByLoc(i,j+1);
 			cell->southCellPtr = getCellByLoc(i,j-1);
 			cell->westCellPtr = getCellByLoc(i-1,j);
 			cell->eastCellPtr = getCellByLoc(i+1,j);
 
-			// Hope i got this part right
+			// Gets the absolute indices for the cell faces
 			int kEast = i*(2*numOfyCells+1) + j;
 			int kWest = (i+1)*(2*numOfyCells+1) + j;
 			int kSouth = numOfyCells*(2*i+1) + i + j;
 			int kNorth = numOfyCells*(2*i+1) + i + j + 1;
-		
-			//std::cout << i << " " << j << " " << kEast << " " << kWest << " " <<
-			//	kSouth << " " << kNorth << std::endl;	
+	
+			// Sets the pointers for cell faces	
 			cell->eastFacePtr = &meshCellFaces[kEast];
 			cell->westFacePtr = &meshCellFaces[kWest];
 			cell->southFacePtr = &meshCellFaces[kSouth];
@@ -243,10 +241,22 @@ int modelMesh::addSpecies(double molarMass, double initCon = 0.0){
 // @param j			y index
 // @param specID	Species ID
 //*****************************************************************************
-species* modelMesh::getSpecies(int i, int j, int specID){
+species* modelMesh::getSpeciesPtr(int i, int j, int specID){
 	meshCell* cell = getCellByLoc(i,j);
 	species* specPtr = cell->getSpecies(specID);
 	return specPtr;
+}
+//*****************************************************************************
+// Gets the species concentration
+//
+//	@param i			x index
+// @param j			y index
+// @param specID	Species ID
+//*****************************************************************************
+double modelMesh::getSpecies(int i, int j, int specID){
+	species* spec = getSpeciesPtr(i, j, specID);
+	double specCon = spec->c;
+	return specCon;
 }
 
 

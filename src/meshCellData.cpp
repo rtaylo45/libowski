@@ -34,8 +34,4 @@ species* meshCell::getSpecies(int specID){
 //*****************************************************************************
 void meshCell::cleanSpecies(){
 	speciesVector.clear();
-	//for(int i = 0; i < speciesVector.size(); i++){
-	//		species spec = speciesVector[i];
-	//		spec.clean();
-	//}
 }

@@ -29,19 +29,19 @@ void testInitSpecies(){
 	int specID1, specID2;
 	double spec1Con, spec2Con;
 
-	modelMesh mesh(xCells, yCells, xLength, yLength);
-	specID1 = mesh.addSpecies(spec1MM, spec1InitCon);
-	specID2 = mesh.addSpecies(spec2MM, spec2InitCon);
+	modelMesh model(xCells, yCells, xLength, yLength);
+	specID1 = model.addSpecies(spec1MM, spec1InitCon);
+	specID2 = model.addSpecies(spec2MM, spec2InitCon);
 
 	for (int i = 0; i < xCells; i++){
 		for (int j = 0; j < yCells; j++){
 			// Gets species pointers
-			species* spec1 = mesh.getSpecies(i, j, specID1);
-			species* spec2 = mesh.getSpecies(i, j, specID2);
+			species* spec1 = model.getSpeciesPtr(i, j, specID1);
+			species* spec2 = model.getSpeciesPtr(i, j, specID2);
 
 			// Gets species Concentrations
-			spec1Con = spec1->c;
-			spec2Con = spec2->c;
+			spec1Con = model.getSpecies(i, j, specID1);;
+			spec2Con = model.getSpecies(i, j, specID2);;
 
 			// Makes sure all species concentrations are right
 			assert(1.0 == spec1Con);
@@ -52,7 +52,7 @@ void testInitSpecies(){
 		}
 	}
 	
-	mesh.clean();
+	model.clean();
 
 }
 

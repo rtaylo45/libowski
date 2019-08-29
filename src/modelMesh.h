@@ -71,7 +71,9 @@ class modelMesh {
 	// Adds a species to the system
 	int addSpecies(double, double);
 	// Gets a pointer to the spcies object
-	species* getSpecies(int, int, int);
+	species* getSpeciesPtr(int, int, int);
+	// Gets the species concentration
+	double getSpecies(int, int, int);
 	// Cleans the model
 	void clean();
 	// Cleans species
