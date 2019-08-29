@@ -62,9 +62,10 @@ class meshCell {
 		x = xCor;
 		y = yCor;	
 	}
-	//**************************************************************************
 	// Add species
-	//**************************************************************************
 	void addSpecies(double, double);
+	// Clean species
+	void cleanSpecies();
+
 
 };

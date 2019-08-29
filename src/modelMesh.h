@@ -28,6 +28,8 @@ class modelMesh {
 	double dx = 0.0;
 	// Change in y direction
 	double dy = 0.0;
+	// Number of specie in the model
+	int numOfSpecs = 0;
 	
 	public:
 	//**************************************************************************
@@ -66,10 +68,12 @@ class modelMesh {
 	void setConstantYVelocity(double);
 	// Sets a constant y velocity across a row of cells
 	void setConstantYVelocity(double, int);
-	// Adds a transported species to the model
-	int addTransportedSpecies(double, double);
+	// Adds a species to the system
+	int addSpecies(double, double);
 	// Cleans the model
 	void clean();
+	// Cleans species
+	void cleanSpecies();
 
 	private:
 	// Creates the cells

@@ -1,13 +1,12 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include "CRAM.h"
-#include "mpiProcess.h"
-#include "modelMesh.h"
 #include <assert.h>
 #include <iostream>
 #include <vector>
-#include <random>
 #include <math.h>
+#include "CRAM.h"
+#include "mpiProcess.h"
+#include "modelMesh.h"
 
 using namespace Eigen;
 
@@ -22,10 +21,19 @@ void testInit(){
 	mesh.clean();
 
 }
+void testInitSpecies(){
+	int specID1, specID2;
+	modelMesh mesh(2, 5, 1.0, 1.0);
+	specID1 = mesh.addSpecies(1.0, 2.0);
+	specID2 = mesh.addSpecies(2.0, 2.0);
+	mesh.clean();
+
+}
 
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
 	testInit();
+	testInitSpecies();
 }

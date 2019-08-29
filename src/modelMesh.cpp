@@ -104,6 +104,9 @@ void modelMesh::connectCells(){
 
 //*****************************************************************************
 // Returns a pointer to the node by i,j location
+//
+// @param i	x index of cell
+// @param j y index of cell
 //*****************************************************************************
 meshCell* modelMesh::getCellByLoc(int i, int j){
 	meshCell *returnPtr;
@@ -121,6 +124,8 @@ meshCell* modelMesh::getCellByLoc(int i, int j){
 
 //*****************************************************************************
 // Returns a pointer to the node by absolution index
+//
+// @param k	Absolute index of cell
 //*****************************************************************************
 meshCell* modelMesh::getCellByLoc(int k){
 	meshCell *returnPtr;
@@ -136,6 +141,9 @@ meshCell* modelMesh::getCellByLoc(int k){
 
 //*****************************************************************************
 // Checks to see if i,j location is valid
+//
+// @param i	x index of cell
+// @param j	y index of cell
 //*****************************************************************************
 bool modelMesh::checkCellLoc(int i, int j){
 
@@ -153,6 +161,8 @@ bool modelMesh::checkCellLoc(int i, int j){
 
 //*****************************************************************************
 // Sets a constant x velocity across the whole problem
+//
+// @param velocity	x velocity [ft/s]
 //*****************************************************************************
 void modelMesh::setConstantXVelocity(double velocity){
 	for (int i = 0; i < numOfxCells; i++){
@@ -167,6 +177,8 @@ void modelMesh::setConstantXVelocity(double velocity){
 
 //*****************************************************************************
 // Sets a constant x velocity across a channel
+//
+// @param velocity	x velocity [ft/s]
 //*****************************************************************************
 void modelMesh::setConstantXVelocity(double velocity, int column){
 	for (int j = 0; j < numOfyCells; j++){
@@ -179,6 +191,8 @@ void modelMesh::setConstantXVelocity(double velocity, int column){
 
 //*****************************************************************************
 // Sets a constant y velocity across the whole problem
+//
+// @param velocity	y velocity [ft/s]
 //*****************************************************************************
 void modelMesh::setConstantYVelocity(double velocity){
 	for (int i = 0; i < numOfxCells; i++){
@@ -192,7 +206,9 @@ void modelMesh::setConstantYVelocity(double velocity){
 }
 
 //*****************************************************************************
-// Sets a constant x velocity across a channel
+// Sets a constant y velocity across a channel
+//
+// @param velocity	y velocity [ft/s]
 //*****************************************************************************
 void modelMesh::setConstantYVelocity(double velocity, int row){
 	for (int i = 0; i < numOfxCells; i++){
@@ -202,6 +218,25 @@ void modelMesh::setConstantYVelocity(double velocity, int row){
 		cell->eastFacePtr->yVl = velocity;
 	}
 }
+//*****************************************************************************
+// Adds a species to the model
+//
+// @param molarMass	Molar mass of species [lbm/mol]
+// @param [initCon]	Initial concentration [lbm/ft^3]
+//*****************************************************************************
+int modelMesh::addSpecies(double molarMass, double initCon = 0.0){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+
+			cell->addSpecies(molarMass, initCon);
+		}
+	}
+	int specID = numOfSpecs;
+	numOfSpecs++;
+	return specID;
+}
+
 
 //*****************************************************************************
 // Cleans the model
@@ -217,4 +252,16 @@ void modelMesh::clean(){
 	meshCellFaces.clear();
 	dx = 0.0;
 	dy = 0.0;
+	cleanSpecies();
+}
+//*****************************************************************************
+// Cleans species in the model
+//*****************************************************************************
+void modelMesh::cleanSpecies(){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->cleanSpecies();
+		}
+	}
 }
