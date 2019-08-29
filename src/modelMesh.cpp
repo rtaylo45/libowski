@@ -236,6 +236,18 @@ int modelMesh::addSpecies(double molarMass, double initCon = 0.0){
 	numOfSpecs++;
 	return specID;
 }
+//*****************************************************************************
+// Returns a pointer to the spcies object in a cell
+//
+//	@param i			x index
+// @param j			y index
+// @param specID	Species ID
+//*****************************************************************************
+species* modelMesh::getSpecies(int i, int j, int specID){
+	meshCell* cell = getCellByLoc(i,j);
+	species* specPtr = cell->getSpecies(specID);
+	return specPtr;
+}
 
 
 //*****************************************************************************

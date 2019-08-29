@@ -64,6 +64,8 @@ class meshCell {
 	}
 	// Add species
 	void addSpecies(double, double);
+	// Gets a pointer to the species
+	species* getSpecies(int);
 	// Clean species
 	void cleanSpecies();
 
