@@ -66,6 +66,8 @@ class modelMesh {
 	void setConstantYVelocity(double);
 	// Sets a constant y velocity across a row of cells
 	void setConstantYVelocity(double, int);
+	// Adds a transported species to the model
+	int addTransportedSpecies(double, double);
 	// Cleans the model
 	void clean();
 

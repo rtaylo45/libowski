@@ -5,6 +5,9 @@
 // on a 2-D finite volume discritization 
 //*****************************************************************************
 #include "meshCellFace.h"
+#include "species.h"
+#include <vector>
+
 class meshCell {
 
 	// Class attributes
@@ -19,6 +22,8 @@ class meshCell {
 	double x;
 	// Y position defined at the cent of the cell
 	double y;
+	// Vector of the species in the cell
+	std::vector<species> speciesVector;
 
 	// Connection info for mesh cells
 	// Pointer to the east mesh cell
@@ -56,5 +61,10 @@ class meshCell {
 		absIndex = absoluteIndex;
 		x = xCor;
 		y = yCor;	
-	}	
+	}
+	//**************************************************************************
+	// Add species
+	//**************************************************************************
+	void addSpecies(double, double);
+
 };
