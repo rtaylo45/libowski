@@ -28,6 +28,8 @@ class modelMesh {
 	double dx = 0.0;
 	// Change in y direction
 	double dy = 0.0;
+	// Number of specie in the model
+	int numOfSpecs = 0;
 	
 	public:
 	//**************************************************************************
@@ -35,8 +37,8 @@ class modelMesh {
 	// 
 	// @param xCells		Number of cells in the x direction
 	// @param yCells		Number of cells in the y direction
-	// @param xDirLength	Total length in the x direction
-	// @param yDirLength	Total length in the y direction
+	// @param xDirLength	Total length in the x direction [ft]
+	// @param yDirLength	Total length in the y direction [ft]
 	//**************************************************************************
 	modelMesh(int xCells, int yCells, double xDirLength, double yDirLength){
 		numOfxCells = xCells;
@@ -66,8 +68,18 @@ class modelMesh {
 	void setConstantYVelocity(double);
 	// Sets a constant y velocity across a row of cells
 	void setConstantYVelocity(double, int);
+	// Adds a species to the system
+	int addSpecies(double, double);
+	// Gets a pointer to the spcies object
+	species* getSpeciesPtr(int, int, int);
+	// Gets the species concentration
+	double getSpecies(int, int, int);
+	// Sets the species source terms
+	void setSpeciesSource(int, int, int, std::vector<double>, double);
 	// Cleans the model
 	void clean();
+	// Cleans species
+	void cleanSpecies();
 
 	private:
 	// Creates the cells
