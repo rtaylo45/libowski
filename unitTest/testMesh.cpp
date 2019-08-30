@@ -28,11 +28,21 @@ void testInitSpecies(){
 	double spec1MM = 2.0, spec2MM = 3.0;
 	int specID1, specID2;
 	double spec1Con, spec2Con;
+	std::vector<double> spec1Coeffs = {5.0, 10.0};
+	std::vector<double> spec2Coeffs = {6.0, 11.0};
+	double spec1S = 50.0, spec2S = 100.0;
 
 	modelMesh model(xCells, yCells, xLength, yLength);
 	specID1 = model.addSpecies(spec1MM, spec1InitCon);
 	specID2 = model.addSpecies(spec2MM, spec2InitCon);
 
+	// Sets sourse terms for the model
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			model.setSpeciesSource(i,j,specID1,	spec1Coeffs, spec1S);
+			model.setSpeciesSource(i,j,specID2,	spec2Coeffs, spec2S);
+		}
+	}
 	for (int i = 0; i < xCells; i++){
 		for (int j = 0; j < yCells; j++){
 			// Gets species pointers

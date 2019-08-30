@@ -258,7 +258,23 @@ double modelMesh::getSpecies(int i, int j, int specID){
 	double specCon = spec->c;
 	return specCon;
 }
-
+//*****************************************************************************
+// Sets the source terms for a species in a cell
+//
+//	@param i			x index
+// @param j			y index
+// @param specID	Species ID
+// @param coeffs	A vector of species coefficients size of number of species
+//						[lbm/s]
+// @param s			Constant source in cell [lbm/ft^3/s]
+//*****************************************************************************
+void modelMesh::setSpeciesSource(int i, int j, int specID, std::vector<double> 
+		coeffs, double s){
+	assert(coeffs.size() == numOfSpecs);
+	species* spec = getSpeciesPtr(i, j, specID);
+	spec->coeffs = coeffs;
+	spec->s = s;
+}
 
 //*****************************************************************************
 // Cleans the model
