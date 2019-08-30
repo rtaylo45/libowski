@@ -6,7 +6,8 @@
 #include <math.h>
 #include "CRAM.h"
 #include "mpiProcess.h"
-#include "modelMesh.h"
+//#include "modelMesh.h"
+#include "speciesDriver.h"
 
 using namespace Eigen;
 
@@ -66,10 +67,57 @@ void testInitSpecies(){
 
 }
 
+void testSpeciesDriver(){
+	int xCells = 2, yCells = 5;
+	double xLength = 1.0, yLength = 1.0;
+	double spec1InitCon = 1.0, spec2InitCon = 2.0;
+	double spec1MM = 2.0, spec2MM = 3.0;
+	int specID1, specID2;
+	double spec1Con, spec2Con;
+	std::vector<double> spec1Coeffs = {5.0, 10.0};
+	std::vector<double> spec2Coeffs = {6.0, 11.0};
+	double spec1S = 50.0, spec2S = 100.0;
+
+	modelMesh model(xCells, yCells, xLength, yLength);
+	speciesDriver species = speciesDriver(&model);
+	//specID1 = model.addSpecies(spec1MM, spec1InitCon);
+	//specID2 = model.addSpecies(spec2MM, spec2InitCon);
+
+	//// Sets sourse terms for the model
+	//for (int i = 0; i < xCells; i++){
+	//	for (int j = 0; j < yCells; j++){
+	//		model.setSpeciesSource(i,j,specID1,	spec1Coeffs, spec1S);
+	//		model.setSpeciesSource(i,j,specID2,	spec2Coeffs, spec2S);
+	//	}
+	//}
+	//for (int i = 0; i < xCells; i++){
+	//	for (int j = 0; j < yCells; j++){
+	//		// Gets species pointers
+	//		species* spec1 = model.getSpeciesPtr(i, j, specID1);
+	//		species* spec2 = model.getSpeciesPtr(i, j, specID2);
+
+	//		// Gets species Concentrations
+	//		spec1Con = model.getSpecies(i, j, specID1);;
+	//		spec2Con = model.getSpecies(i, j, specID2);;
+
+	//		// Makes sure all species concentrations are right
+	//		assert(1.0 == spec1Con);
+	//		assert(2.0 == spec2Con);
+	//		// Makes sure all species molar masses are right
+	//		assert(spec1->MM == spec1MM);
+	//		assert(spec2->MM == spec2MM);
+	//	}
+	//}
+	//
+	//model.clean();
+
+}
+
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
 	testInit();
 	testInitSpecies();
+	testSpeciesDriver();
 }
