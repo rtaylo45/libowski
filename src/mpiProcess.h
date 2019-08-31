@@ -36,7 +36,7 @@ class mpiProcess{
 	// Constructor
 	//**************************************************************************
 	public:
-	mpiProcess(){initMPI();};
+	mpiProcess();
 
 	// Definition of methods
 	public:

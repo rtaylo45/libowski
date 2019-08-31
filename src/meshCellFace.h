@@ -27,13 +27,7 @@ class meshCellFace {
 	// y direction length
 	double dy = 0.0;
 
-	//**************************************************************************
 	// Constructor
-	//**************************************************************************
-	meshCellFace(int iIndex, int jIndex, int absoluteIndex){
-		i = iIndex;	
-		j = jIndex;	
-		absIndex = absoluteIndex;	
-	}
+	meshCellFace(int, int, int);
 
 };

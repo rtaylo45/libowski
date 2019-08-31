@@ -32,28 +32,8 @@ class modelMesh {
 	int numOfSpecs = 0;
 	
 	public:
-	//**************************************************************************
 	// Constructor
-	// 
-	// @param xCells		Number of cells in the x direction
-	// @param yCells		Number of cells in the y direction
-	// @param xDirLength	Total length in the x direction [ft]
-	// @param yDirLength	Total length in the y direction [ft]
-	//**************************************************************************
-	modelMesh(int xCells, int yCells, double xDirLength, double yDirLength){
-		numOfxCells = xCells;
-		numOfyCells = yCells;
-		xLength = xDirLength;
-		yLength = yDirLength;
-		dx = xLength/(float)numOfxCells;
-		dy = yLength/(float)numOfyCells;
-		numOfTotalCells = numOfxCells*numOfyCells;
-
-		// Builds the geometry
-		buildGeometry();
-	}
-
-	public:
+	modelMesh(int, int, double, double);
 	// Builds the geometry
 	void buildGeometry();
 	// Gets the node by location from i,j

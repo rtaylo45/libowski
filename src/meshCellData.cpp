@@ -4,6 +4,24 @@
 #include "meshCellData.h"
 #include <assert.h>
 
+//**************************************************************************
+// Constructor
+//
+// @param iIndex			Index of cell in x direction
+// @param jIndex			Index of cell in y direction
+// @param absoluteIndex	Absolute index of the cell
+// @param xCor				Location of cell center in x direction
+// @param yCor				Location of cell center in y direction
+//**************************************************************************
+meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor, 
+		double yCor){
+	i = iIndex;
+	j = jIndex;
+	absIndex = absoluteIndex;
+	x = xCor;
+	y = yCor;	
+}
+
 //*****************************************************************************
 // Adds a species to the cell
 //
