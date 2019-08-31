@@ -10,6 +10,8 @@
 // direction is defined to go from bottom to top. Positive flow in the x
 // direction is defined to go from left to right.
 //*****************************************************************************
+#ifndef MESHCELLFACE_H
+#define MESHCELLFACE_H
 class meshCellFace {
 
 	public:
@@ -31,3 +33,4 @@ class meshCellFace {
 	meshCellFace(int, int, int);
 
 };
+#endif

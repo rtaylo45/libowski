@@ -4,6 +4,8 @@
 // Mesh cell data type. This class holds scalar cell data information based
 // on a 2-D finite volume discritization 
 //*****************************************************************************
+#ifndef MESHCELLDATA_H
+#define MESHCELLDATA_H
 #include "meshCellFace.h"
 #include "species.h"
 #include <vector>
@@ -57,3 +59,4 @@ class meshCell {
 
 
 };
+#endif

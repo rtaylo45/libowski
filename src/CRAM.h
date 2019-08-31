@@ -8,7 +8,8 @@
 // using the CRAM Method. Returns the solution to the system.
 // The code was copied from pyne CRAM solver
 //*****************************************************************************
-
+#ifndef CRAM_H
+#define CRAM_H
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -44,3 +45,4 @@ class SolverType {
 	//*************************************************************************
 	Eigen::SparseMatrix<double> buildSparseIdentity(int n);
 };
+#endif

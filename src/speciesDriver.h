@@ -4,7 +4,12 @@
 // Driver class for transported species. This class is used to build the 
 // species transport problem
 //*****************************************************************************
+#ifndef SPECIESDRIVER_H
+#define SPECIESDRIVER_H
 #include "modelMesh.h"
+#include "meshCellData.h"
+#include "meshCellFace.h"
+#include "species.h"
 
 class speciesDriver {
 
@@ -26,3 +31,4 @@ class speciesDriver {
 		modelPtr = model;
 	}
 };
+#endif

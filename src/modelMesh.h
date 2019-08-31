@@ -3,7 +3,10 @@
 // 
 // The model mesh. Houses info on the problem domain
 //*****************************************************************************
+#ifndef MODELMESH_H
+#define MODELMESH_H
 #include "meshCellData.h"
+#include "meshCellFace.h"
 #include <vector>
 #include <assert.h>
 
@@ -72,3 +75,4 @@ class modelMesh {
 	bool checkCellLoc(int, int);
 
 };
+#endif

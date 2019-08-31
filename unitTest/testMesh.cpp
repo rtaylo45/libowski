@@ -6,8 +6,10 @@
 #include <math.h>
 #include "CRAM.h"
 #include "mpiProcess.h"
-//#include "modelMesh.h"
+#include "modelMesh.h"
 #include "speciesDriver.h"
+#include "meshCellData.h"
+#include "species.h"
 
 using namespace Eigen;
 

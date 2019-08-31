@@ -3,6 +3,8 @@
 //
 // Defines a chemical or iostopic conserved species
 //*****************************************************************************
+#ifndef SPECIES_H
+#define SPECIES_H
 #include <vector>
 
 class species {
@@ -26,3 +28,4 @@ class species {
 	// Clean
 	void clean();
 };
+#endif
