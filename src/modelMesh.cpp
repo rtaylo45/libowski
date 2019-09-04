@@ -237,65 +237,6 @@ void modelMesh::setConstantYVelocity(double velocity, int row){
 		cell->eastFacePtr->yVl = velocity;
 	}
 }
-//*****************************************************************************
-// Adds a species to the model
-//
-// @param molarMass	Molar mass of species [lbm/mol]
-// @param [initCon]	Initial concentration [lbm/ft^3]
-//*****************************************************************************
-int modelMesh::addSpecies(double molarMass, double initCon = 0.0){
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
-			meshCell* cell = getCellByLoc(i,j);
-
-			cell->addSpecies(molarMass, initCon);
-		}
-	}
-	int specID = numOfSpecs;
-	numOfSpecs++;
-	return specID;
-}
-//*****************************************************************************
-// Returns a pointer to the spcies object in a cell
-//
-//	@param i			x index
-// @param j			y index
-// @param specID	Species ID
-//*****************************************************************************
-species* modelMesh::getSpeciesPtr(int i, int j, int specID){
-	meshCell* cell = getCellByLoc(i,j);
-	species* specPtr = cell->getSpecies(specID);
-	return specPtr;
-}
-//*****************************************************************************
-// Gets the species concentration
-//
-//	@param i			x index
-// @param j			y index
-// @param specID	Species ID
-//*****************************************************************************
-double modelMesh::getSpecies(int i, int j, int specID){
-	species* spec = getSpeciesPtr(i, j, specID);
-	double specCon = spec->c;
-	return specCon;
-}
-//*****************************************************************************
-// Sets the source terms for a species in a cell
-//
-//	@param i			x index
-// @param j			y index
-// @param specID	Species ID
-// @param coeffs	A vector of species coefficients size of number of species
-//						[lbm/s]
-// @param s			Constant source in cell [lbm/ft^3/s]
-//*****************************************************************************
-void modelMesh::setSpeciesSource(int i, int j, int specID, std::vector<double> 
-		coeffs, double s){
-	assert(coeffs.size() == numOfSpecs);
-	species* spec = getSpeciesPtr(i, j, specID);
-	spec->coeffs = coeffs;
-	spec->s = s;
-}
 
 //*****************************************************************************
 // Cleans the model
@@ -311,16 +252,4 @@ void modelMesh::clean(){
 	meshCellFaces.clear();
 	dx = 0.0;
 	dy = 0.0;
-	cleanSpecies();
-}
-//*****************************************************************************
-// Cleans species in the model
-//*****************************************************************************
-void modelMesh::cleanSpecies(){
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
-			meshCell* cell = getCellByLoc(i,j);
-			cell->cleanSpecies();
-		}
-	}
 }

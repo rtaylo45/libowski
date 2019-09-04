@@ -148,7 +148,6 @@ void writePrecursorSolution(MatrixXd sol, double t){
 		else {s++;}
 	}
 
-
 }
 //*****************************************************************************
 // Builds the species matrix for precursor problem
