@@ -82,6 +82,7 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 void speciesDriver::solve(double solveTime){
 	SolverType ExpSolver;
 	Eigen::SparseMatrix<double> A = buildTransMatrix();
+	//Eigen::Vector<double> N0 = buildInitialConditionVector();
 }
 
 //*****************************************************************************
@@ -105,7 +106,6 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 	for (int cellID = 0; cellID < totalCells; cellID++){
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(i,j);
-		// global cell ID
 
 		// Gets pointer to connecting cells
 		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
@@ -127,28 +127,31 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
+			// Gets the species pointer
 			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
+			std::cout << thisSpecPtr->s << std::endl;
+			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
 			double thisCoeff = 0.0;
 
 			// Sets the north flow coefficient 
-			if (northTransition and thisCellNorthCellPtr){
+			if (thisCellNorthCellPtr){
 				// Flow going out of cell
 				if (northTransition < 0.0){
 					thisCoeff += northTransition;
 				}
 				// Flow going into cell from cell above
 				else{
-					j = getAi(thisCellNorthCellPtr->k, totalCells, specID, 
-						totalCells);
-					tripletList.push_back(T(i, j, northTransition));
+					//j = getAi(thisCellNorthCellPtr->absIndex, totalCells, specID, 
+					//	totalCells);
+					//tripletList.push_back(T(i, j, northTransition));
 				}
 			}	
 			// Sets the south flow coefficient
 			if (southTransition and thisCellSouthCellPtr){
 				// Flow going into cell
-				if (southTransition){
-					j = getAi(thisCellSouthCellPtr->k, totalCells, specID, 
+				if (southTransition > 0.0){
+					j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
 						totalCells);
 					tripletList.push_back(T(i, j, southTransition));
 				}
@@ -159,11 +162,49 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			}
 			// Sets the east flow coefficient
 			if(eastTransition and thisCellEastCellPtr){
-
-
+				// Flow going into cell
+				if(eastTransition > 0.0){
+					j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
+						totalCells);
+					tripletList.push_back(T(i, j, eastTransition));
+				}
+				// Flow leaving the cell
+				else{
+					thisCoeff += eastTransition;
+				}
 			}
+			// Sets the west flow coefficient
+			if(westTransition and thisCellWestCellPtr){
+				// Flow leaving the cell
+				if(westTransition < 0.0){
+					thisCoeff += eastTransition;
+				}
+				// Flow going into cell
+				else{
+					j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
+						totalCells);
+					tripletList.push_back(T(i, j, westTransition));
+				}
+			}
+			// Sets the coefficients for non-constant source terms
+			for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
+				double coeff = thisSpecPtr->coeffs[specCounter];
+				if (specCounter == specID){
+					thisCoeff += coeff;
+				}
+				else{
+					j = getAi(cellID, totalCells, specCounter, totalSpecs);
+					tripletList.push_back(T(i, j, coeff));
+				}
+			}
+			// Sets the constant source terms
+			//tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
+
+			// Adds the coeff for this species 
+			//tripletList.push_back(T(i, i, thisCoeff));
 		}
 	}
+	//A.setFromTriplets(tripletList.begin(), tripletList.end());
 	return A;
 }
 
@@ -183,7 +224,8 @@ void speciesDriver::clean(){
 // Takes the cell absID and specID and returns a unique location (row 
 // or column for that combination in a square matrix
 //*****************************************************************************
-int getAi(int cellAbsIndex, int totCells, int specID, int totSpecs){
+int speciesDriver::getAi(int cellAbsIndex, int totCells, int specID, int 
+		totSpecs){
 	int rowsBefore = (cellAbsIndex-1)*totSpecs;
 	return rowsBefore + specID;
 }
