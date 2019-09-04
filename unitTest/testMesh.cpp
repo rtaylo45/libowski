@@ -90,7 +90,7 @@ void testSpeciesSolver(){
 	double xLength = 1.0, yLength = 1.0;
 	double xenonInitCon = 0.0, iodineInitCon = 0.0;
 	double xenonMM = 135.0, iodineMM = 135.0;
-	double totalTime = 10000.0;
+	double t = 10000.0;
    double lambda_I = 2.11E-5;
    double lambda_xe = 2.9306E-5;
    double sigma_a = 2.002E-22;
@@ -98,6 +98,7 @@ void testSpeciesSolver(){
    double flux = 2.5E16;
    double gamma_xe = 0.002468;
    double gamma_I = 0.063033;
+	double N_xe_0 = 0.0, N_I_0 = 0.0;
 	int xenonID, iodineID;
 	double xenonCon, iodineCon;
 	std::vector<double> xenonCoeffs = {-lambda_xe-sigma_a*flux, lambda_I};
@@ -107,18 +108,33 @@ void testSpeciesSolver(){
 
 	modelMesh model(xCells, yCells, xLength, yLength);
 	speciesDriver spec = speciesDriver(&model);
-	xenonID = spec.addSpecies(xenonMM, xenonInitCon);
-	iodineID = spec.addSpecies(iodineMM, iodineInitCon);
+	xenonID = spec.addSpecies(xenonMM, N_xe_0);
+	iodineID = spec.addSpecies(iodineMM, N_I_0);
 
 	// Set source
 	spec.setSpeciesSource(0, 0, xenonID, xenonCoeffs, xenonS);
 	spec.setSpeciesSource(0, 0, iodineID, iodineCoeffs, iodineS);
 
-	spec.solve(totalTime);
+	Eigen::VectorXd sol = spec.solve(t);
+	std::cout << sol << std::endl;
+	double a = lambda_xe + sigma_a*flux;
+   double b = gamma_I*Sigma_f*flux;
+   double d = lambda_I*N_I_0;
+   double k = N_xe_0 - (d-b)/(a - lambda_I) - (b + gamma_xe*Sigma_f*flux)/a;
+
+   // Xenon solution
+   double N_xe = -b/(a-lambda_I)*exp(-lambda_I*t) + b/a +
+      d*exp(-lambda_I*t)/(a - lambda_I) + k*exp(-a*t) +
+      gamma_xe*Sigma_f*flux/a;
+
+   // Iodine solution
+   double N_I = b/lambda_I*(1. - exp(-lambda_I*t)) + N_I_0*exp(-lambda_I*t);
+	std::cout << N_xe << std::endl;
+	std::cout << N_I << std::endl;
 
 	// Gets species Concentrations
-	xenonCon = spec.getSpecies(0, 0, xenonID);;
-	iodineCon = spec.getSpecies(0, 0, iodineID);;
+	xenonCon = spec.getSpecies(0, 0, xenonID);
+	iodineCon = spec.getSpecies(0, 0, iodineID);
 	
 	model.clean();
 	spec.clean();

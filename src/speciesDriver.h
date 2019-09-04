@@ -40,13 +40,15 @@ class speciesDriver {
 	// Sets the species source terms
 	void setSpeciesSource(int, int, int, std::vector<double>, double);
 	// Solves the species transport equation
-	void solve(double);
+	Eigen::VectorXd solve(double);
 	// Cleans species
 	void clean();
 
 	private:
 	// Builds the transition matrix
 	Eigen::SparseMatrix<double> buildTransMatrix();
+	// Builds the initial condition vector
+	Eigen::VectorXd buildInitialConditionVector();
 	// Gets the i or j index for transition matrix
 	int getAi(int, int, int, int);
 };
