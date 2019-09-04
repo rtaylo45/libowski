@@ -53,7 +53,7 @@ void modelMesh::createCells(){
 			double x = i*dx + dx/2.; // x-coordinate
 			double y = j*dy + dy/2.; // y-coordinate
 
-			meshCell cell(i, j, x, y, absIndex);
+			meshCell cell(i, j, x, y, absIndex, dx, dy);
 			meshCells.push_back(cell);	
 			absIndex++;
 		}

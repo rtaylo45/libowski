@@ -24,6 +24,10 @@ class meshCell {
 	double x;
 	// Y position defined at the cent of the cell
 	double y;
+	// dx of cell
+	double dx;
+	// dy of cell
+	double dy;
 	// Vector of the species in the cell
 	std::vector<species> speciesVector;
 
@@ -49,7 +53,7 @@ class meshCell {
 
 	public:
 	// Constructor
-	meshCell(int, int, int, double, double);
+	meshCell(int, int, int, double, double, double, double);
 	// Add species
 	void addSpecies(double, double);
 	// Gets a pointer to the species

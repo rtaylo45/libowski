@@ -9,6 +9,7 @@
 #include <vector>
 #include <Eigen/Core>
 #include <Eigen/Sparse>
+#include <iostream>
 #include "modelMesh.h"
 #include "meshCellData.h"
 #include "meshCellFace.h"
@@ -39,12 +40,14 @@ class speciesDriver {
 	// Sets the species source terms
 	void setSpeciesSource(int, int, int, std::vector<double>, double);
 	// Solves the species transport equation
-	void solve(double, Eigen::SparseVector<double>);
+	void solve(double);
 	// Cleans species
 	void clean();
 
 	private:
 	// Builds the transition matrix
 	Eigen::SparseMatrix<double> buildTransMatrix();
+	// Gets the i or j index for transition matrix
+	int getAi(int, int, int, int);
 };
 #endif

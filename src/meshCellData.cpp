@@ -12,14 +12,18 @@
 // @param absoluteIndex	Absolute index of the cell
 // @param xCor				Location of cell center in x direction
 // @param yCor				Location of cell center in y direction
+// @param dx				dx of cell
+// @param dy				dy of cell
 //**************************************************************************
 meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor, 
-		double yCor){
+		double yCor, double dx_, double dy_){
 	i = iIndex;
 	j = jIndex;
 	absIndex = absoluteIndex;
 	x = xCor;
-	y = yCor;	
+	y = yCor;
+	dx = dx_;
+	dy = dy_;	
 }
 
 //*****************************************************************************

@@ -79,29 +79,89 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 //*****************************************************************************
 // Solves the species transport equation
 //*****************************************************************************
-void speciesDriver::solve(double solveTime, Eigen::VectorXd N0){
+void speciesDriver::solve(double solveTime){
 	SolverType ExpSolver;
+	Eigen::SparseMatrix<double> A = buildTransMatrix();
 }
 
 //*****************************************************************************
 // Builds the transition matrix 
 //*****************************************************************************
 Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
+	// i, j index of transition matrix
+	int i, j;
 	typedef Eigen::Triplet<double> T;
 	std::vector<T> tripletList;
-	int totalSpecs = numOfSpecs + dummySpec;
+	int totalSpecs = numOfSpecs;
 	int totalCells = modelPtr->numOfTotalCells;
 	Eigen::VectorXd N0(totalSpecs*totalCells);
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
 	tripletList.reserve(nonZeros);	
 
 	// Init A matrix
-	Eigen::SparseMatrix<double> A(totalCells*totalSpecs, totalCells*totalSpecs);
+	Eigen::SparseMatrix<double> A(totalCells*totalSpecs + dummySpec, 
+			totalCells*totalSpecs + dummySpec);
 	// Loop over cells
-	for (int k = 0; k < totalSpecs*totalCells; k++){
+	for (int cellID = 0; cellID < totalCells; cellID++){
+		// Gets cell pointer
+		meshCell* thisCellPtr = modelPtr->getCellByLoc(i,j);
+		// global cell ID
+
+		// Gets pointer to connecting cells
+		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
+		meshCell* thisCellSouthCellPtr = thisCellPtr->southCellPtr;
+		meshCell* thisCellEastCellPtr = thisCellPtr->eastCellPtr;
+		meshCell* thisCellWestCellPtr = thisCellPtr->westCellPtr;
+
+		// Gets pointer to the cell faces
+		meshCellFace* thisCellNorthFacePtr = thisCellPtr->northFacePtr;
+		meshCellFace* thisCellSouthFacePtr = thisCellPtr->southFacePtr;
+		meshCellFace* thisCellEastFacePtr = thisCellPtr->eastFacePtr;
+		meshCellFace* thisCellWestFacePtr = thisCellPtr->westFacePtr;
+
+		// Gets the transition coefficient for species convective flux
+		double northTransition = -thisCellNorthFacePtr->xVl/thisCellPtr->dx;
+		double southTransition = thisCellSouthFacePtr->xVl/thisCellPtr->dx;
+		double eastTransition = thisCellEastFacePtr->yVl/thisCellPtr->dy;
+		double westTransition = -thisCellWestFacePtr->yVl/thisCellPtr->dy;
+
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
-			
+			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
+			i = getAi(cellID, totalCells, specID, totalSpecs);
+			double thisCoeff = 0.0;
+
+			// Sets the north flow coefficient 
+			if (northTransition and thisCellNorthCellPtr){
+				// Flow going out of cell
+				if (northTransition < 0.0){
+					thisCoeff += northTransition;
+				}
+				// Flow going into cell from cell above
+				else{
+					j = getAi(thisCellNorthCellPtr->k, totalCells, specID, 
+						totalCells);
+					tripletList.push_back(T(i, j, northTransition));
+				}
+			}	
+			// Sets the south flow coefficient
+			if (southTransition and thisCellSouthCellPtr){
+				// Flow going into cell
+				if (southTransition){
+					j = getAi(thisCellSouthCellPtr->k, totalCells, specID, 
+						totalCells);
+					tripletList.push_back(T(i, j, southTransition));
+				}
+				// Flow going into cell
+				else{
+					thisCoeff += southTransition;
+				}
+			}
+			// Sets the east flow coefficient
+			if(eastTransition and thisCellEastCellPtr){
+
+
+			}
 		}
 	}
 	return A;
@@ -117,4 +177,13 @@ void speciesDriver::clean(){
          cell->cleanSpecies();
       }
    }
+}
+
+//*****************************************************************************
+// Takes the cell absID and specID and returns a unique location (row 
+// or column for that combination in a square matrix
+//*****************************************************************************
+int getAi(int cellAbsIndex, int totCells, int specID, int totSpecs){
+	int rowsBefore = (cellAbsIndex-1)*totSpecs;
+	return rowsBefore + specID;
 }

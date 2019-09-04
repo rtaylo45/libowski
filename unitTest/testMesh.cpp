@@ -13,7 +13,10 @@
 #include "species.h"
 
 using namespace Eigen;
-
+//*****************************************************************************
+// test the init of the mesh class. For now i kinda just test to make sure
+// the function run.
+//*****************************************************************************
 void testInit(){
 
 	modelMesh mesh(2, 5, 1.0, 1.0);
@@ -26,6 +29,11 @@ void testInit(){
 
 }
 
+//*****************************************************************************
+// test the init of the species driver. Test to make sure multiple species
+// can be added. initial concentrations are added correctly. Molar masses
+// are added currect and sources are set right. 
+//*****************************************************************************
 void testSpeciesDriver(){
 	int xCells = 2, yCells = 5;
 	double xLength = 1.0, yLength = 1.0;
@@ -73,6 +81,10 @@ void testSpeciesDriver(){
 
 }
 
+//*****************************************************************************
+// Test that the species driver sets up the problem right and solves the 
+// system right. 
+//*****************************************************************************
 void testSpeciesSolver(){
 	int xCells = 1, yCells = 1;
 	double xLength = 1.0, yLength = 1.0;
@@ -102,6 +114,8 @@ void testSpeciesSolver(){
 	spec.setSpeciesSource(0, 0, xenonID, xenonCoeffs, xenonS);
 	spec.setSpeciesSource(0, 0, iodineID, iodineCoeffs, iodineS);
 
+	spec.solve(totalTime);
+
 	// Gets species Concentrations
 	xenonCon = spec.getSpecies(0, 0, xenonID);;
 	iodineCon = spec.getSpecies(0, 0, iodineID);;
@@ -111,6 +125,9 @@ void testSpeciesSolver(){
 
 }
 
+//*****************************************************************************
+// Main test
+//*****************************************************************************
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
