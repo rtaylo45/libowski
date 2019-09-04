@@ -14,6 +14,25 @@
 
 using namespace Eigen;
 //*****************************************************************************
+// Test if two number are approx equal
+//
+// @param goalVal		The real solution value
+// @param testVal		Test value
+// @param rtol			Relative tolerance
+// @param atol			Absolution tolerance
+//
+// Values for rtol and atol were taken from the default values for numpys 
+// isApprox function.
+//*****************************************************************************
+bool isApprox(double goalVal, double testVal, double rtol = 1e-5, double atol = 1e-8){
+	bool retBool = false;
+
+	double diff = abs(goalVal - testVal);
+	if (diff < rtol) { retBool = true; }
+	if (diff/goalVal < atol) { retBool = true; }
+	return retBool;
+}
+//*****************************************************************************
 // test the init of the mesh class. For now i kinda just test to make sure
 // the function run.
 //*****************************************************************************
@@ -85,7 +104,7 @@ void testSpeciesDriver(){
 // Test that the species driver sets up the problem right and solves the 
 // system right. 
 //*****************************************************************************
-void testSpeciesSolver(){
+void testXenonIodineNoFlow(){
 	int xCells = 1, yCells = 1;
 	double xLength = 1.0, yLength = 1.0;
 	double xenonInitCon = 0.0, iodineInitCon = 0.0;
@@ -115,8 +134,10 @@ void testSpeciesSolver(){
 	spec.setSpeciesSource(0, 0, xenonID, xenonCoeffs, xenonS);
 	spec.setSpeciesSource(0, 0, iodineID, iodineCoeffs, iodineS);
 
-	Eigen::VectorXd sol = spec.solve(t);
-	std::cout << sol << std::endl;
+	// Solve with CRAM
+	spec.solve(t);
+
+	// Stuff for analytical solution
 	double a = lambda_xe + sigma_a*flux;
    double b = gamma_I*Sigma_f*flux;
    double d = lambda_I*N_I_0;
@@ -129,12 +150,12 @@ void testSpeciesSolver(){
 
    // Iodine solution
    double N_I = b/lambda_I*(1. - exp(-lambda_I*t)) + N_I_0*exp(-lambda_I*t);
-	std::cout << N_xe << std::endl;
-	std::cout << N_I << std::endl;
 
 	// Gets species Concentrations
 	xenonCon = spec.getSpecies(0, 0, xenonID);
 	iodineCon = spec.getSpecies(0, 0, iodineID);
+	assert(isApprox(xenonCon, N_xe));
+	assert(isApprox(iodineCon, N_I));
 	
 	model.clean();
 	spec.clean();
@@ -150,5 +171,5 @@ int main(){
 
 	testInit();
 	testSpeciesDriver();
-	testSpeciesSolver();
+	testXenonIodineNoFlow();
 }

@@ -79,7 +79,7 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 //*****************************************************************************
 // Solves the species transport equation
 //*****************************************************************************
-Eigen::VectorXd speciesDriver::solve(double solveTime){
+void speciesDriver::solve(double solveTime){
 	Eigen::VectorXd sol;
 	SolverType ExpSolver;
 
@@ -87,7 +87,7 @@ Eigen::VectorXd speciesDriver::solve(double solveTime){
 	Eigen::VectorXd N0 = buildInitialConditionVector();
 
 	sol = ExpSolver.solve(A, N0, solveTime);
-	return sol;
+	unpackSolution(sol);
 }
 
 //*****************************************************************************
@@ -235,6 +235,29 @@ Eigen::VectorXd speciesDriver::buildInitialConditionVector(){
 	}
 	N0[N0.size()-1] = 1.0;
 	return N0;
+}
+
+//*****************************************************************************
+// Unpacks the solution from the matrix exp solve
+//*****************************************************************************
+void speciesDriver::unpackSolution(Eigen::VectorXd sol){
+	int i;
+	int totalSpecs = numOfSpecs;
+	int totalCells = modelPtr->numOfTotalCells;
+
+	// Loops over cells
+	for (int cellID = 0; cellID < totalCells; cellID++){
+		// Gets cell pointer
+		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
+
+		// Loop over species
+		for (int specID = 0; specID < totalSpecs; specID++){
+			// Gets the species pointer
+			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
+			i = getAi(cellID, totalCells, specID, totalSpecs);
+			thisSpecPtr->c = sol[i];
+		}
+	}
 }
 
 //*****************************************************************************
