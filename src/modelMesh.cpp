@@ -53,11 +53,12 @@ void modelMesh::createCells(){
 			double x = i*dx + dx/2.; // x-coordinate
 			double y = j*dy + dy/2.; // y-coordinate
 
-			meshCell cell(i, j, x, y, absIndex, dx, dy);
+			meshCell cell(i, j, absIndex, x, y,  dx, dy);
 			meshCells.push_back(cell);	
 			absIndex++;
 		}
 	}
+	std::cout << " " << std::endl;
 }
 //*****************************************************************************
 // Creates the cell faces
@@ -188,8 +189,8 @@ void modelMesh::setConstantXVelocity(double velocity){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			
-			cell->northFacePtr->xVl = velocity;
-			cell->southFacePtr->xVl = velocity;
+			cell->eastFacePtr->xVl = velocity;
+			cell->westFacePtr->xVl = velocity;
 		}
 	}
 }
@@ -199,12 +200,12 @@ void modelMesh::setConstantXVelocity(double velocity){
 //
 // @param velocity	x velocity [ft/s]
 //*****************************************************************************
-void modelMesh::setConstantXVelocity(double velocity, int column){
-	for (int j = 0; j < numOfyCells; j++){
-		meshCell* cell = getCellByLoc(column,j);
+void modelMesh::setConstantXVelocity(double velocity, int row){
+	for (int i = 0; i < numOfxCells; i++){
+		meshCell* cell = getCellByLoc(i,row);
 		
-		cell->northFacePtr->xVl = velocity;
-		cell->southFacePtr->xVl = velocity;
+		cell->eastFacePtr->xVl = velocity;
+		cell->westFacePtr->xVl = velocity;
 	}
 }
 
@@ -218,8 +219,8 @@ void modelMesh::setConstantYVelocity(double velocity){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			
-			cell->westFacePtr->yVl = velocity;
-			cell->eastFacePtr->yVl = velocity;
+			cell->northFacePtr->yVl = velocity;
+			cell->southFacePtr->yVl = velocity;
 		}
 	}
 }
@@ -229,12 +230,12 @@ void modelMesh::setConstantYVelocity(double velocity){
 //
 // @param velocity	y velocity [ft/s]
 //*****************************************************************************
-void modelMesh::setConstantYVelocity(double velocity, int row){
-	for (int i = 0; i < numOfxCells; i++){
-		meshCell* cell = getCellByLoc(i,row);
+void modelMesh::setConstantYVelocity(double velocity, int column){
+	for (int j = 0; j < numOfyCells; j++){
+		meshCell* cell = getCellByLoc(column,j);
 		
-		cell->westFacePtr->yVl = velocity;
-		cell->eastFacePtr->yVl = velocity;
+		cell->northFacePtr->yVl = velocity;
+		cell->southFacePtr->yVl = velocity;
 	}
 }
 

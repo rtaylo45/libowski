@@ -58,6 +58,8 @@ class meshCell {
 	void addSpecies(double, double);
 	// Gets a pointer to the species
 	species* getSpecies(int);
+	// Sets species concentration
+	void setSpeciesConcentration(double, int);
 	// Clean species
 	void cleanSpecies();
 

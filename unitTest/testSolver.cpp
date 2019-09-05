@@ -500,6 +500,7 @@ void neutronPrecursorProblem(int myid){
 
 	A = BuildSpeciesMatrix(coeff, varCoeff, numOfSpecs, numOfLvls, flux);
 	N0(A.cols()-1) = 1.0;
+	std::cout << A;
 	
 
 	// Sets the solver

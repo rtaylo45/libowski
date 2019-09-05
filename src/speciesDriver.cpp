@@ -87,6 +87,7 @@ void speciesDriver::solve(double solveTime){
 	Eigen::VectorXd N0 = buildInitialConditionVector();
 
 	sol = ExpSolver.solve(A, N0, solveTime);
+	//std::cout << sol;
 	unpackSolution(sol);
 }
 
@@ -124,10 +125,10 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 		meshCellFace* thisCellWestFacePtr = thisCellPtr->westFacePtr;
 
 		// Gets the transition coefficient for species convective flux
-		double northTransition = -thisCellNorthFacePtr->xVl/thisCellPtr->dx;
-		double southTransition = thisCellSouthFacePtr->xVl/thisCellPtr->dx;
-		double eastTransition = thisCellEastFacePtr->yVl/thisCellPtr->dy;
-		double westTransition = -thisCellWestFacePtr->yVl/thisCellPtr->dy;
+		double northTransition = -thisCellNorthFacePtr->yVl/thisCellPtr->dy;
+		double southTransition = thisCellSouthFacePtr->yVl/thisCellPtr->dy;
+		double eastTransition = thisCellEastFacePtr->xVl/thisCellPtr->dx;
+		double westTransition = -thisCellWestFacePtr->xVl/thisCellPtr->dx;
 
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
@@ -146,7 +147,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 				// Flow going into cell from cell above
 				else{
 					j = getAi(thisCellNorthCellPtr->absIndex, totalCells, specID, 
-						totalCells);
+						totalSpecs);
 					tripletList.push_back(T(i, j, northTransition));
 				}
 			}	
@@ -155,7 +156,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 				// Flow going into cell
 				if (southTransition > 0.0){
 					j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
-						totalCells);
+						totalSpecs);
 					tripletList.push_back(T(i, j, southTransition));
 				}
 				// Flow going into cell
@@ -168,7 +169,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 				// Flow going into cell
 				if(eastTransition > 0.0){
 					j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
-						totalCells);
+						totalSpecs);
 					tripletList.push_back(T(i, j, eastTransition));
 				}
 				// Flow leaving the cell
@@ -185,7 +186,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 				// Flow going into cell
 				else{
 					j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
-						totalCells);
+						totalSpecs);
 					tripletList.push_back(T(i, j, westTransition));
 				}
 			}
@@ -208,6 +209,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 		}
 	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
+	std::cout << A << std::endl;
 	return A;
 }
 
@@ -253,9 +255,9 @@ void speciesDriver::unpackSolution(Eigen::VectorXd sol){
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
 			// Gets the species pointer
-			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
 			i = getAi(cellID, totalCells, specID, totalSpecs);
-			thisSpecPtr->c = sol[i];
+			//std::cout << sol[i] << " " << i << std::endl;
+			thisCellPtr->setSpeciesConcentration(sol[i], specID);
 		}
 	}
 }

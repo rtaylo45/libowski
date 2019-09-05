@@ -42,12 +42,24 @@ void meshCell::addSpecies(double molarMass, double initCon){
 //*****************************************************************************
 // Gets a pointer to the species object in the cell
 //
-// @param specID	ID of the species [lbm/ft^3]
+// @param specID	ID of the species
 //*****************************************************************************
 species* meshCell::getSpecies(int specID){
 	// Checks to make sure the specID is not out of range
 	assert(specID <= speciesVector.size() and specID>= 0);
 	return &speciesVector[specID];
+
+}
+
+//*****************************************************************************
+// Gets a pointer to the species object in the cell
+//
+// @param con		Concentration [lbm/ft^3]
+// @param specID	ID of the species
+//*****************************************************************************
+void meshCell::setSpeciesConcentration(double con, int specID){
+	species spec = speciesVector[specID];
+	spec.c = con;
 
 }
 
