@@ -14,7 +14,7 @@ set(LIB_DIR lib)
 set(EIGEN3_INCLUDE_DIR ${LIB_DIR}/eigen3)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-find_package(MPI)
+#find_package(MPI)
 if(${MPI_FOUND})
 	include_directories(${MPI_INCLUDE_PATH})
 endif()

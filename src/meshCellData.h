@@ -9,6 +9,7 @@
 #include "meshCellFace.h"
 #include "species.h"
 #include <vector>
+#include <iostream>
 
 class meshCell {
 

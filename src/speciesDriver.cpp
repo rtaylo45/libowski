@@ -140,6 +140,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 
 			// Sets the north flow coefficient 
 			if (thisCellNorthCellPtr){
+			//if (true){
 				// Flow going out of cell
 				if (northTransition < 0.0){
 					thisCoeff += northTransition;
@@ -209,7 +210,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 		}
 	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
-	std::cout << A << std::endl;
+	//std::cout << A << std::endl;
 	return A;
 }
 
@@ -255,9 +256,11 @@ void speciesDriver::unpackSolution(Eigen::VectorXd sol){
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
 			// Gets the species pointer
+			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
 			i = getAi(cellID, totalCells, specID, totalSpecs);
-			//std::cout << sol[i] << " " << i << std::endl;
-			thisCellPtr->setSpeciesConcentration(sol[i], specID);
+			double val = sol[i];
+			thisSpecPtr->c = val;
+
 		}
 	}
 }
