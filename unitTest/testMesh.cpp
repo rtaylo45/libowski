@@ -162,8 +162,6 @@ void testXenonIodineNoFlow(){
 		for (int j = 0; j < yCells; j++){
 			xenonCon = spec.getSpecies(i, j, xenonID);
 			iodineCon = spec.getSpecies(i, j, iodineID);
-			std::cout << isApprox(xenonCon, N_xe) << std::endl; 
-         std::cout << isApprox(iodineCon, N_I) << std::endl;
 			assert(isApprox(xenonCon, N_xe));
 			assert(isApprox(iodineCon, N_I));
 		}
@@ -178,12 +176,12 @@ void testXenonIodineNoFlow(){
 // Test Xenon iodine flow problem
 //*****************************************************************************
 void testXenonIodineFlow(){
-	int xCells = 1, yCells = 10;
+	int xCells = 1, yCells = 1001;
 	double xLength = 1.0, yLength = 10.0;
 	double yVelocity = 0.1;
 	double xenonInitCon = 0.0, iodineInitCon = 0.0;
 	double xenonMM = 135.0, iodineMM = 135.0;
-	double t = 10000.0;
+	double t = 1000000.0;
    double lambda_I = 2.11E-5;
    double lambda_xe = 2.9306E-5;
    double sigma_a = 2.002E-22;
@@ -226,7 +224,7 @@ void testXenonIodineFlow(){
 
 	// Gets species Concentrations
 	for (int i = 0; i < xCells; i++){
-		for (int j = 0; j < yCells; j++){
+		for (int j = 0; j < yCells-1; j++){
 			xenonCon = spec.getSpecies(i, j, xenonID);
 			iodineCon = spec.getSpecies(i, j, iodineID);
 			meshCell* cell = model.getCellByLoc(i,j);
@@ -237,6 +235,7 @@ void testXenonIodineFlow(){
 
 			//std::cout << iodineCon << " " << N_I << std::endl;
 			std::cout << iodineCon << " " << N_I << " " << abs(iodineCon - N_I)/N_I << std::endl;
+			isApprox(iodineCon, N_I, 1e-4, 1e-5);
 		}
 	}
 
@@ -255,3 +254,7 @@ int main(){
 	testInit();
 	testSpeciesDriver();
 	testXenonIodineNoFlow();
+	testXenonIodineFlow();
+
+	mpi.finalize();
+}

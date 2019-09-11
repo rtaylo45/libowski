@@ -58,7 +58,6 @@ void modelMesh::createCells(){
 			absIndex++;
 		}
 	}
-	std::cout << " " << std::endl;
 }
 //*****************************************************************************
 // Creates the cell faces
