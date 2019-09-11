@@ -537,10 +537,10 @@ int main(){
 	int numprocs = mpi.size;
 
 
-	testSolverTime(myid, numprocs);
-	//tankProblem(myid);
-	//xenonIodineProblem(myid);
-	//neutronPrecursorProblem(myid);
+	//testSolverTime(myid, numprocs);
+	tankProblem(myid);
+	xenonIodineProblem(myid);
+	neutronPrecursorProblem(myid);
 
 	mpi.finalize();
 }
