@@ -50,13 +50,13 @@ SparseMatrix<double> buildAMatrix(int n){
    SparseMatrix<double> A(n,n);
 
 	for (int j = 0; j < n; j++){
-		tripletList.push_back(T(j,j,3.0));
+		tripletList.push_back(T(j,j,-3.0));
 	}
 	for (int j = 0; j < n-1; j++){
-		tripletList.push_back(T(j,j+1,-1.0));
+		tripletList.push_back(T(j,j+1,1.0));
 	}
 	for (int j = n; j < n; j++){
-		tripletList.push_back(T(j,j-1,-1.0));
+		tripletList.push_back(T(j,j-1,1.0));
 	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 	return A;
@@ -203,7 +203,7 @@ void testSolverTime(int myid, int numprocs){
 	typedef Eigen::Triplet<double> T;
 	std::default_random_engine gen;
 	std::uniform_real_distribution<double> dist(0.0,1.0);
-	int iters = 100;
+	int iters = 20;
 	double simTime = 0.0;
 	std::ofstream outputFile;
 
@@ -247,9 +247,7 @@ void testSolverTime(int myid, int numprocs){
 
 		}
 		if (myid==0){
-			outputFile << "Aveg: "+std::to_string(simTime/iters)+"\n";
 			outputFile << "\n";
-			//std::cout << simTime/iters << std::endl;
 		}
 	}
 	outputFile.close();
@@ -392,11 +390,11 @@ void xenonIodineProblem(int myid){
     	N_I = b/lambda_I*(1. - exp(-lambda_I*t)) + N_I_0*exp(-lambda_I*t);
 		
 		if (myid==0){
-			//std::cout << N_xe << " " << sol(0) << std::endl;
-    		//std::cout << N_I << " " << sol(1) << std::endl;
-    		//std::cout << " " << std::endl;
-			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
-			//std::cout << abs(N_I-sol(1))/N_xe << std::endl;
+			std::cout << N_xe << " " << sol(0) << std::endl;
+    		std::cout << N_I << " " << sol(1) << std::endl;
+			std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
+			std::cout << abs(N_I-sol(1))/N_xe << std::endl;
+    		std::cout << " " << std::endl;
 
 			assert(isApprox(sol(0), N_xe));
 			assert(isApprox(sol(1), N_I));
@@ -539,10 +537,10 @@ int main(){
 	int numprocs = mpi.size;
 
 
-	//testSolverTime(myid, numprocs);
-	tankProblem(myid);
-	xenonIodineProblem(myid);
-	neutronPrecursorProblem(myid);
+	testSolverTime(myid, numprocs);
+	//tankProblem(myid);
+	//xenonIodineProblem(myid);
+	//neutronPrecursorProblem(myid);
 
 	mpi.finalize();
 }

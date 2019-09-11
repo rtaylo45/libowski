@@ -81,9 +81,9 @@ for key in df1.keys():
     plt.xlabel('Number of Processors')
     plt.legend()
     plt.grid()
-    plt.tight_layout()
     plt.title("Matirx Size = "+key +'x'+key)
     plt.savefig("SpeedUpSize"+key+".png", dpi=500)
+    plt.tight_layout()
     plt.close()
 
 
