@@ -20,8 +20,8 @@ def readData(fname):
 
 def builddf(frames):
     results = {}
-    #headers = ['1', '2', '3', '4', '5', '6', '7', '8']
-    headers = ['1', '2', '3', '4']
+    headers = ['1', '2', '3', '4', '5', '6', '7', '8']
+    #headers = ['1', '2', '3', '4']
     for i, frame in enumerate(frames):
         header = headers[i]
         results[header] = frame
@@ -30,8 +30,8 @@ def builddf(frames):
 
 def builddfSpeedUp(frames):
     results = {}
-    #headers = ['1', '2', '3', '4', '5', '6', '7', '8']
-    headers = ['1', '2', '3', '4']
+    headers = ['1', '2', '3', '4', '5', '6', '7', '8']
+    #headers = ['1', '2', '3', '4']
     for i, frame in enumerate(frames):
         header = headers[i]
         results[header] = frame
@@ -44,12 +44,12 @@ df1 = readData(sys.argv[1])
 df2 = readData(sys.argv[2])
 df3 = readData(sys.argv[3])
 df4 = readData(sys.argv[4])
-#df5 = readData(sys.argv[5])
-#df6 = readData(sys.argv[6])
-#df7 = readData(sys.argv[7])
-#df8 = readData(sys.argv[8])
-#dflist = [df1, df2, df3, df4, df5, df6, df7, df8]
-dflist = [df1, df2, df3, df4]
+df5 = readData(sys.argv[5])
+df6 = readData(sys.argv[6])
+df7 = readData(sys.argv[7])
+df8 = readData(sys.argv[8])
+dflist = [df1, df2, df3, df4, df5, df6, df7, df8]
+#dflist = [df1, df2, df3, df4]
 
 
 for key in df1.keys():
@@ -69,8 +69,8 @@ for key in df1.keys():
     plt.close()
 
     plotdata = []
-    #headers = ['1', '2', '3', '4', '5', '6', '7', '8']
-    headers = ['1', '2', '3', '4']
+    headers = ['1', '2', '3', '4', '5', '6', '7', '8']
+    #headers = ['1', '2', '3', '4']
     for header in headers:
         plotdata.append(plotDF['1'].mean()/plotDF[header].mean())
 
