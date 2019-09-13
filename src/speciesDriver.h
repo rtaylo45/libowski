@@ -10,6 +10,7 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <iostream>
+#include <algorithm>
 #include "modelMesh.h"
 #include "meshCellData.h"
 #include "meshCellFace.h"

@@ -176,27 +176,29 @@ void testXenonIodineNoFlow(){
 // Test Xenon iodine flow problem
 //*****************************************************************************
 void testXenonIodineFlow(){
-	int xCells = 1, yCells = 1001;
+	int xCells = 1, yCells = 10;
 	double xLength = 1.0, yLength = 10.0;
 	double yVelocity = 0.1;
 	double xenonInitCon = 0.0, iodineInitCon = 0.0;
 	double xenonMM = 135.0, iodineMM = 135.0;
-	double t = 1000000.0;
+	double AvogNum = 6.02214076E23;
+	double t = 10000000.0;
    double lambda_I = 2.11E-5;
    double lambda_xe = 2.9306E-5;
    double sigma_a = 2.002E-22;
    double Sigma_f = 9.7532E-1;
-   //double flux = 2.5E16;
-   double flux = 2.5E5;
+   double flux = 2.5E16;
+   //double flux = 2.5E10;
    double gamma_xe = 0.002468;
    double gamma_I = 0.063033;
 	double N_xe_0 = 0.0, N_I_0 = 0.0;
 	int xenonID, iodineID;
 	double xenonCon, iodineCon;
 	std::vector<double> xenonCoeffs = {-lambda_xe-sigma_a*flux, lambda_I};
-	std::vector<double> iodineCoeffs = {0.0, -lambda_I};
-	double xenonS = gamma_xe*Sigma_f*flux;
-	double iodineS = gamma_I*Sigma_f*flux;
+	//std::vector<double> iodineCoeffs = {0.0, -lambda_I};
+	std::vector<double> iodineCoeffs = {-lambda_I};
+	double xenonS = gamma_xe*Sigma_f*flux*xenonMM/AvogNum;
+	double iodineS = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -208,13 +210,13 @@ void testXenonIodineFlow(){
 	speciesDriver spec = speciesDriver(&model);
 
 	// Adds xenon and iodine species
-	xenonID = spec.addSpecies(xenonMM, N_xe_0);
+	//xenonID = spec.addSpecies(xenonMM, N_xe_0);
 	iodineID = spec.addSpecies(iodineMM, N_I_0);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
 		for (int j = 0; j < yCells; j++){
-			spec.setSpeciesSource(i, j, xenonID, xenonCoeffs, xenonS);
+			//spec.setSpeciesSource(i, j, xenonID, xenonCoeffs, xenonS);
 			spec.setSpeciesSource(i, j, iodineID, iodineCoeffs, iodineS);
 		}
 	}
@@ -224,18 +226,18 @@ void testXenonIodineFlow(){
 
 	// Gets species Concentrations
 	for (int i = 0; i < xCells; i++){
-		for (int j = 0; j < yCells-1; j++){
-			xenonCon = spec.getSpecies(i, j, xenonID);
+		for (int j = 0; j < yCells; j++){
+			//xenonCon = spec.getSpecies(i, j, xenonID);
 			iodineCon = spec.getSpecies(i, j, iodineID);
 			meshCell* cell = model.getCellByLoc(i,j);
 			double y = cell->y;
 			// Iodine solution
-			double b = gamma_I*Sigma_f*flux;
+			double b = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
    		double N_I = b/lambda_I*(1. - exp(-lambda_I/yVelocity*y));
 
 			//std::cout << iodineCon << " " << N_I << std::endl;
-			std::cout << iodineCon << " " << N_I << " " << abs(iodineCon - N_I)/N_I << std::endl;
-			isApprox(iodineCon, N_I, 1e-4, 1e-5);
+			std::cout << y << " " << iodineCon << " " << N_I << " " << abs(iodineCon - N_I)/N_I << std::endl;
+			//assert(isApprox(iodineCon, N_I, 1e-4, 1e-5));
 		}
 	}
 
@@ -254,7 +256,7 @@ int main(){
 	testInit();
 	testSpeciesDriver();
 	testXenonIodineNoFlow();
-	testXenonIodineFlow();
+	//testXenonIodineFlow();
 
 	mpi.finalize();
 }

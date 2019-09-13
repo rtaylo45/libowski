@@ -125,10 +125,10 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 		meshCellFace* thisCellWestFacePtr = thisCellPtr->westFacePtr;
 
 		// Gets the transition coefficient for species convective flux
-		double northTransition = -thisCellNorthFacePtr->yVl/thisCellPtr->dy;
-		double southTransition = thisCellSouthFacePtr->yVl/thisCellPtr->dy;
-		double eastTransition = thisCellEastFacePtr->xVl/thisCellPtr->dx;
-		double westTransition = -thisCellWestFacePtr->xVl/thisCellPtr->dx;
+		double nTran = -thisCellNorthFacePtr->yVl/thisCellPtr->dy;
+		double sTran = thisCellSouthFacePtr->yVl/thisCellPtr->dy;
+		double eTran = -thisCellEastFacePtr->xVl/thisCellPtr->dx;
+		double wTran = thisCellWestFacePtr->xVl/thisCellPtr->dx;
 
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
@@ -136,62 +136,33 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
 			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
-			double thisCoeff = 0.0;
 
 			// Sets the north flow coefficient 
 			if (thisCellNorthCellPtr){
-			//if (true){
-				// Flow going out of cell
-				if (northTransition < 0.0){
-					thisCoeff += northTransition;
-				}
-				// Flow going into cell from cell above
-				else{
-					j = getAi(thisCellNorthCellPtr->absIndex, totalCells, specID, 
-						totalSpecs);
-					tripletList.push_back(T(i, j, northTransition));
-				}
+				j = getAi(thisCellNorthCellPtr->absIndex, totalCells, specID, 
+					totalSpecs);
+				tripletList.push_back(T(i, j, std::max(nTran,0.0)));
 			}	
 			// Sets the south flow coefficient
-			if (southTransition and thisCellSouthCellPtr){
-				// Flow going into cell
-				if (southTransition > 0.0){
-					j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
-						totalSpecs);
-					tripletList.push_back(T(i, j, southTransition));
-				}
-				// Flow going into cell
-				else{
-					thisCoeff += southTransition;
-				}
+			if (thisCellSouthCellPtr){
+				j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
+					totalSpecs);
+				tripletList.push_back(T(i, j, std::max(sTran,0.0)));
 			}
 			// Sets the east flow coefficient
-			if(eastTransition and thisCellEastCellPtr){
-				// Flow going into cell
-				if(eastTransition > 0.0){
-					j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
-						totalSpecs);
-					tripletList.push_back(T(i, j, eastTransition));
-				}
-				// Flow leaving the cell
-				else{
-					thisCoeff += eastTransition;
-				}
+			if(thisCellEastCellPtr){
+				j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
+					totalSpecs);
+				tripletList.push_back(T(i, j, std::max(eTran,0.0)));
 			}
 			// Sets the west flow coefficient
-			if(westTransition and thisCellWestCellPtr){
-				// Flow leaving the cell
-				if(westTransition < 0.0){
-					thisCoeff += eastTransition;
-				}
-				// Flow going into cell
-				else{
-					j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
-						totalSpecs);
-					tripletList.push_back(T(i, j, westTransition));
-				}
+			if(thisCellWestCellPtr){
+				j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
+					totalSpecs);
+				tripletList.push_back(T(i, j, std::max(wTran,0.0)));
 			}
 			// Sets the coefficients for non-constant source terms
+			double thisCoeff = 0.0;
 			for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
 				double coeff = thisSpecPtr->coeffs[specCounter];
 				if (specCounter == specID){
@@ -206,6 +177,9 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
 
 			// Adds the coeff for this species 
+			thisCoeff += std::min(nTran,0.0) + std::min(sTran,0.0) 
+				+ std::min(wTran,0.0) + std::min(eTran,0.0);
+			//std::cout << std::max(nTran,0.0)<< " "<< std::max(sTran,0.0) <<std::endl;
 			tripletList.push_back(T(i, i, thisCoeff));
 		}
 	}
