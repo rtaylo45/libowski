@@ -40,6 +40,8 @@ class speciesDriver {
 	double getSpecies(int, int, int);
 	// Sets the species source terms
 	void setSpeciesSource(int, int, int, std::vector<double>, double);
+	// Sets a boundary condition in a cell
+	void setBoundaryCondition(int, int, int, double);
 	// Solves the species transport equation
 	void solve(double);
 	// Cleans species

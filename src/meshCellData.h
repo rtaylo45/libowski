@@ -29,6 +29,8 @@ class meshCell {
 	double dx;
 	// dy of cell
 	double dy;
+	// Denote if a cell is a boundary condition
+	bool solved = false;
 	// Vector of the species in the cell
 	std::vector<species> speciesVector;
 

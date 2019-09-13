@@ -75,6 +75,21 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 	if (s != 0.0){dummySpec = 1;};
    spec->s = s;
 }
+//*****************************************************************************
+// Sets a boundary condition in a cell
+//
+// @param i       x index
+// @param j       y index
+// @param specID  Species ID
+// @param bc			BC value [lbm/ft^3]
+//*****************************************************************************
+void speciesDriver::setBoundaryCondition(int i, int j, int specID, double bc){
+   meshCell* cell = modelPtr->getCellByLoc(i,j);
+	cell->solved = true;
+   species* spec = getSpeciesPtr(i, j, specID);
+	spec->c = bc;
+	
+}
 
 //*****************************************************************************
 // Solves the species transport equation
@@ -111,6 +126,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 	for (int cellID = 0; cellID < totalCells; cellID++){
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
+		if (thisCellPtr->solved) continue;
 
 		// Gets pointer to connecting cells
 		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
