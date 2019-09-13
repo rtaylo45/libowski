@@ -1,6 +1,7 @@
 project(libowski_prog)
 
-set(PROJECT_SOURCES CRAM.cpp mpiProcess.cpp modelMesh.cpp meshCellData.cpp)
+set(PROJECT_SOURCES CRAM.cpp mpiProcess.cpp modelMesh.cpp meshCellData.cpp
+	meshCellFace.cpp species.cpp speciesDriver.cpp)
 
 # All sources that also need to be tested in unit tests go into a static library
 add_library(liblibowski STATIC ${PROJECT_SOURCES})

@@ -13,6 +13,8 @@
 //
 // This is the object that needs to be used by all other things in the code.
 //*****************************************************************************
+#ifndef MPIPROCESS_H
+#define MPIPROCESS_H
 #include <complex>
 #include <Eigen/Sparse>
 #ifdef HAVE_MPI
@@ -36,7 +38,7 @@ class mpiProcess{
 	// Constructor
 	//**************************************************************************
 	public:
-	mpiProcess(){initMPI();};
+	mpiProcess();
 
 	// Definition of methods
 	public:
@@ -61,4 +63,4 @@ class mpiProcess{
 };
 // points to the global mpi variable in mpiProcess.cpp
 extern mpiProcess mpi;
-
+#endif

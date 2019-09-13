@@ -148,7 +148,6 @@ void writePrecursorSolution(MatrixXd sol, double t){
 		else {s++;}
 	}
 
-
 }
 //*****************************************************************************
 // Builds the species matrix for precursor problem
@@ -499,6 +498,7 @@ void neutronPrecursorProblem(int myid){
 
 	A = BuildSpeciesMatrix(coeff, varCoeff, numOfSpecs, numOfLvls, flux);
 	N0(A.cols()-1) = 1.0;
+	std::cout << A;
 	
 
 	// Sets the solver

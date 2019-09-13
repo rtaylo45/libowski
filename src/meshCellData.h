@@ -4,9 +4,12 @@
 // Mesh cell data type. This class holds scalar cell data information based
 // on a 2-D finite volume discritization 
 //*****************************************************************************
+#ifndef MESHCELLDATA_H
+#define MESHCELLDATA_H
 #include "meshCellFace.h"
 #include "species.h"
 #include <vector>
+#include <iostream>
 
 class meshCell {
 
@@ -22,6 +25,10 @@ class meshCell {
 	double x;
 	// Y position defined at the cent of the cell
 	double y;
+	// dx of cell
+	double dx;
+	// dy of cell
+	double dy;
 	// Vector of the species in the cell
 	std::vector<species> speciesVector;
 
@@ -46,28 +53,17 @@ class meshCell {
 	meshCellFace *southFacePtr = nullptr;
 
 	public:
-	//**************************************************************************
 	// Constructor
-	//
-	// @param iIndex			Index of cell in x direction
-	// @param jIndex			Index of cell in y direction
-	// @param absoluteIndex	Absolute index of the cell
-	// @param xCor				Location of cell center in x direction
-	// @param yCor				Location of cell center in y direction
-	//**************************************************************************
-	meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor, double yCor){
-		i = iIndex;
-		j = jIndex;
-		absIndex = absoluteIndex;
-		x = xCor;
-		y = yCor;	
-	}
+	meshCell(int, int, int, double, double, double, double);
 	// Add species
 	void addSpecies(double, double);
 	// Gets a pointer to the species
 	species* getSpecies(int);
+	// Sets species concentration
+	void setSpeciesConcentration(double, int);
 	// Clean species
 	void cleanSpecies();
 
 
 };
+#endif
