@@ -27,6 +27,12 @@ class speciesDriver {
 	int numOfSpecs = 0;
 	// Number of dummy species needs to be added. 
 	int dummySpec = 0;
+	// Logical set after the matrix has been built
+	bool matrixInit = false;
+	// Transition matrix
+	Eigen::SparseMatrix<double> A;
+	// Initial condition
+	Eigen::VectorXd N0;
 
 	// Class methods
 	public:
@@ -40,6 +46,8 @@ class speciesDriver {
 	double getSpecies(int, int, int);
 	// Sets the species source terms
 	void setSpeciesSource(int, int, int, std::vector<double>, double);
+	// Sets a boundary condition in a cell
+	void setBoundaryCondition(int, int, int, double);
 	// Solves the species transport equation
 	void solve(double);
 	// Cleans species

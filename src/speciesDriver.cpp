@@ -2,6 +2,8 @@
 // Author: Zack Taylor
 //*****************************************************************************
 #include "speciesDriver.h"
+#include <Eigen/Eigenvalues>
+#include <Eigen/Core>
 
 //*****************************************************************************
 // Constructor
@@ -75,6 +77,21 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 	if (s != 0.0){dummySpec = 1;};
    spec->s = s;
 }
+//*****************************************************************************
+// Sets a boundary condition in a cell
+//
+// @param i       x index
+// @param j       y index
+// @param specID  Species ID
+// @param bc			BC value [lbm/ft^3]
+//*****************************************************************************
+void speciesDriver::setBoundaryCondition(int i, int j, int specID, double bc){
+   meshCell* cell = modelPtr->getCellByLoc(i,j);
+	cell->solved = true;
+   species* spec = getSpeciesPtr(i, j, specID);
+	spec->c = bc;
+	
+}
 
 //*****************************************************************************
 // Solves the species transport equation
@@ -82,9 +99,17 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 void speciesDriver::solve(double solveTime){
 	Eigen::VectorXd sol;
 	SolverType ExpSolver;
+	Eigen::MatrixXd dA;
 
-	Eigen::SparseMatrix<double> A = buildTransMatrix();
-	Eigen::VectorXd N0 = buildInitialConditionVector();
+	if (not matrixInit){
+		A = buildTransMatrix();
+		//dA = Eigen::MatrixXd(A);
+		//std::cout << A  << std::endl;
+		//std::cout << dA.eigenvalues() << std::endl;
+		//std::cout << dA.determinant() << std::endl;
+		N0 = buildInitialConditionVector();
+		matrixInit = true;
+	}
 
 	sol = ExpSolver.solve(A, N0, solveTime);
 	//std::cout << sol;
@@ -111,6 +136,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 	for (int cellID = 0; cellID < totalCells; cellID++){
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
+		if (thisCellPtr->solved) {continue;};
 
 		// Gets pointer to connecting cells
 		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
@@ -163,14 +189,16 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			}
 			// Sets the coefficients for non-constant source terms
 			double thisCoeff = 0.0;
-			for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
-				double coeff = thisSpecPtr->coeffs[specCounter];
-				if (specCounter == specID){
-					thisCoeff += coeff;
-				}
-				else{
-					j = getAi(cellID, totalCells, specCounter, totalSpecs);
-					tripletList.push_back(T(i, j, coeff));
+			if (thisSpecPtr->coeffs.size()){
+				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
+					double coeff = thisSpecPtr->coeffs[specCounter];
+					if (specCounter == specID){
+						thisCoeff += coeff;
+					}
+					else{
+						j = getAi(cellID, totalCells, specCounter, totalSpecs);
+						tripletList.push_back(T(i, j, coeff));
+					}
 				}
 			}
 			// Sets the constant source terms
@@ -184,7 +212,6 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 		}
 	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
-	//std::cout << A << std::endl;
 	return A;
 }
 
@@ -210,7 +237,7 @@ Eigen::VectorXd speciesDriver::buildInitialConditionVector(){
 			N0[i] = thisSpecPtr->c;
 		}
 	}
-	N0[N0.size()-1] = 1.0;
+	if(dummySpec){N0[N0.size()-1] = 1.0;};
 	return N0;
 }
 
