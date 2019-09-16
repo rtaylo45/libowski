@@ -27,6 +27,12 @@ class speciesDriver {
 	int numOfSpecs = 0;
 	// Number of dummy species needs to be added. 
 	int dummySpec = 0;
+	// Logical set after the matrix has been built
+	bool matrixInit = false;
+	// Transition matrix
+	Eigen::SparseMatrix<double> A;
+	// Initial condition
+	Eigen::VectorXd N0;
 
 	// Class methods
 	public:

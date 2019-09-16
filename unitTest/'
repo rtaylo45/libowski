@@ -306,9 +306,9 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	testInit();
-	testSpeciesDriver();
-	testXenonIodineNoFlow();
+	//testInit();
+	//testSpeciesDriver();
+	//testXenonIodineNoFlow();
 	//testYDirectionAdvection();
 	testXenonIodineFlow();
 
