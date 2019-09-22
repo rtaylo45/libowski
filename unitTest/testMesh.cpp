@@ -186,12 +186,14 @@ void testYDirectionAdvection(){
 	int xCells = 1, yCells = 100;
 	double xLength = 1.0, yLength = 100.0;
 	double specInitCon = 10.0;
-	double numOfSteps = 1000.;
+	double numOfSteps = 60.;
 	double tEnd = 60.0; 
 	double dt = tEnd/numOfSteps;
 	double yVelocity = 6.0; // ft/s
 	int specID, spec2ID;
 	std::vector<double> coeffs = {0.0};
+	double dx = yLength/(float)yCells;
+	std::cout << yVelocity*dt/dx << std::endl;
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -204,9 +206,9 @@ void testYDirectionAdvection(){
 
 	// Adds species to the model
 	specID = spec.addSpecies(1.0, 10.0);
-	spec.setSpeciesSource(0, 0, specID, coeffs, 100.0);
+	//spec.setSpeciesSource(0, 0, specID, coeffs, 100.0);
 	//spec2ID = spec.addSpecies(1.0, 0.0);
-	//spec.setBoundaryCondition(0, 0, specID, 2.*specInitCon);
+	spec.setBoundaryCondition(0, 0, specID, 2.*specInitCon);
 	//for (int i = 0; i < xCells; i++){
 	//	for (int j = 0; j < yCells; j++){
 	//		spec.setSpeciesSource(i, j, spec2ID, coeffs, 100.0);
@@ -306,11 +308,11 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	testInit();
-	testSpeciesDriver();
-	testXenonIodineNoFlow();
-	//testYDirectionAdvection();
-	testXenonIodineFlow();
+	//testInit();
+	//testSpeciesDriver();
+	//testXenonIodineNoFlow();
+	testYDirectionAdvection();
+	//testXenonIodineFlow();
 
 	mpi.finalize();
 }
