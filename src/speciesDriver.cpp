@@ -176,18 +176,21 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			if (thisCellSouthCellPtr){
 				j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
+				r = calcSpecConvectiveSlope(i, j, specID, sTran, 1);
 				tripletList.push_back(T(i, j, std::max(sTran,0.0)));
 			}
 			// Sets the east flow coefficient
 			if(thisCellEastCellPtr){
 				j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
+				r = calcSpecConvectiveSlope(i, j, specID, eTran, 2);
 				tripletList.push_back(T(i, j, std::max(eTran,0.0)));
 			}
 			// Sets the west flow coefficient
 			if(thisCellWestCellPtr){
 				j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
+				r = calcSpecConvectiveSlope(i, j, specID, wTran, 3);
 				tripletList.push_back(T(i, j, std::max(wTran,0.0)));
 			}
 			// Sets the coefficients for non-constant source terms
