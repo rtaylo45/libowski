@@ -48,6 +48,8 @@ class speciesDriver {
 	void setSpeciesSource(int, int, int, std::vector<double>, double);
 	// Sets a boundary condition in a cell
 	void setBoundaryCondition(int, int, int, double);
+	// Calculates the species convection slope across in a cell
+	double calcSpecConvectiveSlope(int, int, int, int, double);
 	// Solves the species transport equation
 	void solve(double);
 	// Cleans species

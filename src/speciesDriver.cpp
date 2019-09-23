@@ -127,6 +127,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 	int totalSpecs = numOfSpecs;
 	int totalCells = modelPtr->numOfTotalCells;
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
+	double r = 0.0;
 	tripletList.reserve(nonZeros);	
 
 	// Init A matrix
@@ -163,10 +164,12 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
 
+
 			// Sets the north flow coefficient 
 			if (thisCellNorthCellPtr){
 				j = getAi(thisCellNorthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
+				r = calcSpecConvectiveSlope(i, j, specID, nTran, 0);
 				tripletList.push_back(T(i, j, std::max(nTran,0.0)));
 			}	
 			// Sets the south flow coefficient
@@ -264,6 +267,95 @@ void speciesDriver::unpackSolution(Eigen::VectorXd sol){
 
 		}
 	}
+}
+//*****************************************************************************
+// Claculatest the convective species slop in a cell
+//
+// @param i			x-direction index
+// @param j			y-direction index
+// @param specID	Species ID
+// @pram tran		Transton value	[1/s]
+// @param loc		Location of adjacent cell
+//			0 = north
+//			1 = south
+//			2 = east
+//			3 = west
+//*****************************************************************************
+double speciesDriver::calcSpecConvectiveSlope(int i, int j, int specID, 
+		int loc, double tran){
+		double alphal = 0.0;
+		double rohP, rohN, rohNN, rohS, rohSS, rohE, rohEE, rohW, rohWW;
+		double r;
+		if (tran < 0.0) {alphal = 1.0;};
+		if (tran == 0.0) {return 0.0;};
+
+		// This cell pointer
+		meshCell* thisCellPtr = modelPtr->getCellByLoc(i, j);
+	
+		// Gets pointer to connecting cells
+		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
+		meshCell* thisCellSouthCellPtr = thisCellPtr->southCellPtr;
+		meshCell* thisCellEastCellPtr = thisCellPtr->eastCellPtr;
+		meshCell* thisCellWestCellPtr = thisCellPtr->westCellPtr;
+
+		// Gets pointer to conncetions of connections
+		meshCell* thisCellNorthNorthCellPtr = thisCellNorthCellPtr->northCellPtr;
+		meshCell* thisCellSouthSouthCellPtr = thisCellSouthCellPtr->southCellPtr;
+		meshCell* thisCellEastEastCellPtr = thisCellEastCellPtr->eastCellPtr;
+		meshCell* thisCellWestWestCellPtr = thisCellWestCellPtr->westCellPtr;
+
+		// Gets this cells species concentration
+		rohP = thisCellPtr->getSpecCon(specID);
+
+		switch(loc){
+
+			// North location
+			case 0: {
+				rohS = thisCellSouthCellPtr->getSpecCon(specID);	
+				rohN = thisCellNorthCellPtr->getSpecCon(specID);
+				rohNN = (thisCellNorthNorthCellPtr) ? 
+					thisCellNorthNorthCellPtr->getSpecCon(specID) : 0.0;
+				r = (1.-alphal)*(rohP - rohS)/(rohN - rohP) + 
+					alphal*(rohNN - rohN)/(rohN - rohP);
+				
+				break;
+			}
+
+			// South location
+			case 1: {
+				rohS = thisCellSouthCellPtr->getSpecCon(specID);	
+				rohN = thisCellNorthCellPtr->getSpecCon(specID);
+				rohSS = (thisCellSouthSouthCellPtr) ? 
+					thisCellNorthNorthCellPtr->getSpecCon(specID) : 0.0;
+				r = (1.-alphal)*(rohS - rohSS)/(rohP - rohS) + 
+					alphal*(rohN - rohS)/(rohP - rohS);
+				break;
+			}
+
+			// East location
+			case 2: {
+				rohE = thisCellEastCellPtr->getSpecCon(specID);	
+				rohW = thisCellWestCellPtr->getSpecCon(specID);
+				rohEE = (thisCellEastEastCellPtr) ? 
+					thisCellEastEastCellPtr->getSpecCon(specID) : 0.0;
+				r = (1.-alphal)*(rohP - rohW)/(rohE - rohP) + 
+					alphal*(rohEE - rohE)/(rohE - rohP);
+				break;
+			}
+
+			// West location
+			case 3: {
+				rohE = thisCellEastCellPtr->getSpecCon(specID);	
+				rohW = thisCellWestCellPtr->getSpecCon(specID);
+				rohWW = (thisCellWestWestCellPtr) ? 
+					thisCellWestWestCellPtr->getSpecCon(specID) : 0.0;
+				r = (1.-alphal)*(rohW - rohWW)/(rohP - rohW) + 
+					alphal*(rohE - rohP)/(rohP - rohW);
+				break;
+			}
+
+		}
+		return r;
 }
 
 //*****************************************************************************
