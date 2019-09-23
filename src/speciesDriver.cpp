@@ -100,7 +100,6 @@ void speciesDriver::solve(double solveTime){
 	Eigen::VectorXd sol;
 	SolverType ExpSolver;
 	Eigen::MatrixXd dA;
-	lastSolveTime = solveTime;
 	double timeStep = solveTime - lastSolveTime;
 
 	//if (not matrixInit){
@@ -110,12 +109,13 @@ void speciesDriver::solve(double solveTime){
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		N0 = buildInitialConditionVector();
+		//std::cout << N0  << std::endl;
 		//matrixInit = true;
 	//}
 
 	sol = ExpSolver.solve(A, N0, timeStep);
-	//std::cout << sol;
 	unpackSolution(sol);
+	lastSolveTime = solveTime;
 }
 
 //*****************************************************************************
@@ -175,9 +175,9 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			if (thisCellNorthCellPtr){
 				j = getAi(thisCellNorthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				double r = calcSpecConvectiveSlope(i, j, specID, nTran, 0);
+				double r = calcSpecConvectiveSlope(cellID, specID, 0, nTran);
 				double psi = fluxLim.getPsi(r);
-				double aN = std::max(nTran,0.0) + psi/2.*(-std::max(nTran,0.0) -
+				double aN = std::max(-nTran,0.0) + psi/2.*(-std::max(nTran,0.0) -
 					std::max(-nTran,0.0)) + dN;
 				tripletList.push_back(T(i, j, aN));
 			}	
@@ -185,7 +185,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			if (thisCellSouthCellPtr){
 				j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				double r = calcSpecConvectiveSlope(i, j, specID, sTran, 1);
+				double r = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
 				double psi = fluxLim.getPsi(r);
 				double aS = std::max(sTran,0.0) + psi/2.*(std::max(-sTran,0.0) -
 					std::max(sTran, 0.0)) + dS;
@@ -195,7 +195,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			if(thisCellEastCellPtr){
 				j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				double r = calcSpecConvectiveSlope(i, j, specID, eTran, 2);
+				double r = calcSpecConvectiveSlope(cellID, specID, 2, eTran);
 				double psi = fluxLim.getPsi(r);
 				double aE = std::max(-eTran,0.0) + psi/2.*(-std::max(-eTran,0.0) -
 					std::max(eTran, 0.0)) + dE;
@@ -205,7 +205,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			if(thisCellWestCellPtr){
 				j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				double r = calcSpecConvectiveSlope(i, j, specID, wTran, 3);
+				double r = calcSpecConvectiveSlope(cellID, specID, 3, wTran);
 				double psi = fluxLim.getPsi(r);
 				double aW = std::max(wTran, 0.0) + psi/2.*(std::max(-wTran, 0.0) -
 					std::max(wTran,0.0)) + dW;
@@ -225,12 +225,13 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 					}
 				}
 			}
+
 			// Sets the constant source terms
 			tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
 
 			// Calculates the x portion for the cell coefficient
-			double rW = calcSpecConvectiveSlope(i, j, specID, wTran, 3);
-			double rE = calcSpecConvectiveSlope(i, j, specID, eTran, 2);
+			double rW = calcSpecConvectiveSlope(cellID, specID, 3, wTran);
+			double rE = calcSpecConvectiveSlope(cellID, specID, 2, eTran);
 			double psiW = fluxLim.getPsi(rW);
 			double psiE = fluxLim.getPsi(rE);
 			double aPx = -std::max(eTran,0.0) - std::max(-eTran,0.0) +
@@ -239,14 +240,15 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 				dE - dW;
 
 			// Calculates the y portion for the cell coefficient
-			double rN = calcSpecConvectiveSlope(i, j, specID, nTran, 0);
-			double rS = calcSpecConvectiveSlope(i, j, specID, sTran, 1);
+			double rN = calcSpecConvectiveSlope(cellID, specID, 0, nTran);
+			double rS = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
 			double psiN = fluxLim.getPsi(rN);
 			double psiS = fluxLim.getPsi(rS);
 			double aPy = -std::max(nTran,0.0) - std::max(-sTran,0.0) + 
 				psiN/2.*(std::max(nTran,0.0) + std::max(-nTran,0.0)) +
 				psiS/2.*(std::max(sTran,0.0) + std::max(-sTran,0.0)) - 
 				dS - dN;
+
 			// Adds the coeff for this species 
 			thisCoeff += aPx + aPy;
 			//std::cout << std::max(nTran,0.0)<< " "<< std::max(sTran,0.0) <<std::endl;
@@ -310,8 +312,7 @@ void speciesDriver::unpackSolution(Eigen::VectorXd sol){
 //*****************************************************************************
 // Claculatest the convective species slop in a cell
 //
-// @param i			x-direction index
-// @param j			y-direction index
+// @param cellID	Global cellID
 // @param specID	Species ID
 // @pram tran		Transton value	[1/s]
 // @param loc		Location of adjacent cell
@@ -320,16 +321,17 @@ void speciesDriver::unpackSolution(Eigen::VectorXd sol){
 //			2 = east
 //			3 = west
 //*****************************************************************************
-double speciesDriver::calcSpecConvectiveSlope(int i, int j, int specID, 
+double speciesDriver::calcSpecConvectiveSlope(int cellID, int specID, 
 		int loc, double tran){
 		double alphal = 0.0;
-		double rohP, rohN, rohNN, rohS, rohSS, rohE, rohEE, rohW, rohWW;
+		double rohP = 0.0, rohN = 0.0, rohE = 0.0, rohS = 0.0, rohW = 0.0;
+		double rohNN, rohSS, rohEE, rohWW;
 		double r;
 		if (tran < 0.0) {alphal = 1.0;};
 		if (tran == 0.0) {return 0.0;};
 
 		// This cell pointer
-		meshCell* thisCellPtr = modelPtr->getCellByLoc(i, j);
+		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
 	
 		// Gets pointer to connecting cells
 		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
@@ -338,10 +340,20 @@ double speciesDriver::calcSpecConvectiveSlope(int i, int j, int specID,
 		meshCell* thisCellWestCellPtr = thisCellPtr->westCellPtr;
 
 		// Gets pointer to conncetions of connections
-		meshCell* thisCellNorthNorthCellPtr = thisCellNorthCellPtr->northCellPtr;
-		meshCell* thisCellSouthSouthCellPtr = thisCellSouthCellPtr->southCellPtr;
-		meshCell* thisCellEastEastCellPtr = thisCellEastCellPtr->eastCellPtr;
-		meshCell* thisCellWestWestCellPtr = thisCellWestCellPtr->westCellPtr;
+		meshCell* thisCellNorthNorthCellPtr = nullptr;
+		meshCell* thisCellSouthSouthCellPtr = nullptr;
+		meshCell* thisCellEastEastCellPtr = nullptr;
+		meshCell* thisCellWestWestCellPtr = nullptr;
+
+		if (thisCellNorthCellPtr){thisCellNorthNorthCellPtr = thisCellNorthCellPtr->northCellPtr;};
+		if (thisCellSouthCellPtr){thisCellSouthSouthCellPtr = thisCellSouthCellPtr->southCellPtr;};
+		if (thisCellEastCellPtr){thisCellEastEastCellPtr = thisCellEastCellPtr->eastCellPtr;};
+		if (thisCellWestCellPtr){thisCellWestWestCellPtr = thisCellWestCellPtr->westCellPtr;};
+
+		if (thisCellNorthCellPtr){rohN = thisCellNorthCellPtr->getSpecCon(specID);};
+		if (thisCellSouthCellPtr){rohS = thisCellSouthCellPtr->getSpecCon(specID);};
+		if (thisCellEastCellPtr){rohE = thisCellEastCellPtr->getSpecCon(specID);};
+		if (thisCellWestCellPtr){rohW = thisCellWestCellPtr->getSpecCon(specID);};
 
 		// Gets this cells species concentration
 		rohP = thisCellPtr->getSpecCon(specID);
@@ -350,8 +362,6 @@ double speciesDriver::calcSpecConvectiveSlope(int i, int j, int specID,
 
 			// North location
 			case 0: {
-				rohS = thisCellSouthCellPtr->getSpecCon(specID);	
-				rohN = thisCellNorthCellPtr->getSpecCon(specID);
 				rohNN = (thisCellNorthNorthCellPtr) ? 
 					thisCellNorthNorthCellPtr->getSpecCon(specID) : 0.0;
 				r = (1.-alphal)*(rohP - rohS)/(rohN - rohP) + 
@@ -362,10 +372,8 @@ double speciesDriver::calcSpecConvectiveSlope(int i, int j, int specID,
 
 			// South location
 			case 1: {
-				rohS = thisCellSouthCellPtr->getSpecCon(specID);	
-				rohN = thisCellNorthCellPtr->getSpecCon(specID);
 				rohSS = (thisCellSouthSouthCellPtr) ? 
-					thisCellNorthNorthCellPtr->getSpecCon(specID) : 0.0;
+					thisCellSouthSouthCellPtr->getSpecCon(specID) : 0.0;
 				r = (1.-alphal)*(rohS - rohSS)/(rohP - rohS) + 
 					alphal*(rohN - rohS)/(rohP - rohS);
 				break;
@@ -373,8 +381,6 @@ double speciesDriver::calcSpecConvectiveSlope(int i, int j, int specID,
 
 			// East location
 			case 2: {
-				rohE = thisCellEastCellPtr->getSpecCon(specID);	
-				rohW = thisCellWestCellPtr->getSpecCon(specID);
 				rohEE = (thisCellEastEastCellPtr) ? 
 					thisCellEastEastCellPtr->getSpecCon(specID) : 0.0;
 				r = (1.-alphal)*(rohP - rohW)/(rohE - rohP) + 
@@ -384,8 +390,6 @@ double speciesDriver::calcSpecConvectiveSlope(int i, int j, int specID,
 
 			// West location
 			case 3: {
-				rohE = thisCellEastCellPtr->getSpecCon(specID);	
-				rohW = thisCellWestCellPtr->getSpecCon(specID);
 				rohWW = (thisCellWestWestCellPtr) ? 
 					thisCellWestWestCellPtr->getSpecCon(specID) : 0.0;
 				r = (1.-alphal)*(rohW - rohWW)/(rohP - rohW) + 
