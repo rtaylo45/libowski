@@ -50,6 +50,14 @@ species* meshCell::getSpecies(int specID){
 	return &speciesVector[specID];
 
 }
+//*****************************************************************************
+// Gets species concentration
+//*****************************************************************************
+double meshCell::getSpecCon(int specID){
+	assert(specID <= speciesVector.size() and specID>= 0);
+	species* spec = getSpecies(specID);
+	return spec->c;
+}
 
 //*****************************************************************************
 // Gets a pointer to the species object in the cell

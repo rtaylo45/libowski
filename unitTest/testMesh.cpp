@@ -184,14 +184,15 @@ void testXenonIodineNoFlow(){
 //*****************************************************************************
 void testYDirectionAdvection(){
 	int xCells = 1, yCells = 100;
-	double xLength = 1.0, yLength = 100.0;
+	double xLength = 1.0, yLength = 1000.0;
 	double specInitCon = 10.0;
 	double numOfSteps = 1000.;
 	double tEnd = 60.0; 
 	double dt = tEnd/numOfSteps;
-	double yVelocity = 6.0; // ft/s
+	double yVelocity = 60.0; // ft/s
 	int specID, spec2ID;
 	std::vector<double> coeffs = {0.0};
+	double dx = yLength/(float)yCells;
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -204,14 +205,7 @@ void testYDirectionAdvection(){
 
 	// Adds species to the model
 	specID = spec.addSpecies(1.0, 10.0);
-	spec.setSpeciesSource(0, 0, specID, coeffs, 100.0);
-	//spec2ID = spec.addSpecies(1.0, 0.0);
-	//spec.setBoundaryCondition(0, 0, specID, 2.*specInitCon);
-	//for (int i = 0; i < xCells; i++){
-	//	for (int j = 0; j < yCells; j++){
-	//		spec.setSpeciesSource(i, j, spec2ID, coeffs, 100.0);
-	//	}
-	//}
+	spec.setBoundaryCondition(0, 0, specID, 2.*specInitCon);
 
 	for (int step = 1; step <= numOfSteps; step++){
 		double t = step*dt;
@@ -221,7 +215,7 @@ void testYDirectionAdvection(){
 		// Outlet concentration	
 		double specConOut = spec.getSpecies(0, yCells-1, specID);
 		double specConIn = spec.getSpecies(0, 0, specID);
-		printf (" %4.2f %6.3f %6.3f\n", t, specConIn, specConOut);
+		//printf (" %4.2f %6.3f %6.3f\n", t, specConIn, specConOut);
 	}
 	model.clean();
 	spec.clean();
@@ -288,7 +282,7 @@ void testXenonIodineFlow(){
 			double b = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
    		double N_I = b/lambda_I*(1. - exp(-lambda_I/yVelocity*y));
 
-			std::cout << xenonCon << " " << iodineCon << " " << N_I << std::endl;
+			//std::cout << xenonCon << " " << iodineCon << " " << N_I << std::endl;
 			//std::cout << y << " " << iodineCon << " " << N_I << " " << abs(iodineCon - N_I)/N_I << std::endl;
 			//assert(isApprox(iodineCon, N_I, 1e-4, 1e-5));
 		}
@@ -309,7 +303,7 @@ int main(){
 	testInit();
 	testSpeciesDriver();
 	testXenonIodineNoFlow();
-	//testYDirectionAdvection();
+	testYDirectionAdvection();
 	testXenonIodineFlow();
 
 	mpi.finalize();

@@ -100,20 +100,22 @@ void speciesDriver::solve(double solveTime){
 	Eigen::VectorXd sol;
 	SolverType ExpSolver;
 	Eigen::MatrixXd dA;
+	double timeStep = solveTime - lastSolveTime;
 
-	if (not matrixInit){
+	//if (not matrixInit){
 		A = buildTransMatrix();
 		//dA = Eigen::MatrixXd(A);
 		//std::cout << A  << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		N0 = buildInitialConditionVector();
-		matrixInit = true;
-	}
+		//std::cout << N0  << std::endl;
+		//matrixInit = true;
+	//}
 
-	sol = ExpSolver.solve(A, N0, solveTime);
-	//std::cout << sol;
+	sol = ExpSolver.solve(A, N0, timeStep);
 	unpackSolution(sol);
+	lastSolveTime = solveTime;
 }
 
 //*****************************************************************************
@@ -151,10 +153,16 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 		meshCellFace* thisCellWestFacePtr = thisCellPtr->westFacePtr;
 
 		// Gets the transition coefficient for species convective flux
-		double nTran = -thisCellNorthFacePtr->yVl/thisCellPtr->dy;
+		double nTran = thisCellNorthFacePtr->yVl/thisCellPtr->dy;
 		double sTran = thisCellSouthFacePtr->yVl/thisCellPtr->dy;
-		double eTran = -thisCellEastFacePtr->xVl/thisCellPtr->dx;
+		double eTran = thisCellEastFacePtr->xVl/thisCellPtr->dx;
 		double wTran = thisCellWestFacePtr->xVl/thisCellPtr->dx;
+
+		// Calculates the diffusion transition
+		double dN = 0.0; 
+		double dS = 0.0;
+		double dW = 0.0;
+		double dE = 0.0;
 
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
@@ -167,25 +175,41 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			if (thisCellNorthCellPtr){
 				j = getAi(thisCellNorthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				tripletList.push_back(T(i, j, std::max(nTran,0.0)));
+				double r = calcSpecConvectiveSlope(cellID, specID, 0, nTran);
+				double psi = fluxLim.getPsi(r);
+				double aN = std::max(-nTran,0.0) + psi/2.*(-std::max(nTran,0.0) -
+					std::max(-nTran,0.0)) + dN;
+				tripletList.push_back(T(i, j, aN));
 			}	
 			// Sets the south flow coefficient
 			if (thisCellSouthCellPtr){
 				j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				tripletList.push_back(T(i, j, std::max(sTran,0.0)));
+				double r = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
+				double psi = fluxLim.getPsi(r);
+				double aS = std::max(sTran,0.0) + psi/2.*(std::max(-sTran,0.0) -
+					std::max(sTran, 0.0)) + dS;
+				tripletList.push_back(T(i, j, std::max(aS,0.0)));
 			}
 			// Sets the east flow coefficient
 			if(thisCellEastCellPtr){
 				j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				tripletList.push_back(T(i, j, std::max(eTran,0.0)));
+				double r = calcSpecConvectiveSlope(cellID, specID, 2, eTran);
+				double psi = fluxLim.getPsi(r);
+				double aE = std::max(-eTran,0.0) + psi/2.*(-std::max(-eTran,0.0) -
+					std::max(eTran, 0.0)) + dE;
+				tripletList.push_back(T(i, j, std::max(aE,0.0)));
 			}
 			// Sets the west flow coefficient
 			if(thisCellWestCellPtr){
 				j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				tripletList.push_back(T(i, j, std::max(wTran,0.0)));
+				double r = calcSpecConvectiveSlope(cellID, specID, 3, wTran);
+				double psi = fluxLim.getPsi(r);
+				double aW = std::max(wTran, 0.0) + psi/2.*(std::max(-wTran, 0.0) -
+					std::max(wTran,0.0)) + dW;
+				tripletList.push_back(T(i, j, std::max(aW,0.0)));
 			}
 			// Sets the coefficients for non-constant source terms
 			double thisCoeff = 0.0;
@@ -201,12 +225,32 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 					}
 				}
 			}
+
 			// Sets the constant source terms
 			tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
 
+			// Calculates the x portion for the cell coefficient
+			double rW = calcSpecConvectiveSlope(cellID, specID, 3, wTran);
+			double rE = calcSpecConvectiveSlope(cellID, specID, 2, eTran);
+			double psiW = fluxLim.getPsi(rW);
+			double psiE = fluxLim.getPsi(rE);
+			double aPx = -std::max(eTran,0.0) - std::max(-eTran,0.0) +
+				psiE/2.*(std::max(eTran,0.0) + std::max(-eTran,0.0)) +
+				psiW/2.*(std::max(wTran,0.0) + std::max(-wTran,0.0)) -
+				dE - dW;
+
+			// Calculates the y portion for the cell coefficient
+			double rN = calcSpecConvectiveSlope(cellID, specID, 0, nTran);
+			double rS = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
+			double psiN = fluxLim.getPsi(rN);
+			double psiS = fluxLim.getPsi(rS);
+			double aPy = -std::max(nTran,0.0) - std::max(-sTran,0.0) + 
+				psiN/2.*(std::max(nTran,0.0) + std::max(-nTran,0.0)) +
+				psiS/2.*(std::max(sTran,0.0) + std::max(-sTran,0.0)) - 
+				dS - dN;
+
 			// Adds the coeff for this species 
-			thisCoeff += std::min(nTran,0.0) + std::min(sTran,0.0) 
-				+ std::min(wTran,0.0) + std::min(eTran,0.0);
+			thisCoeff += aPx + aPy;
 			//std::cout << std::max(nTran,0.0)<< " "<< std::max(sTran,0.0) <<std::endl;
 			tripletList.push_back(T(i, i, thisCoeff));
 		}
@@ -264,6 +308,97 @@ void speciesDriver::unpackSolution(Eigen::VectorXd sol){
 
 		}
 	}
+}
+//*****************************************************************************
+// Claculatest the convective species slop in a cell
+//
+// @param cellID	Global cellID
+// @param specID	Species ID
+// @pram tran		Transton value	[1/s]
+// @param loc		Location of adjacent cell
+//			0 = north
+//			1 = south
+//			2 = east
+//			3 = west
+//*****************************************************************************
+double speciesDriver::calcSpecConvectiveSlope(int cellID, int specID, 
+		int loc, double tran){
+		double alphal = 0.0;
+		double rohP = 0.0, rohN = 0.0, rohE = 0.0, rohS = 0.0, rohW = 0.0;
+		double rohNN, rohSS, rohEE, rohWW;
+		double r;
+		if (tran < 0.0) {alphal = 1.0;};
+		if (tran == 0.0) {return 0.0;};
+
+		// This cell pointer
+		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
+	
+		// Gets pointer to connecting cells
+		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
+		meshCell* thisCellSouthCellPtr = thisCellPtr->southCellPtr;
+		meshCell* thisCellEastCellPtr = thisCellPtr->eastCellPtr;
+		meshCell* thisCellWestCellPtr = thisCellPtr->westCellPtr;
+
+		// Gets pointer to conncetions of connections
+		meshCell* thisCellNorthNorthCellPtr = nullptr;
+		meshCell* thisCellSouthSouthCellPtr = nullptr;
+		meshCell* thisCellEastEastCellPtr = nullptr;
+		meshCell* thisCellWestWestCellPtr = nullptr;
+
+		if (thisCellNorthCellPtr){thisCellNorthNorthCellPtr = thisCellNorthCellPtr->northCellPtr;};
+		if (thisCellSouthCellPtr){thisCellSouthSouthCellPtr = thisCellSouthCellPtr->southCellPtr;};
+		if (thisCellEastCellPtr){thisCellEastEastCellPtr = thisCellEastCellPtr->eastCellPtr;};
+		if (thisCellWestCellPtr){thisCellWestWestCellPtr = thisCellWestCellPtr->westCellPtr;};
+
+		if (thisCellNorthCellPtr){rohN = thisCellNorthCellPtr->getSpecCon(specID);};
+		if (thisCellSouthCellPtr){rohS = thisCellSouthCellPtr->getSpecCon(specID);};
+		if (thisCellEastCellPtr){rohE = thisCellEastCellPtr->getSpecCon(specID);};
+		if (thisCellWestCellPtr){rohW = thisCellWestCellPtr->getSpecCon(specID);};
+
+		// Gets this cells species concentration
+		rohP = thisCellPtr->getSpecCon(specID);
+
+		switch(loc){
+
+			// North location
+			case 0: {
+				rohNN = (thisCellNorthNorthCellPtr) ? 
+					thisCellNorthNorthCellPtr->getSpecCon(specID) : 0.0;
+				r = (1.-alphal)*(rohP - rohS)/(rohN - rohP) + 
+					alphal*(rohNN - rohN)/(rohN - rohP);
+				
+				break;
+			}
+
+			// South location
+			case 1: {
+				rohSS = (thisCellSouthSouthCellPtr) ? 
+					thisCellSouthSouthCellPtr->getSpecCon(specID) : 0.0;
+				r = (1.-alphal)*(rohS - rohSS)/(rohP - rohS) + 
+					alphal*(rohN - rohS)/(rohP - rohS);
+				break;
+			}
+
+			// East location
+			case 2: {
+				rohEE = (thisCellEastEastCellPtr) ? 
+					thisCellEastEastCellPtr->getSpecCon(specID) : 0.0;
+				r = (1.-alphal)*(rohP - rohW)/(rohE - rohP) + 
+					alphal*(rohEE - rohE)/(rohE - rohP);
+				break;
+			}
+
+			// West location
+			case 3: {
+				rohWW = (thisCellWestWestCellPtr) ? 
+					thisCellWestWestCellPtr->getSpecCon(specID) : 0.0;
+				r = (1.-alphal)*(rohW - rohWW)/(rohP - rohW) + 
+					alphal*(rohE - rohP)/(rohP - rohW);
+				break;
+			}
+
+		}
+		return r;
 }
 
 //*****************************************************************************
