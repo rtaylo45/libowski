@@ -100,18 +100,20 @@ void speciesDriver::solve(double solveTime){
 	Eigen::VectorXd sol;
 	SolverType ExpSolver;
 	Eigen::MatrixXd dA;
+	lastSolveTime = solveTime;
+	double timeStep = solveTime - lastSolveTime;
 
-	if (not matrixInit){
+	//if (not matrixInit){
 		A = buildTransMatrix();
 		//dA = Eigen::MatrixXd(A);
 		//std::cout << A  << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		N0 = buildInitialConditionVector();
-		matrixInit = true;
-	}
+		//matrixInit = true;
+	//}
 
-	sol = ExpSolver.solve(A, N0, solveTime);
+	sol = ExpSolver.solve(A, N0, timeStep);
 	//std::cout << sol;
 	unpackSolution(sol);
 }
@@ -127,7 +129,6 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 	int totalSpecs = numOfSpecs;
 	int totalCells = modelPtr->numOfTotalCells;
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
-	double r = 0.0;
 	tripletList.reserve(nonZeros);	
 
 	// Init A matrix
@@ -152,10 +153,16 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 		meshCellFace* thisCellWestFacePtr = thisCellPtr->westFacePtr;
 
 		// Gets the transition coefficient for species convective flux
-		double nTran = -thisCellNorthFacePtr->yVl/thisCellPtr->dy;
+		double nTran = thisCellNorthFacePtr->yVl/thisCellPtr->dy;
 		double sTran = thisCellSouthFacePtr->yVl/thisCellPtr->dy;
-		double eTran = -thisCellEastFacePtr->xVl/thisCellPtr->dx;
+		double eTran = thisCellEastFacePtr->xVl/thisCellPtr->dx;
 		double wTran = thisCellWestFacePtr->xVl/thisCellPtr->dx;
+
+		// Calculates the diffusion transition
+		double dN = 0.0; 
+		double dS = 0.0;
+		double dW = 0.0;
+		double dE = 0.0;
 
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
@@ -164,34 +171,45 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
 
-
 			// Sets the north flow coefficient 
 			if (thisCellNorthCellPtr){
 				j = getAi(thisCellNorthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				r = calcSpecConvectiveSlope(i, j, specID, nTran, 0);
-				tripletList.push_back(T(i, j, std::max(nTran,0.0)));
+				double r = calcSpecConvectiveSlope(i, j, specID, nTran, 0);
+				double psi = fluxLim.getPsi(r);
+				double aN = std::max(nTran,0.0) + psi/2.*(-std::max(nTran,0.0) -
+					std::max(-nTran,0.0)) + dN;
+				tripletList.push_back(T(i, j, aN));
 			}	
 			// Sets the south flow coefficient
 			if (thisCellSouthCellPtr){
 				j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				r = calcSpecConvectiveSlope(i, j, specID, sTran, 1);
-				tripletList.push_back(T(i, j, std::max(sTran,0.0)));
+				double r = calcSpecConvectiveSlope(i, j, specID, sTran, 1);
+				double psi = fluxLim.getPsi(r);
+				double aS = std::max(sTran,0.0) + psi/2.*(std::max(-sTran,0.0) -
+					std::max(sTran, 0.0)) + dS;
+				tripletList.push_back(T(i, j, std::max(aS,0.0)));
 			}
 			// Sets the east flow coefficient
 			if(thisCellEastCellPtr){
 				j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				r = calcSpecConvectiveSlope(i, j, specID, eTran, 2);
-				tripletList.push_back(T(i, j, std::max(eTran,0.0)));
+				double r = calcSpecConvectiveSlope(i, j, specID, eTran, 2);
+				double psi = fluxLim.getPsi(r);
+				double aE = std::max(-eTran,0.0) + psi/2.*(-std::max(-eTran,0.0) -
+					std::max(eTran, 0.0)) + dE;
+				tripletList.push_back(T(i, j, std::max(aE,0.0)));
 			}
 			// Sets the west flow coefficient
 			if(thisCellWestCellPtr){
 				j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				r = calcSpecConvectiveSlope(i, j, specID, wTran, 3);
-				tripletList.push_back(T(i, j, std::max(wTran,0.0)));
+				double r = calcSpecConvectiveSlope(i, j, specID, wTran, 3);
+				double psi = fluxLim.getPsi(r);
+				double aW = std::max(wTran, 0.0) + psi/2.*(std::max(-wTran, 0.0) -
+					std::max(wTran,0.0)) + dW;
+				tripletList.push_back(T(i, j, std::max(aW,0.0)));
 			}
 			// Sets the coefficients for non-constant source terms
 			double thisCoeff = 0.0;
@@ -210,9 +228,27 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			// Sets the constant source terms
 			tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
 
+			// Calculates the x portion for the cell coefficient
+			double rW = calcSpecConvectiveSlope(i, j, specID, wTran, 3);
+			double rE = calcSpecConvectiveSlope(i, j, specID, eTran, 2);
+			double psiW = fluxLim.getPsi(rW);
+			double psiE = fluxLim.getPsi(rE);
+			double aPx = -std::max(eTran,0.0) - std::max(-eTran,0.0) +
+				psiE/2.*(std::max(eTran,0.0) + std::max(-eTran,0.0)) +
+				psiW/2.*(std::max(wTran,0.0) + std::max(-wTran,0.0)) -
+				dE - dW;
+
+			// Calculates the y portion for the cell coefficient
+			double rN = calcSpecConvectiveSlope(i, j, specID, nTran, 0);
+			double rS = calcSpecConvectiveSlope(i, j, specID, sTran, 1);
+			double psiN = fluxLim.getPsi(rN);
+			double psiS = fluxLim.getPsi(rS);
+			double aPy = -std::max(nTran,0.0) - std::max(-sTran,0.0) + 
+				psiN/2.*(std::max(nTran,0.0) + std::max(-nTran,0.0)) +
+				psiS/2.*(std::max(sTran,0.0) + std::max(-sTran,0.0)) - 
+				dS - dN;
 			// Adds the coeff for this species 
-			thisCoeff += std::min(nTran,0.0) + std::min(sTran,0.0) 
-				+ std::min(wTran,0.0) + std::min(eTran,0.0);
+			thisCoeff += aPx + aPy;
 			//std::cout << std::max(nTran,0.0)<< " "<< std::max(sTran,0.0) <<std::endl;
 			tripletList.push_back(T(i, i, thisCoeff));
 		}

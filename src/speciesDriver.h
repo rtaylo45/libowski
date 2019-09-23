@@ -16,6 +16,7 @@
 #include "meshCellFace.h"
 #include "species.h"
 #include "CRAM.h"
+#include "convectionLimiter.h"
 
 class speciesDriver {
 
@@ -29,10 +30,14 @@ class speciesDriver {
 	int dummySpec = 0;
 	// Logical set after the matrix has been built
 	bool matrixInit = false;
+	// Last solve time 
+	double lastSolveTime = 0.0;
 	// Transition matrix
 	Eigen::SparseMatrix<double> A;
 	// Initial condition
 	Eigen::VectorXd N0;
+	// Convection flux limiter type
+	fluxLimiter fluxLim = fluxLimiter(0);
 
 	// Class methods
 	public:
