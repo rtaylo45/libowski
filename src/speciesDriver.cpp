@@ -87,9 +87,10 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 //*****************************************************************************
 void speciesDriver::setBoundaryCondition(int i, int j, int specID, double bc){
    meshCell* cell = modelPtr->getCellByLoc(i,j);
-	cell->solved = true;
+	cell->boundary = true;
+	dummySpec = 1;
    species* spec = getSpeciesPtr(i, j, specID);
-	spec->c = bc;
+	spec->bc = bc;
 	
 }
 
@@ -105,7 +106,7 @@ void speciesDriver::solve(double solveTime){
 	//if (not matrixInit){
 		A = buildTransMatrix();
 		//dA = Eigen::MatrixXd(A);
-		//std::cout << A  << std::endl;
+		std::cout << A  << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		N0 = buildInitialConditionVector();
@@ -138,7 +139,6 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 	for (int cellID = 0; cellID < totalCells; cellID++){
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
-		if (thisCellPtr->solved) {continue;};
 
 		// Gets pointer to connecting cells
 		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
@@ -226,6 +226,10 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 				}
 			}
 
+			double rS = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
+			double aSb = std::max(sTran,0.0) + fluxLim.getPsi(rS)*(std::max(-sTran,0.0) -
+				std::max(sTran, 0.0)) + dS;
+			if (thisCellPtr->boundary){thisSpecPtr->s += 2.*aSb*thisSpecPtr->bc;};
 			// Sets the constant source terms
 			tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
 
@@ -241,13 +245,14 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 
 			// Calculates the y portion for the cell coefficient
 			double rN = calcSpecConvectiveSlope(cellID, specID, 0, nTran);
-			double rS = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
+			//double rS = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
 			double psiN = fluxLim.getPsi(rN);
 			double psiS = fluxLim.getPsi(rS);
 			double aPy = -std::max(nTran,0.0) - std::max(-sTran,0.0) + 
 				psiN/2.*(std::max(nTran,0.0) + std::max(-nTran,0.0)) +
 				psiS/2.*(std::max(sTran,0.0) + std::max(-sTran,0.0)) - 
 				dS - dN;
+			if (thisCellPtr->boundary){aPy -= aSb;};
 
 			// Adds the coeff for this species 
 			thisCoeff += aPx + aPy;

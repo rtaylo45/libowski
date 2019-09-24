@@ -5,6 +5,7 @@
 // The finite Volume Method Second Edition
 //*****************************************************************************
 #include "convectionLimiter.h"
+#include <iostream>
 
 //*****************************************************************************
 // Constructor
@@ -40,6 +41,7 @@ fluxLimiter::fluxLimiter(int limitType){
 //*****************************************************************************
 double fluxLimiter::getPsi(double r){
 	double psi = superbee(r);
+	//std::cout << r << " "<< superbee(r) << std::endl;
 	//double psi = *fluxLimiterPtr(r);
 	return psi;
 }
