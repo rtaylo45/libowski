@@ -6,6 +6,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string>
+#include <fstream>
 
 #include "CRAM.h"
 #include "mpiProcess.h"
@@ -300,8 +302,8 @@ void testXenonIodineFlow(){
 //*****************************************************************************
 void testNeutronPrecursorsFlow(){
 	double t = 0.0;
-	int steps = 82;
-	double totalTime = 1400.0;
+	int steps = 140;
+	double totalTime = 140.0;
 	double dt = totalTime/steps;
 	int xCells = 7, yCells = 16;
 	double xLength = 2.5, yLength = 8.0;
@@ -403,11 +405,14 @@ void testNeutronPrecursorsFlow(){
 		}
 	}
 
-	for (int k = 0; k <+ steps; k++){
+	for (int k = 0; k < steps; k++){
 		t = t + dt;
 		// Solve with CRAM
 		spec.solve(t);
 
+		std::ofstream outputFile;
+		outputFile.open("precursorsMultiChan.out", std::ios_base::app);
+		outputFile << "Time: "+std::to_string(t)+"\n";
 		// Gets species Concentrations
 		for (int i = 0; i < xCells; i++){
 			for (int j = 0; j < yCells; j++){
@@ -420,6 +425,9 @@ void testNeutronPrecursorsFlow(){
 
 				printf (" %2i %2i %E %E %E %E %E %E\n", i, j, c1Con, 
 					c2Con, c3Con, c4Con, c5Con, c6Con);
+				outputFile << i << " " << j << " " << c1Con << " " << c2Con << " " 
+					<< c3Con << " " << c4Con << " " << c5Con << " " << c6Con << std::endl;
+
 			}
 		}
 	}
