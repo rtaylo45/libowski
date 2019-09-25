@@ -107,16 +107,6 @@ void modelMesh::connectCells(){
 			cell->westFacePtr = &meshCellFaces[kWest];
 			cell->southFacePtr = &meshCellFaces[kSouth];
 			cell->northFacePtr = &meshCellFaces[kNorth];
-
-			//if (Node->northPtr != nullptr)
-			//	std::cout << "North Node " <<Node->northPtr->i << ' ' << Node->northPtr->j << std::endl;
-			//if (Node->southPtr != nullptr)
-			//	std::cout << "South Node " <<Node->southPtr->i << ' ' << Node->southPtr->j << std::endl;
-			//if (Node->westPtr != nullptr)
-			//	std::cout << "west Node " <<Node->westPtr->i << ' ' << Node->westPtr->j << std::endl;
-			//if (Node->eastPtr != nullptr)
-			//	std::cout << "East Node " <<Node->eastPtr->i << ' ' << Node->eastPtr->j << std::endl;
-			//std::cout << " " << std::endl;
 		}
 	}
 }

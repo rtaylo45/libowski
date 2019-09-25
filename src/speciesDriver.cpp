@@ -106,7 +106,7 @@ void speciesDriver::solve(double solveTime){
 	//if (not matrixInit){
 		A = buildTransMatrix();
 		//dA = Eigen::MatrixXd(A);
-		std::cout << A  << std::endl;
+		//std::cout << A  << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		N0 = buildInitialConditionVector();
