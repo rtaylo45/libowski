@@ -17,6 +17,7 @@
 #include "species.h"
 #include "CRAM.h"
 #include "convectionLimiter.h"
+#include "mpiProcess.h"
 
 class speciesDriver {
 

@@ -115,7 +115,7 @@ void speciesDriver::solve(double solveTime){
 	N0 = buildInitialConditionVector();
 
 	sol = ExpSolver.solve(A, N0, timeStep);
-	unpackSolution(sol);
+	if (mpi.rank == 0){unpackSolution(sol);};
 	lastSolveTime = solveTime;
 }
 
