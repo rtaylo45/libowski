@@ -103,16 +103,16 @@ void speciesDriver::solve(double solveTime){
 	Eigen::MatrixXd dA;
 	double timeStep = solveTime - lastSolveTime;
 
-	//if (not matrixInit){
+	if (not matrixInit){
 		A = buildTransMatrix();
 		//dA = Eigen::MatrixXd(A);
 		//std::cout << A  << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << dA.determinant() << std::endl;
-		N0 = buildInitialConditionVector();
 		//std::cout << N0  << std::endl;
-		//matrixInit = true;
-	//}
+		matrixInit = true;
+	}
+	N0 = buildInitialConditionVector();
 
 	sol = ExpSolver.solve(A, N0, timeStep);
 	unpackSolution(sol);
@@ -404,6 +404,13 @@ double speciesDriver::calcSpecConvectiveSlope(int cellID, int specID,
 
 		}
 		return r;
+}
+
+//*****************************************************************************
+// Tells solver to rebuild the transition matrix before the next solve
+//*****************************************************************************
+void speciesDriver::resetMatrix(){
+	matrixInit = false;
 }
 
 //*****************************************************************************
