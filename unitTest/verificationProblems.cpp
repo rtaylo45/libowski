@@ -193,7 +193,7 @@ void testXenonIodineFlow(){
 //*****************************************************************************
 void testNeutronPrecursorsFlow(){
 	double t = 0.0;
-	int steps = 140;
+	int steps = 2;
 	double totalTime = 140.0;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 16;
@@ -315,6 +315,7 @@ void testNeutronPrecursorsFlow(){
 
 			}
 		}
+		spec.resetMatrix();
 		//std::cout << " " << std::endl;
 	}
 

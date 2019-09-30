@@ -53,8 +53,8 @@ class speciesDriver {
 	void setSpeciesSource(int, int, int, std::vector<double>, double);
 	// Sets a boundary condition in a cell
 	void setBoundaryCondition(int, int, int, double);
-	// Calculates the species convection slope across in a cell
-	double calcSpecConvectiveSlope(int, int, int, double);
+	// Call to make solver rebuild the A matrix before the next solve
+	void resetMatrix();
 	// Solves the species transport equation
 	void solve(double);
 	// Cleans species
@@ -69,5 +69,7 @@ class speciesDriver {
 	void unpackSolution(Eigen::VectorXd);
 	// Gets the i or j index for transition matrix
 	int getAi(int, int, int, int);
+	// Calculates the species convection slope across in a cell
+	double calcSpecConvectiveSlope(int, int, int, double);
 };
 #endif
