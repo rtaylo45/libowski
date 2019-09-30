@@ -3,6 +3,7 @@ project(unitTest)
 # The test program
 add_executable(unitTestSolver testSolver.cpp)
 add_executable(unitTestMesh testMesh.cpp)
+add_executable(unitTestVerification verificationProblems.cpp)
 
 # Unit test path
 set(TEST_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -16,6 +17,11 @@ if(${MPI_FOUND})
 	target_link_libraries(unitTestMesh PRIVATE liblibowski ${MPI_LIBRARIES})
 	target_compile_definitions(unitTestMesh PRIVATE HAVE_MPI)
 	add_test(test_mesh ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ${TEST_PATH}/unitTestMesh)
+
+	# Verification problem
+	target_link_libraries(unitTestVerification PRIVATE liblibowski ${MPI_LIBRARIES})
+	target_compile_definitions(unitTestVerification PRIVATE HAVE_MPI)
+	add_test(test_Verification ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ${TEST_PATH}/unitTestVerification)
 else()
 	# Solver test
 	target_link_libraries(unitTestSolver PRIVATE liblibowski)
@@ -24,4 +30,8 @@ else()
 	# Model mesh test
 	target_link_libraries(unitTestMesh PRIVATE liblibowski)
 	add_test(test_mesh ${TEST_PATH}/unitTestMesh)
+
+	# Verification problem
+	target_link_libraries(unitTestVerification PRIVATE liblibowski)
+	add_test(test_Verification ${TEST_PATH}/unitTestVerification)
 endif()
