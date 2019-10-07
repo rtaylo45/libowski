@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <unsupported/Eigen/CXX11/Tensor>
@@ -57,6 +58,7 @@ void testXenonIodineNoFlow(int myid){
    double flux = 2.5E16;
    double gamma_xe = 0.002468;
    double gamma_I = 0.063033;
+	double D_xe = 0.0, D_I = 0.0;
 	double N_xe_0 = 0.0, N_I_0 = 0.0;
 	int xenonID, iodineID;
 	double xenonCon, iodineCon;
@@ -67,8 +69,8 @@ void testXenonIodineNoFlow(int myid){
 
 	modelMesh model(xCells, yCells, xLength, yLength);
 	speciesDriver spec = speciesDriver(&model);
-	xenonID = spec.addSpecies(xenonMM, N_xe_0);
-	iodineID = spec.addSpecies(iodineMM, N_I_0);
+	xenonID = spec.addSpecies(xenonMM, N_xe_0, D_xe);
+	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
 
 	// Set source
 	
@@ -132,6 +134,7 @@ void testXenonIodineFlow(int myid){
    double flux = 2.5E16;
    double gamma_xe = 0.002468;
    double gamma_I = 0.063033;
+	double D_xe = 0.0, D_I = 0.0;
 	double N_xe_0 = 0.0, N_I_0 = 0.0;
 	int xenonID, iodineID;
 	double xenonCon, iodineCon, error = 0.0;
@@ -150,8 +153,8 @@ void testXenonIodineFlow(int myid){
 	speciesDriver spec = speciesDriver(&model);
 
 	// Adds xenon and iodine species
-	xenonID = spec.addSpecies(xenonMM, N_xe_0);
-	iodineID = spec.addSpecies(iodineMM, N_I_0);
+	xenonID = spec.addSpecies(xenonMM, N_xe_0, D_xe);
+	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
 	spec.setBoundaryCondition(0, 0, xenonID, xenonInitCon);
 	spec.setBoundaryCondition(0, 0, iodineID, iodineInitCon);
 
@@ -211,6 +214,7 @@ void testNeutronPrecursorsFlow(int myid){
 	double lambdaC4 = -0.3170, lambdaC5 = -1.3500, lambdaC6 = -8.640;
 	double c1InitCon = 0.0, c2InitCon = 0.0, c3InitCon = 0.0, c4InitCon = 0.0;
 	double c5InitCon = 0.0, c6InitCon = 0.0;
+	double D_c1 = 0.0, D_c2 = 0.0, D_c3 = 0.0, D_c4 = 0.0, D_c5 = 0.0, D_c6 = 0.0;
    MatrixXd coeff(16,7);
 	std::vector<double> c1Coeffs = {lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0};
 	std::vector<double> c2Coeffs = {0.0, lambdaC2, 0.0, 0.0, 0.0, 0.0};
@@ -265,12 +269,12 @@ void testNeutronPrecursorsFlow(int myid){
 	speciesDriver spec = speciesDriver(&model);
 
 	// Adds species
-	c1ID = spec.addSpecies(1.0, 0.0);
-	c2ID = spec.addSpecies(1.0, 0.0);
-	c3ID = spec.addSpecies(1.0, 0.0);
-	c4ID = spec.addSpecies(1.0, 0.0);
-	c5ID = spec.addSpecies(1.0, 0.0);
-	c6ID = spec.addSpecies(1.0, 0.0);
+	c1ID = spec.addSpecies(1.0, 0.0, D_c1);
+	c2ID = spec.addSpecies(1.0, 0.0, D_c2);
+	c3ID = spec.addSpecies(1.0, 0.0, D_c3);
+	c4ID = spec.addSpecies(1.0, 0.0, D_c4);
+	c5ID = spec.addSpecies(1.0, 0.0, D_c5);
+	c6ID = spec.addSpecies(1.0, 0.0, D_c6);
 
 	// Sets BCs
 	for (int i = 0; i < xCells; i++){
@@ -349,6 +353,7 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 	double lambdaC4 = -0.3170, lambdaC5 = -1.3500, lambdaC6 = -8.640;
 	double c1InitCon = 0.0, c2InitCon = 0.0, c3InitCon = 0.0, c4InitCon = 0.0;
 	double c5InitCon = 0.0, c6InitCon = 0.0;
+	double D_c1 = 0.0, D_c2 = 0.0, D_c3 = 0.0, D_c4 = 0.0, D_c5 = 0.0, D_c6 = 0.0;
    MatrixXd coeff(16,7);
 	Tensor<double, 3> ceoff3d(6, 13, 16);
 	std::vector<double> c1Coeffs = {lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -417,12 +422,12 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 	speciesDriver spec = speciesDriver(&model);
 
 	// Adds species
-	c1ID = spec.addSpecies(1.0, 0.0);
-	c2ID = spec.addSpecies(1.0, 0.0);
-	c3ID = spec.addSpecies(1.0, 0.0);
-	c4ID = spec.addSpecies(1.0, 0.0);
-	c5ID = spec.addSpecies(1.0, 0.0);
-	c6ID = spec.addSpecies(1.0, 0.0);
+	c1ID = spec.addSpecies(1.0, 0.0, D_c1);
+	c2ID = spec.addSpecies(1.0, 0.0, D_c2);
+	c3ID = spec.addSpecies(1.0, 0.0, D_c3);
+	c4ID = spec.addSpecies(1.0, 0.0, D_c4);
+	c5ID = spec.addSpecies(1.0, 0.0, D_c5);
+	c6ID = spec.addSpecies(1.0, 0.0, D_c6);
 
 	// Sets BCs
 	for (int i = 0; i < xCells; i++){
@@ -485,6 +490,75 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 
 }
 //*****************************************************************************
+// Test benchmark for Ben
+//*****************************************************************************
+void testBenBenchmark(int myid){
+	int xCells = 1, yCells = 100;
+	double xLength = 1.0, yLength = 300.;
+	double yVelocity = 30.0;
+	double specInitCon = 0.0;
+	double specMM = 1.0;
+	double t = 10000000.0;
+   double lambda_spec = -.3;
+	double D_spec = 1.0;
+	double specS = 0.0, x = 0.0;
+	meshCell* cell;
+	int specID, specID2;
+	double specCon;
+	std::vector<double> specCoeffs = {lambda_spec};
+
+	// Builds the mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+
+	// Sets the x velocity
+	model.setConstantYVelocity(yVelocity);
+
+	// Sets species driver
+	speciesDriver spec = speciesDriver(&model);
+
+	// Adds xenon and iodine species
+	specID = spec.addSpecies(specMM, 0.0, D_spec);
+	for (int k = 0; k < xCells; k++){
+		spec.setBoundaryCondition(k, 0, specID, 1.0);
+	}
+
+	// Set source
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			cell = model.getCellByLoc(i,j);
+			x = cell->x;
+			specS = (x < 100.) ? sin(M_PI*x/100.) : 0.0;
+			//std::cout << x << " " << specS << std::endl;
+			spec.setSpeciesSource(i, j, specID, specCoeffs, specS);
+		}
+	}
+
+	// Solve with CRAM
+	spec.solve(t);
+
+	std::ofstream outputFile;
+	outputFile.open("benBenchmark.out", std::ios_base::app);
+	outputFile << "Time: "+std::to_string(t)+"\n";
+	// Gets species Concentrations
+	if (myid==0){
+		for (int i = 0; i < xCells; i++){
+			for (int j = 0; j < yCells; j++){
+				specCon = spec.getSpecies(i, j, specID);
+
+				//std::cout << specCon << std::endl;
+				//printf (" %2i %2i %E \n", i, j, specCon);
+				outputFile << i << " " << j << " " << specCon << std::endl;
+			}
+		}
+	}
+
+	
+	model.clean();
+	spec.clean();
+
+}
+
+//*****************************************************************************
 // Main test
 //*****************************************************************************
 int main(){
@@ -495,6 +569,7 @@ int main(){
 	testXenonIodineFlow(myid);
 	testNeutronPrecursorsFlow(myid);
 	testNeutronPrecursorsMultiChanFlow(myid);
+	testBenBenchmark(myid);
 
 	mpi.finalize();
 }

@@ -19,13 +19,15 @@ class species {
 	double s = 0.0;
 	// Holds the boundary condition value [lbm/ft^3]
 	double bc = 0.0;
+	// Diffusion coefficient
+	double D = 0.0;
 	// Vector of linear source term coefficients in order of species IDs [1/s]
 	std::vector<double> coeffs;
 
 	// Class methods
 	public:
 	// Constructor
-	species(double, double);
+	species(double, double, double);
 
 	// Clean
 	void clean();

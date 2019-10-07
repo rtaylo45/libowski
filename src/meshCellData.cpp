@@ -31,10 +31,11 @@ meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor,
 //
 // @param molarMass	Molar mass of species [lbm/mol]
 // @param initCon		Initial concentration [lbm/ft^3]
+// @param diffCoeff	Diffusion coefficient [ft^2/s]
 //*****************************************************************************
-void meshCell::addSpecies(double molarMass, double initCon){
+void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff){
 
-	species spec(molarMass, initCon);
+	species spec(molarMass, initCon, diffCoeff);
 	speciesVector.push_back(spec);
 
 }
