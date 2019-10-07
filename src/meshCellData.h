@@ -58,7 +58,7 @@ class meshCell {
 	// Constructor
 	meshCell(int, int, int, double, double, double, double);
 	// Add species
-	void addSpecies(double, double);
+	void addSpecies(double, double, double);
 	// Gets a pointer to the species
 	species* getSpecies(int);
 	// Gets this cells species concentration

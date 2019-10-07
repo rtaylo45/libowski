@@ -71,8 +71,8 @@ void testSpeciesDriver(){
 
 	modelMesh model(xCells, yCells, xLength, yLength);
 	speciesDriver spec = speciesDriver(&model);
-	specID1 = spec.addSpecies(spec1MM, spec1InitCon);
-	specID2 = spec.addSpecies(spec2MM, spec2InitCon);
+	specID1 = spec.addSpecies(spec1MM, spec1InitCon, 0.0);
+	specID2 = spec.addSpecies(spec2MM, spec2InitCon, 0.0);
 
 	// Sets sourse terms for the model
 	for (int i = 0; i < xCells; i++){
@@ -131,7 +131,7 @@ void testYDirectionAdvection(){
 	speciesDriver spec = speciesDriver(&model);
 
 	// Adds species to the model
-	specID = spec.addSpecies(1.0, 10.0);
+	specID = spec.addSpecies(1.0, 10.0, 0.0);
 	spec.setBoundaryCondition(0, 0, specID, 2.*specInitCon);
 
 	for (int step = 1; step <= numOfSteps; step++){

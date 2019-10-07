@@ -45,7 +45,7 @@ class speciesDriver {
 	// Constructor
 	speciesDriver(modelMesh* model);
 	// Adds a species to the system
-	int addSpecies(double, double);
+	int addSpecies(double, double, double);
 	// Gets a pointer to the species object
 	species* getSpeciesPtr(int, int, int);
 	// Gets the species concentration
