@@ -11,6 +11,7 @@
 #include <Eigen/Sparse>
 #include <iostream>
 #include <algorithm>
+#include <string>
 #include "modelMesh.h"
 #include "meshCellData.h"
 #include "meshCellFace.h"
@@ -50,10 +51,12 @@ class speciesDriver {
 	species* getSpeciesPtr(int, int, int);
 	// Gets the species concentration
 	double getSpecies(int, int, int);
+	// Sets the species concentration
+	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms
 	void setSpeciesSource(int, int, int, std::vector<double>, double);
 	// Sets a boundary condition in a cell
-	void setBoundaryCondition(int, int, int, double);
+	void setBoundaryCondition(std::string, int, double);
 	// Call to make solver rebuild the A matrix before the next solve
 	void resetMatrix();
 	// Solves the species transport equation

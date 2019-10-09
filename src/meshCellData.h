@@ -31,6 +31,11 @@ class meshCell {
 	double dy;
 	// Denote if a cell is at a  boundary
 	bool boundary = false;
+	// Boundary location: 0 = North
+	//							 1 = South
+	//							 2 = East
+	//							 3 = West
+	int boundaryLoc = -1;
 	// Vector of the species in the cell
 	std::vector<species> speciesVector;
 

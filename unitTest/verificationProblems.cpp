@@ -32,18 +32,42 @@ using namespace Eigen;
 //*****************************************************************************
 bool isApprox(double goalVal, double testVal, double rtol = 1e-5, double atol = 1e-8){
 	bool retBool = false;
+	bool rtolBool = false;
+	bool atolBool = false;
 
 	double diff = abs(goalVal - testVal);
-	if (diff < rtol) { retBool = true; }
-	if (diff/goalVal < atol) { retBool = true; }
+	if (diff < rtol) {rtolBool = true;};
+	if (diff/goalVal < atol) {atolBool = true;};
+	if (rtolBool and atolBool) {retBool = true;};
 	return retBool;
 }
+
+//*****************************************************************************
+// Precursor analytical solution
+//*****************************************************************************
+double precursorAnalitical(double y, double vel, double a, double length, 
+	double lambda){
+	double sol = 0.0;
+	double bottom1, bottom2;
+
+	bottom1 = pow(length*lambda,2.0) + pow(M_PI*vel,2.0);
+	bottom2 = pow(lambda/vel,2.0) + pow(M_PI/length,2.0);
+
+	sol = length*a*vel*M_PI*exp(-lambda*y/vel)/bottom1 - 
+		(a/vel)*((M_PI/length)*cos(M_PI*y/length) - 
+		(lambda/vel)*sin(M_PI*y/length))/bottom2;
+
+	sol = (a - a*exp(-lambda*y/vel))/lambda;
+
+	return sol;
+}
+
 //*****************************************************************************
 // Test that the species driver sets up the problem right and solves the 
 // system right. 
 //*****************************************************************************
 void testXenonIodineNoFlow(int myid){
-	int xCells = 1, yCells = 10;
+	int xCells = 1, yCells = 1;
 	double xLength = 1.0, yLength = 1.0;
 	double xenonInitCon = 0.0, iodineInitCon = 0.0;
 	double xenonMM = 135.0, iodineMM = 135.0;
@@ -106,8 +130,8 @@ void testXenonIodineNoFlow(int myid){
 				for (int j = 0; j < yCells; j++){
 					xenonCon = spec.getSpecies(i, j, xenonID);
 					iodineCon = spec.getSpecies(i, j, iodineID);
-					assert(isApprox(xenonCon, N_xe));
-					assert(isApprox(iodineCon, N_I));
+					assert(isApprox(xenonCon, N_xe, 1.e8, 1.e-10));
+					assert(isApprox(iodineCon, N_I, 1.e8, 1.e-10));
 				}
 			}
 		}
@@ -117,9 +141,9 @@ void testXenonIodineNoFlow(int myid){
 	spec.clean();
 }
 //*****************************************************************************
-// Test Xenon iodine flow problem
+// Test Xenon iodine flow problem in the y direction
 //*****************************************************************************
-void testXenonIodineFlow(int myid){
+void testXenonIodineYFlow(int myid){
 	int xCells = 1, yCells = 500;
 	double xLength = 1.0, yLength = 10.0;
 	double yVelocity = 8.0;
@@ -155,8 +179,8 @@ void testXenonIodineFlow(int myid){
 	// Adds xenon and iodine species
 	xenonID = spec.addSpecies(xenonMM, N_xe_0, D_xe);
 	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
-	spec.setBoundaryCondition(0, 0, xenonID, xenonInitCon);
-	spec.setBoundaryCondition(0, 0, iodineID, iodineInitCon);
+	spec.setBoundaryCondition("south", xenonID, xenonInitCon);
+	spec.setBoundaryCondition("south", iodineID, iodineInitCon);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -183,8 +207,87 @@ void testXenonIodineFlow(int myid){
 
 				//std::cout << xenonCon << " " << iodineCon << " " << N_I << std::endl;
 				error = std::max(std::abs(iodineCon - N_I)/N_I, error);
-				//std::cout << y << " " << iodineCon << " " << N_I 
-				//<< " " << std::abs(iodineCon - N_I)/N_I << std::endl;
+				//std::cout << y << " " << error << std::endl;
+				assert(isApprox(iodineCon, N_I));
+			}
+		}
+	}
+	//std::cout << "Max l-1 error: " << error << std::endl;
+
+	
+	model.clean();
+	spec.clean();
+
+}
+
+//*****************************************************************************
+// Test Xenon iodine flow problem in the x direction
+//*****************************************************************************
+void testXenonIodineXFlow(int myid){
+	int xCells = 500, yCells = 1;
+	double xLength = 10.0, yLength = 1.0;
+	double xVelocity = 8.0;
+	double xenonInitCon = 5e-6, iodineInitCon = 5e-6;
+	double xenonMM = 135.0, iodineMM = 135.0;
+	double AvogNum = 6.02214076E23;
+	double t = 10000000.0;
+   double lambda_I = 2.11E-5;
+   double lambda_xe = 2.9306E-5;
+   double sigma_a = 2.002E-22;
+   double Sigma_f = 9.7532E-1;
+   double flux = 2.5E16;
+   double gamma_xe = 0.002468;
+   double gamma_I = 0.063033;
+	double D_xe = 0.0, D_I = 0.0;
+	double N_xe_0 = 0.0, N_I_0 = 0.0;
+	int xenonID, iodineID;
+	double xenonCon, iodineCon, error = 0.0;
+	std::vector<double> xenonCoeffs = {-lambda_xe-sigma_a*flux, lambda_I};
+	std::vector<double> iodineCoeffs = {0.0, -lambda_I};
+	double xenonS = gamma_xe*Sigma_f*flux*xenonMM/AvogNum;
+	double iodineS = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
+
+	// Builds the mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+
+	// Sets the x velocity
+	model.setConstantXVelocity(xVelocity);
+
+	// Sets species driver
+	speciesDriver spec = speciesDriver(&model);
+
+	// Adds xenon and iodine species
+	xenonID = spec.addSpecies(xenonMM, N_xe_0, D_xe);
+	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
+	spec.setBoundaryCondition("west", xenonID, xenonInitCon);
+	spec.setBoundaryCondition("west", iodineID, iodineInitCon);
+
+	// Set source
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			spec.setSpeciesSource(i, j, xenonID, xenonCoeffs, xenonS);
+			spec.setSpeciesSource(i, j, iodineID, iodineCoeffs, iodineS);
+		}
+	}
+
+	// Solve with CRAM
+	spec.solve(t);
+
+	// Gets species Concentrations
+	if (myid==0){
+		for (int i = 0; i < xCells; i++){
+			for (int j = 0; j < yCells; j++){
+				xenonCon = spec.getSpecies(i, j, xenonID);
+				iodineCon = spec.getSpecies(i, j, iodineID);
+				meshCell* cell = model.getCellByLoc(i,j);
+				double x = cell->x;
+				// Iodine solution
+				double b = gamma_I*Sigma_f*flux*iodineMM/AvogNum/lambda_I;
+   			double N_I = b + (iodineInitCon - b)*exp(-lambda_I/xVelocity*x);
+
+				//std::cout << xenonCon << " " << iodineCon << " " << N_I << std::endl;
+				error = std::max(std::abs(iodineCon - N_I)/N_I, error);
+				//std::cout << y << " " << error << std::endl;
 				assert(isApprox(iodineCon, N_I));
 			}
 		}
@@ -197,31 +300,122 @@ void testXenonIodineFlow(int myid){
 
 }
 //*****************************************************************************
+// Test 2D diffusion
+//*****************************************************************************
+void testDiffusion2D(int myid){
+	int xCells = 20, yCells = 20;
+	double xLength = 100.0, yLength = 100.0;
+	double totalTime = 1000000.0;
+	double t = 0.0;
+	int steps = 1;
+	double dt = totalTime/steps;
+	double D_spec = 1.0;
+	int specID;
+	double specCon;
+	double s, y, x;
+	double exact, temp1, temp2, temp3, error;
+
+	// Builds the mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+
+	// Sets species driver
+	speciesDriver spec = speciesDriver(&model);
+
+	// Adds xenon and iodine species
+	specID = spec.addSpecies(1.0, 0.0, D_spec);
+	spec.setBoundaryCondition("south", specID, 0.0);
+	spec.setBoundaryCondition("east", specID, 0.0);
+	spec.setBoundaryCondition("west", specID, 0.0);
+	spec.setBoundaryCondition("north", specID, 100.0);
+
+	// Set source
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			//s = exp(-20.*pow(x-1.0/2.,2) - 20.*pow(y-1.0/2.,2));
+			s = 0.0;
+			spec.setSpeciesCon(i, j, specID, s);
+		}
+	}
+
+	error = 0.0;
+	for (int k = 0; k < steps; k++){
+		t = t + dt;
+		std::cout << t << std::endl;
+		// Solve with CRAM
+		spec.solve(t);
+
+		std::ofstream outputFile;
+		outputFile.open("Diffusion2D.out", std::ios_base::app);
+		outputFile << "Time: "+std::to_string(t)+"\n";
+
+		// Gets species Concentrations
+		if (myid==0){
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					specCon = spec.getSpecies(i, j, specID);
+					meshCell* cell = model.getCellByLoc(i,j);
+					x = cell->x;
+					y = cell->y;
+					exact = 0.0;
+
+					// Calculates exact solution from the first project
+					// of my CFD class
+					for (int k = 1; k < 202; k += 2){
+						temp1 = sinh(k*M_PI*y/xLength);
+						temp2 = sin(k*M_PI*x/xLength);
+						temp3 = 1./(k*sinh(k*M_PI*yLength/xLength));
+						exact += temp1*temp2*temp3;						
+					}
+					exact = exact*400./M_PI;
+					error += pow(std::abs(specCon - exact), 2);
+					//std::cout << error << std::endl;
+					outputFile << i << " " << j << " " << specCon << std::endl;
+				}
+			}
+		}
+		error = pow(error,0.5)/(xCells*yCells);
+		std::cout << "Error: " << error << std::endl;
+	}
+
+	
+	model.clean();
+	spec.clean();
+
+}
+//*****************************************************************************
 // Test neutron precursors for sinlge channel
 //*****************************************************************************
 void testNeutronPrecursorsFlow(int myid){
 	double t = 0.0;
-	int steps = 2;
+	int steps = 1;
 	double totalTime = 140.0;
 	double dt = totalTime/steps;
-	int xCells = 1, yCells = 16;
-	double xLength = 1.0, yLength = 8.0;
+	int xCells = 1, yCells = 10;
+	double xLength = 1.0, yLength = 10.0;
 	double scale;
 	double AvogNum = 6.02214076E23;
 	int c1ID, c2ID, c3ID, c4ID, c5ID, c6ID;
 	double c1Con, c2Con, c3Con, c4Con, c5Con, c6Con;
-   double lambdaC1 = -0.0125, lambdaC2 = -0.0318, lambdaC3 = -0.109;
-	double lambdaC4 = -0.3170, lambdaC5 = -1.3500, lambdaC6 = -8.640;
+	double c1Ana, c2Ana, c3Ana, c4Ana, c5Ana, c6Ana;
+   double lambdaC1 = 0.0125, lambdaC2 = 0.0318, lambdaC3 = 0.109;
+	double lambdaC4 = 0.3170, lambdaC5 = 1.3500, lambdaC6 = 8.640;
 	double c1InitCon = 0.0, c2InitCon = 0.0, c3InitCon = 0.0, c4InitCon = 0.0;
 	double c5InitCon = 0.0, c6InitCon = 0.0;
 	double D_c1 = 0.0, D_c2 = 0.0, D_c3 = 0.0, D_c4 = 0.0, D_c5 = 0.0, D_c6 = 0.0;
+	double y, s, y1, y2;
+	double a1 = 8.30980E-04, a2 = 4.32710E-03, a3 = 4.19580E-03;
+	double a4 = 1.19610E-02, a5 = 3.47340E-03, a6 = 1.22760E-03;
+	double c1Error, c2Error, c3Error, c4Error, c5Error, c6Error;
+	double yVelocity = 0.001;
    MatrixXd coeff(16,7);
-	std::vector<double> c1Coeffs = {lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0};
-	std::vector<double> c2Coeffs = {0.0, lambdaC2, 0.0, 0.0, 0.0, 0.0};
-	std::vector<double> c3Coeffs = {0.0, 0.0, lambdaC3, 0.0, 0.0, 0.0};
-	std::vector<double> c4Coeffs = {0.0, 0.0, 0.0, lambdaC4, 0.0, 0.0};
-	std::vector<double> c5Coeffs = {0.0, 0.0, 0.0, 0.0, lambdaC5, 0.0};
-	std::vector<double> c6Coeffs = {0.0, 0.0, 0.0, 0.0, 0.0, lambdaC6};
+	//std::vector<double> c1Coeffs = {-lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0};
+	//std::vector<double> c2Coeffs = {0.0, -lambdaC2, 0.0, 0.0, 0.0, 0.0};
+	//std::vector<double> c3Coeffs = {0.0, 0.0, -lambdaC3, 0.0, 0.0, 0.0};
+	//std::vector<double> c4Coeffs = {0.0, 0.0, 0.0, -lambdaC4, 0.0, 0.0};
+	//std::vector<double> c5Coeffs = {0.0, 0.0, 0.0, 0.0, -lambdaC5, 0.0};
+	//std::vector<double> c6Coeffs = {0.0, 0.0, 0.0, 0.0, 0.0, -lambdaC6};
+	std::vector<double> c5Coeffs = { -lambdaC5, 0.0};
+	std::vector<double> c6Coeffs = { 0.0, -lambdaC6};
 
    // Coefficients in order of precursor groups for columns
 	coeff(0,0)  = 1.9490E-04, coeff(0,1)  = 1.0149E-03, coeff(0,2)  = 9.8409E-04;
@@ -258,43 +452,49 @@ void testNeutronPrecursorsFlow(int myid){
 	coeff(14,3) = 4.3295E-03, coeff(14,4) = 1.2572E-03, coeff(14,5) = 4.4433E-04;
 	coeff(15,3) = 2.1769E-03, coeff(15,4) = 6.3215E-04, coeff(15,5) = 2.2341E-04;
 
-
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
 
 	// Sets the y velocity
-	model.setConstantYVelocity(1.0, 0);
+	model.setConstantYVelocity(model.dy);
 
 	// Sets species driver
 	speciesDriver spec = speciesDriver(&model);
 
 	// Adds species
-	c1ID = spec.addSpecies(1.0, 0.0, D_c1);
-	c2ID = spec.addSpecies(1.0, 0.0, D_c2);
-	c3ID = spec.addSpecies(1.0, 0.0, D_c3);
-	c4ID = spec.addSpecies(1.0, 0.0, D_c4);
+	//c1ID = spec.addSpecies(1.0, 0.0, D_c1);
+	//c2ID = spec.addSpecies(1.0, 0.0, D_c2);
+	//c3ID = spec.addSpecies(1.0, 0.0, D_c3);
+	//c4ID = spec.addSpecies(1.0, 0.0, D_c4);
 	c5ID = spec.addSpecies(1.0, 0.0, D_c5);
 	c6ID = spec.addSpecies(1.0, 0.0, D_c6);
 
 	// Sets BCs
-	for (int i = 0; i < xCells; i++){
-		spec.setBoundaryCondition(i, 0, c1ID, c1InitCon);
-		spec.setBoundaryCondition(i, 0, c2ID, c2InitCon);
-		spec.setBoundaryCondition(i, 0, c3ID, c3InitCon);
-		spec.setBoundaryCondition(i, 0, c4ID, c4InitCon);
-		spec.setBoundaryCondition(i, 0, c5ID, c5InitCon);
-		spec.setBoundaryCondition(i, 0, c6ID, c6InitCon);
-	}
+	//spec.setBoundaryCondition("south", c1ID, c1InitCon);
+	//spec.setBoundaryCondition("south", c2ID, c2InitCon);
+	//spec.setBoundaryCondition("south", c3ID, c3InitCon);
+	//spec.setBoundaryCondition("south", c4ID, c4InitCon);
+	spec.setBoundaryCondition("south", c5ID, c5InitCon);
+	spec.setBoundaryCondition("south", c6ID, c6InitCon);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
 		for (int j = 0; j < yCells; j++){
-			spec.setSpeciesSource(i, j, c1ID, c1Coeffs, coeff(j,c1ID));
-			spec.setSpeciesSource(i, j, c2ID, c2Coeffs, coeff(j,c2ID));
-			spec.setSpeciesSource(i, j, c3ID, c3Coeffs, coeff(j,c3ID));
-			spec.setSpeciesSource(i, j, c4ID, c4Coeffs, coeff(j,c4ID));
-			spec.setSpeciesSource(i, j, c5ID, c5Coeffs, coeff(j,c5ID));
-			spec.setSpeciesSource(i, j, c6ID, c6Coeffs, coeff(j,c6ID));
+
+			meshCell* cell = model.getCellByLoc(i,j);
+			y = cell->y;
+			y1 = y - model.dy/2.;
+			y2 = y + model.dy/2.;
+			s = (1./model.dy)*(yLength/M_PI)*(cos(M_PI*y1/yLength) - 
+				cos(M_PI*y2/yLength));
+
+			//std::cout << y1 << " " << y2 << " " << s << std::endl;
+			//spec.setSpeciesSource(i, j, c1ID, c1Coeffs, a1);
+			//spec.setSpeciesSource(i, j, c2ID, c2Coeffs, a2);
+			//spec.setSpeciesSource(i, j, c3ID, c3Coeffs, a3);
+			//spec.setSpeciesSource(i, j, c4ID, c4Coeffs, a4);
+			spec.setSpeciesSource(i, j, c5ID, c5Coeffs, a5);
+			spec.setSpeciesSource(i, j, c6ID, c6Coeffs, a6);
 		}
 	}
 
@@ -311,17 +511,41 @@ void testNeutronPrecursorsFlow(int myid){
 		if (myid==0){
 			for (int i = 0; i < xCells; i++){
 				for (int j = 0; j < yCells; j++){
-					c1Con = spec.getSpecies(i, j, c1ID);
-					c2Con = spec.getSpecies(i, j, c2ID);
-					c3Con = spec.getSpecies(i, j, c3ID);
-					c4Con = spec.getSpecies(i, j, c4ID);
+					meshCell* cell = model.getCellByLoc(i,j);
+					y = cell->y;
+					//c1Ana = precursorAnalitical(y, yVelocity, a1, yLength, lambdaC1);
+					//c2Ana = precursorAnalitical(y, yVelocity, a2, yLength, lambdaC2);
+					//c3Ana = precursorAnalitical(y, yVelocity, a3, yLength, lambdaC3);
+					//c4Ana = precursorAnalitical(y, yVelocity, a4, yLength, lambdaC4);
+					c5Ana = precursorAnalitical(y, yVelocity, a5, yLength, lambdaC5);
+					c6Ana = precursorAnalitical(y, yVelocity, a6, yLength, lambdaC6);
+
+					//c1Con = spec.getSpecies(i, j, c1ID);
+					//c2Con = spec.getSpecies(i, j, c2ID);
+					//c3Con = spec.getSpecies(i, j, c3ID);
+					//c4Con = spec.getSpecies(i, j, c4ID);
 					c5Con = spec.getSpecies(i, j, c5ID);
 					c6Con = spec.getSpecies(i, j, c6ID);
 
-					//printf (" %2i %2i %E %E %E %E %E %E\n", i, j, c1Con, 
+					//c1Error = std::abs(c1Con-c1Ana)/c1Ana;
+					//c2Error = std::abs(c2Con-c2Ana)/c2Ana;
+					//c3Error = std::abs(c3Con-c3Ana)/c3Ana;
+					//c4Error = std::abs(c4Con-c4Ana)/c4Ana;
+					//c5Error = std::abs(c5Con-c5Ana)/c5Ana;
+					//c6Error = std::abs(c6Con-c6Ana)/c6Ana;
+
+					c1Error = 0.0;
+					c2Error = 0.0;
+					c3Error = 0.0;
+					c4Error = 0.0;
+					c5Error = std::abs(c5Con-c5Ana)/c5Ana;
+					c6Error = std::abs(c6Con-c6Ana)/c6Ana;
+
+					printf (" %2i %2i %F %F %F %F %F %F \n", i, j, c1Error, c2Error, c3Error, c4Error, c5Error,
+						c6Error);
 					//	c2Con, c3Con, c4Con, c5Con, c6Con);
-					outputFile << i << " " << j << " " << c1Con << " " << c2Con << " " 
-						<< c3Con << " " << c4Con << " " << c5Con << " " << c6Con << std::endl;
+					//outputFile << i << " " << j << " " << c1Con << " " << c2Con << " " 
+					//	<< c3Con << " " << c4Con << " " << c5Con << " " << c6Con << std::endl;
 
 				}
 			}
@@ -340,7 +564,7 @@ void testNeutronPrecursorsFlow(int myid){
 //*****************************************************************************
 void testNeutronPrecursorsMultiChanFlow(int myid){
 	double t = 0.0;
-	int steps = 100;
+	int steps = 1;
 	double totalTime = 5.0;
 	double dt = totalTime/steps;
 	int xCells = 14, yCells = 16;
@@ -430,14 +654,26 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 	c6ID = spec.addSpecies(1.0, 0.0, D_c6);
 
 	// Sets BCs
-	for (int i = 0; i < xCells; i++){
-		spec.setBoundaryCondition(i, 0, c1ID, c1InitCon);
-		spec.setBoundaryCondition(i, 0, c2ID, c2InitCon);
-		spec.setBoundaryCondition(i, 0, c3ID, c3InitCon);
-		spec.setBoundaryCondition(i, 0, c4ID, c4InitCon);
-		spec.setBoundaryCondition(i, 0, c5ID, c5InitCon);
-		spec.setBoundaryCondition(i, 0, c6ID, c6InitCon);
-	}
+	spec.setBoundaryCondition("south", c1ID, c1InitCon);
+	spec.setBoundaryCondition("south", c2ID, c2InitCon);
+	spec.setBoundaryCondition("south", c3ID, c3InitCon);
+	spec.setBoundaryCondition("south", c4ID, c4InitCon);
+	spec.setBoundaryCondition("south", c5ID, c5InitCon);
+	spec.setBoundaryCondition("south", c6ID, c6InitCon);
+
+	spec.setBoundaryCondition("east", c1ID, 0.0);
+	spec.setBoundaryCondition("east", c2ID, 0.0);
+	spec.setBoundaryCondition("east", c3ID, 0.0);
+	spec.setBoundaryCondition("east", c4ID, 0.0);
+	spec.setBoundaryCondition("east", c5ID, 0.0);
+	spec.setBoundaryCondition("east", c6ID, 0.0);
+
+	spec.setBoundaryCondition("west", c1ID, 0.0);
+	spec.setBoundaryCondition("west", c2ID, 0.0);
+	spec.setBoundaryCondition("west", c3ID, 0.0);
+	spec.setBoundaryCondition("west", c4ID, 0.0);
+	spec.setBoundaryCondition("west", c5ID, 0.0);
+	spec.setBoundaryCondition("west", c6ID, 0.0);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -518,9 +754,7 @@ void testBenBenchmark(int myid){
 
 	// Adds xenon and iodine species
 	specID = spec.addSpecies(specMM, 0.0, D_spec);
-	for (int k = 0; k < xCells; k++){
-		spec.setBoundaryCondition(k, 0, specID, 1.0);
-	}
+	spec.setBoundaryCondition("south", specID, 1.0);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -566,8 +800,10 @@ int main(){
 	int numprocs = mpi.size;
 
 	testXenonIodineNoFlow(myid);
-	testXenonIodineFlow(myid);
-	testNeutronPrecursorsFlow(myid);
+	testXenonIodineYFlow(myid);
+	testXenonIodineXFlow(myid);
+	testDiffusion2D(myid);
+	//testNeutronPrecursorsFlow(myid);
 	testNeutronPrecursorsMultiChanFlow(myid);
 	testBenBenchmark(myid);
 

@@ -62,6 +62,19 @@ double speciesDriver::getSpecies(int i, int j, int specID){
 }
 
 //*****************************************************************************
+// Sets the species concentration
+//
+// @param i       x index
+// @param j       y index
+// @param specID  Species ID
+// @param specCon	Concentration [lbm/ft^3]
+//*****************************************************************************
+void speciesDriver::setSpeciesCon(int i, int j, int specID, double specCon){
+   species* spec = getSpeciesPtr(i, j, specID);
+   spec->c = specCon;
+}
+
+//*****************************************************************************
 // Sets the source terms for a species in a cell
 //
 // @param i       x index
@@ -82,17 +95,71 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 //*****************************************************************************
 // Sets a boundary condition in a cell
 //
-// @param i       x index
-// @param j       y index
+//	@param Loc		Location 
 // @param specID  Species ID
-// @param bc			BC value [lbm/ft^3]
+// @param bc		BC value [lbm/ft^3]
 //*****************************************************************************
-void speciesDriver::setBoundaryCondition(int i, int j, int specID, double bc){
-   meshCell* cell = modelPtr->getCellByLoc(i,j);
-	cell->boundary = true;
+void speciesDriver::setBoundaryCondition(std::string loc, int specID, double bc){
+	int xCellMax = modelPtr->numOfxCells - 1;
+	int xCellMin = 0;
+	int yCellMax = modelPtr->numOfyCells - 1;
+	int yCellMin = 0;
+	int locID = -1;
 	dummySpec = 1;
-   species* spec = getSpeciesPtr(i, j, specID);
-	spec->bc = bc;
+
+	if (loc == "north") {locID = 0;};
+	if (loc == "south") {locID = 1;};
+	if (loc == "east") {locID = 2;};
+	if (loc == "west") {locID = 3;};
+	assert(locID != -1);
+
+	switch(locID){
+
+		// North location
+		case 0: {
+			for (int i = 0; i < modelPtr->numOfxCells; i++){
+				meshCell* cell = modelPtr->getCellByLoc(i,yCellMax);
+				cell->boundary = true;
+				cell->boundaryLoc = 0;
+   			species* spec = getSpeciesPtr(i, yCellMax, specID);
+				spec->bc = bc;
+			}
+			break;
+		}
+		// South location
+		case 1: {
+			for (int i = 0; i < modelPtr->numOfxCells; i++){
+				meshCell* cell = modelPtr->getCellByLoc(i,yCellMin);
+				cell->boundary = true;
+				cell->boundaryLoc = 1;
+   			species* spec = getSpeciesPtr(i, yCellMin, specID);
+				spec->bc = bc;
+			}
+			break;
+		}
+		// East location
+		case 2: {
+			for (int j = 0; j < modelPtr->numOfyCells; j++){
+				meshCell* cell = modelPtr->getCellByLoc(xCellMax,j);
+				cell->boundary = true;
+				cell->boundaryLoc = 2;
+   			species* spec = getSpeciesPtr(xCellMax, j, specID);
+				spec->bc = bc;
+			}
+			break;
+		}
+		// West location
+		case 3: {
+			for (int j = 0; j < modelPtr->numOfyCells; j++){
+				meshCell* cell = modelPtr->getCellByLoc(xCellMin,j);
+				cell->boundary = true;
+				cell->boundaryLoc = 3;
+   			species* spec = getSpeciesPtr(xCellMin, j, specID);
+				spec->bc = bc;
+			}
+			break;
+		}
+	}
 	
 }
 
@@ -108,8 +175,8 @@ void speciesDriver::solve(double solveTime){
 	if (not matrixInit){
 		A = buildTransMatrix();
 		//dA = Eigen::MatrixXd(A);
-		//std::cout << A  << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
+		//std::cout << A  << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		//std::cout << N0  << std::endl;
 		matrixInit = true;
@@ -133,6 +200,10 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 	int totalCells = modelPtr->numOfTotalCells;
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
 	double diffusionCoeff = 0.0;
+	double aSb = 0.0, aNb = 0.0, aWb = 0.0, aEb = 0.0;
+	double rN, rS, rE, rW;
+	double psiN, psiS, psiE, psiW;
+	double aN, aS, aE, aW;
 	tripletList.reserve(nonZeros);	
 
 	// Init A matrix
@@ -175,48 +246,51 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
 
+
+			// Conecntration slopes
+			rN = calcSpecConvectiveSlope(cellID, specID, 0, nTran);
+			rS = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
+			rE = calcSpecConvectiveSlope(cellID, specID, 2, eTran);
+			rW = calcSpecConvectiveSlope(cellID, specID, 3, wTran);
+
+			// flux limiter
+			psiN = fluxLim.getPsi(rN);
+			psiS = fluxLim.getPsi(rS);
+			psiE = fluxLim.getPsi(rE);
+			psiW = fluxLim.getPsi(rW);
+
+			// Matrix Coefficient
+			aN = std::max(-nTran,0.0) + psiN/2.*(-std::max(nTran,0.0) -
+				std::max(-nTran,0.0)) + diffusionCoeff*dN;
+			aS = std::max(sTran,0.0) + psiS/2.*(std::max(-sTran,0.0) -
+				std::max(sTran, 0.0)) + diffusionCoeff*dS;
+			aE = std::max(-eTran,0.0) + psiE/2.*(-std::max(-eTran,0.0) -
+				std::max(eTran, 0.0)) + diffusionCoeff*dE;
+			aW = std::max(wTran, 0.0) + psiW/2.*(std::max(-wTran, 0.0) -
+				std::max(wTran,0.0)) + diffusionCoeff*dW;
+
 			// Sets the north flow coefficient 
 			if (thisCellNorthCellPtr){
 				j = getAi(thisCellNorthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				double r = calcSpecConvectiveSlope(cellID, specID, 0, nTran);
-				double psi = fluxLim.getPsi(r);
-				double aN = std::max(-nTran,0.0) + psi/2.*(-std::max(nTran,0.0) -
-					std::max(-nTran,0.0)) + diffusionCoeff*dN;
 				tripletList.push_back(T(i, j, aN));
-				//std::cout << "aN " << aN << std::endl;
 			}	
 			// Sets the south flow coefficient
 			if (thisCellSouthCellPtr){
 				j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				double r = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
-				double psi = fluxLim.getPsi(r);
-				double aS = std::max(sTran,0.0) + psi/2.*(std::max(-sTran,0.0) -
-					std::max(sTran, 0.0)) + diffusionCoeff*dS;
 				tripletList.push_back(T(i, j, std::max(aS,0.0)));
-				//std::cout << "aS " << aS << std::endl;
 			}
 			// Sets the east flow coefficient
 			if(thisCellEastCellPtr){
 				j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				double r = calcSpecConvectiveSlope(cellID, specID, 2, eTran);
-				double psi = fluxLim.getPsi(r);
-				double aE = std::max(-eTran,0.0) + psi/2.*(-std::max(-eTran,0.0) -
-					std::max(eTran, 0.0)) + diffusionCoeff*dE;
-				//std::cout << "aE " << aE << std::endl;
 				tripletList.push_back(T(i, j, std::max(aE,0.0)));
 			}
 			// Sets the west flow coefficient
 			if(thisCellWestCellPtr){
 				j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				double r = calcSpecConvectiveSlope(cellID, specID, 3, wTran);
-				double psi = fluxLim.getPsi(r);
-				double aW = std::max(wTran, 0.0) + psi/2.*(std::max(-wTran, 0.0) -
-					std::max(wTran,0.0)) + diffusionCoeff*dW;
-				//std::cout << "aW " << aW << std::endl;
 				tripletList.push_back(T(i, j, std::max(aW,0.0)));
 			}
 			// Sets the coefficients for non-constant source terms
@@ -234,39 +308,38 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 				}
 			}
 
-			double rS = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
-			double aSb = std::max(sTran,0.0) + fluxLim.getPsi(rS)*(std::max(-sTran,0.0) -
-				std::max(sTran, 0.0)) + diffusionCoeff*dS;
-			if (thisCellPtr->boundary){thisSpecPtr->s += 2.*aSb*thisSpecPtr->bc;};
-			// Sets the constant source terms
-			tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
+			if (thisCellPtr->boundaryLoc == 0){thisSpecPtr->s += 2.*aN*thisSpecPtr->bc;};
+			if (thisCellPtr->boundaryLoc == 1){thisSpecPtr->s += 2.*aS*thisSpecPtr->bc;};
+			if (thisCellPtr->boundaryLoc == 2){thisSpecPtr->s += 2.*aE*thisSpecPtr->bc;};
+			if (thisCellPtr->boundaryLoc == 3){thisSpecPtr->s += 2.*aW*thisSpecPtr->bc;};
+
+			if (thisCellPtr->boundaryLoc == 0){aNb = aN;};
+			if (thisCellPtr->boundaryLoc == 1){aSb = aS;};
+			if (thisCellPtr->boundaryLoc == 2){aEb = aE;};
+			if (thisCellPtr->boundaryLoc == 3){aWb = aW;};
 
 			// Calculates the x portion for the cell coefficient
-			double rW = calcSpecConvectiveSlope(cellID, specID, 3, wTran);
-			double rE = calcSpecConvectiveSlope(cellID, specID, 2, eTran);
-			double psiW = fluxLim.getPsi(rW);
-			double psiE = fluxLim.getPsi(rE);
 			double aPx = -std::max(eTran,0.0) - std::max(-eTran,0.0) +
 				psiE/2.*(std::max(eTran,0.0) + std::max(-eTran,0.0)) +
 				psiW/2.*(std::max(wTran,0.0) + std::max(-wTran,0.0)) -
 				diffusionCoeff*dE - diffusionCoeff*dW;
 
 			// Calculates the y portion for the cell coefficient
-			double rN = calcSpecConvectiveSlope(cellID, specID, 0, nTran);
-			//double rS = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
-			double psiN = fluxLim.getPsi(rN);
-			double psiS = fluxLim.getPsi(rS);
 			double aPy = -std::max(nTran,0.0) - std::max(-sTran,0.0) + 
 				psiN/2.*(std::max(nTran,0.0) + std::max(-nTran,0.0)) +
 				psiS/2.*(std::max(sTran,0.0) + std::max(-sTran,0.0)) - 
 				diffusionCoeff*dS - diffusionCoeff*dN;
-			if (thisCellPtr->boundary){aPy -= aSb;};
 
 			// Adds the coeff for this species 
 			thisCoeff += aPx + aPy;
-			//std::cout << "thisCoeff " << aPx << " " << aPy << std::endl;
-			//std::cout << std::max(nTran,0.0)<< " "<< std::max(sTran,0.0) <<std::endl;
+			// Adds the coefficents if the cell in a boundary
+			thisCoeff -= (aSb + aNb + aWb + aEb);
 			tripletList.push_back(T(i, i, thisCoeff));
+
+			// Sets the constant source terms
+			tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
+			// Resets the boundary coefficients
+			aSb = 0.0, aNb = 0.0, aWb = 0.0, aEb = 0.0;
 		}
 	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
