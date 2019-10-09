@@ -1,16 +1,17 @@
 import matplotlib.pyplot as plt
+from collections import OrderedDict
 import seaborn as sns; sns.set()
 import numpy as np
 import sys
 import pandas as pd
 import os
 
-yCells = 1
-xCells = 100
+yCells = 200
+xCells = 200
 numSpecs = 1
 
 def readData(fname):
-    results = {}
+    results = OrderedDict()
     with open(fname, 'r') as f:
         key = None
         rowCount = 0
@@ -34,6 +35,7 @@ def readData(fname):
 fname = sys.argv[1]
 results = readData(fname)
 cwd = os.getcwd()
+maxVal = results[results.keys()[0]][:,2].max()
 
 for imageCount, key in enumerate(results.keys()):
     data = results[key]
@@ -41,13 +43,13 @@ for imageCount, key in enumerate(results.keys()):
     for row in xrange(data.shape[0]):
         dataArray[int(data[row,1]), int(data[row,0])] =  data[row,2]
     print "Image: ",imageCount, " out of: ", len(results.keys())-1
-    ax = sns.heatmap(dataArray)
+    ax = sns.heatmap(dataArray, vmin = 0.0, vmax = maxVal)
     ax.invert_yaxis()
     plt.ylabel("y")
     plt.xlabel("x")
     plt.title('Time: ' + key + ' sec')
-    figName = 'spec.png'
-    #plt.show()
+    #figName = 'spec.png'
+    figName = 'diffusion=_'+key+'.png'
     plt.savefig(figName, dpi=500)
+    #plt.show()
     plt.close()
-
