@@ -99,7 +99,9 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 // @param specID  Species ID
 // @param bc		BC value [lbm/ft^3]
 //*****************************************************************************
-void speciesDriver::setBoundaryCondition(std::string loc, int specID, double bc){
+void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc, 
+	int specID, double bc){
+
 	int xCellMax = modelPtr->numOfxCells - 1;
 	int xCellMin = 0;
 	int yCellMax = modelPtr->numOfyCells - 1;
@@ -112,6 +114,30 @@ void speciesDriver::setBoundaryCondition(std::string loc, int specID, double bc)
 	if (loc == "east") {locID = 2;};
 	if (loc == "west") {locID = 3;};
 	assert(locID != -1);
+
+
+	if (BCType == "dirichlet") {
+		setDirichletBoundaryCondition(locID, specID, bc);
+	}
+	else if (BCType == "periodic"){
+		setPeriodicBoundaryCondition(locID);
+	} 
+	
+}
+
+//*****************************************************************************
+// Sets a dirichlet boundary condition in a cell
+//
+//	@param LocID	Location ID
+// @param specID  Species ID
+// @param bc		BC value [lbm/ft^3]
+//*****************************************************************************
+void speciesDriver::setDirichletBoundaryCondition(int locID, int specID, 
+	double bc){
+	int xCellMax = modelPtr->numOfxCells - 1;
+	int xCellMin = 0;
+	int yCellMax = modelPtr->numOfyCells - 1;
+	int yCellMin = 0;
 
 	switch(locID){
 
@@ -160,9 +186,59 @@ void speciesDriver::setBoundaryCondition(std::string loc, int specID, double bc)
 			break;
 		}
 	}
-	
 }
 
+//*****************************************************************************
+// Sets a periodic boundary condition in a cell
+//
+//	@param LocID	Location ID
+//*****************************************************************************
+void speciesDriver::setPeriodicBoundaryCondition(int locID){
+	int xCellMax = modelPtr->numOfxCells - 1;
+	int xCellMin = 0;
+	int yCellMax = modelPtr->numOfyCells - 1;
+	int yCellMin = 0;
+
+	switch(locID){
+
+		// North location
+		case 0: {
+			for (int i = 0; i < modelPtr->numOfxCells; i++){
+				meshCell* thisCell = modelPtr->getCellByLoc(i,yCellMax);
+				meshCell* southCell = modelPtr->getCellByLoc(i,yCellMin);
+				thisCell->northCellPtr = southCell;
+			}
+			break;
+		}
+		// South location
+		case 1: {
+			for (int i = 0; i < modelPtr->numOfxCells; i++){
+				meshCell* thisCell = modelPtr->getCellByLoc(i,yCellMin);
+				meshCell* northCell = modelPtr->getCellByLoc(i,yCellMax);
+				thisCell->southCellPtr = northCell;
+			}
+			break;
+		}
+		// East location
+		case 2: {
+			for (int j = 0; j < modelPtr->numOfyCells; j++){
+				meshCell* thisCell = modelPtr->getCellByLoc(xCellMax,j);
+				meshCell* westCell = modelPtr->getCellByLoc(xCellMin,j);
+				thisCell->eastCellPtr = westCell;
+			}
+			break;
+		}
+		// West location
+		case 3: {
+			for (int j = 0; j < modelPtr->numOfyCells; j++){
+				meshCell* thisCell = modelPtr->getCellByLoc(xCellMin,j);
+				meshCell* eastCell = modelPtr->getCellByLoc(xCellMax,j);
+				thisCell->westCellPtr = eastCell;
+			}
+			break;
+		}
+	}
+}
 //*****************************************************************************
 // Solves the species transport equation
 //*****************************************************************************
@@ -170,14 +246,16 @@ void speciesDriver::solve(double solveTime){
 	Eigen::VectorXd sol;
 	SolverType ExpSolver;
 	Eigen::MatrixXd dA;
+	double alpha = 14;
 	double timeStep = solveTime - lastSolveTime;
 
 	if (not matrixInit){
 		A = buildTransMatrix();
-		//dA = Eigen::MatrixXd(A);
+		//dA = Eigen::MatrixXd(A)/pow(2.,alpha);
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << A  << std::endl;
 		//std::cout << dA.determinant() << std::endl;
+		//std::cout << dA.norm() << std::endl;
 		//std::cout << N0  << std::endl;
 		matrixInit = true;
 	}

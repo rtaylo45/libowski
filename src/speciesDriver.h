@@ -56,7 +56,7 @@ class speciesDriver {
 	// Sets the species source terms
 	void setSpeciesSource(int, int, int, std::vector<double>, double);
 	// Sets a boundary condition in a cell
-	void setBoundaryCondition(std::string, int, double);
+	void setBoundaryCondition(std::string, std::string, int, double);
 	// Call to make solver rebuild the A matrix before the next solve
 	void resetMatrix();
 	// Solves the species transport equation
@@ -75,5 +75,9 @@ class speciesDriver {
 	int getAi(int, int, int, int);
 	// Calculates the species convection slope across in a cell
 	double calcSpecConvectiveSlope(int, int, int, double);
+	// Sets a Dirichlet boundary condition
+	void setDirichletBoundaryCondition(int, int, double);
+	// Sets a periodic boundary condiiton
+	void setPeriodicBoundaryCondition(int);
 };
 #endif

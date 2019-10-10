@@ -132,7 +132,7 @@ void testYDirectionAdvection(){
 
 	// Adds species to the model
 	specID = spec.addSpecies(1.0, 10.0, 0.0);
-	spec.setBoundaryCondition("south", specID, 2.*specInitCon);
+	spec.setBoundaryCondition("dirichlet", "south", specID, 2.*specInitCon);
 
 	for (int step = 1; step <= numOfSteps; step++){
 		double t = step*dt;

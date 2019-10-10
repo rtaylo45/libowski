@@ -179,8 +179,8 @@ void testXenonIodineYFlow(int myid){
 	// Adds xenon and iodine species
 	xenonID = spec.addSpecies(xenonMM, N_xe_0, D_xe);
 	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
-	spec.setBoundaryCondition("south", xenonID, xenonInitCon);
-	spec.setBoundaryCondition("south", iodineID, iodineInitCon);
+	spec.setBoundaryCondition("dirichlet", "south", xenonID, xenonInitCon);
+	spec.setBoundaryCondition("dirichlet","south", iodineID, iodineInitCon);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -259,8 +259,8 @@ void testXenonIodineXFlow(int myid){
 	// Adds xenon and iodine species
 	xenonID = spec.addSpecies(xenonMM, N_xe_0, D_xe);
 	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
-	spec.setBoundaryCondition("west", xenonID, xenonInitCon);
-	spec.setBoundaryCondition("west", iodineID, iodineInitCon);
+	spec.setBoundaryCondition("dirichlet","west", xenonID, xenonInitCon);
+	spec.setBoundaryCondition("dirichlet","west", iodineID, iodineInitCon);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -323,10 +323,10 @@ void testDiffusion2D(int myid){
 
 	// Adds xenon and iodine species
 	specID = spec.addSpecies(1.0, 0.0, D_spec);
-	spec.setBoundaryCondition("south", specID, 0.0);
-	spec.setBoundaryCondition("east", specID, 0.0);
-	spec.setBoundaryCondition("west", specID, 0.0);
-	spec.setBoundaryCondition("north", specID, 100.0);
+	spec.setBoundaryCondition("dirichlet","south", specID, 0.0);
+	spec.setBoundaryCondition("dirichlet","east", specID, 0.0);
+	spec.setBoundaryCondition("dirichlet","west", specID, 0.0);
+	spec.setBoundaryCondition("dirichlet","north", specID, 100.0);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -474,8 +474,10 @@ void testNeutronPrecursorsFlow(int myid){
 	//spec.setBoundaryCondition("south", c2ID, c2InitCon);
 	//spec.setBoundaryCondition("south", c3ID, c3InitCon);
 	//spec.setBoundaryCondition("south", c4ID, c4InitCon);
-	spec.setBoundaryCondition("south", c5ID, c5InitCon);
-	spec.setBoundaryCondition("south", c6ID, c6InitCon);
+	spec.setBoundaryCondition("periodic","south", c5ID, c5InitCon);
+	spec.setBoundaryCondition("periodic","south", c6ID, c6InitCon);
+	spec.setBoundaryCondition("periodic","north", c5ID, c5InitCon);
+	spec.setBoundaryCondition("periodic","north", c6ID, c6InitCon);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -565,10 +567,10 @@ void testNeutronPrecursorsFlow(int myid){
 void testNeutronPrecursorsMultiChanFlow(int myid){
 	double t = 0.0;
 	int steps = 1;
-	double totalTime = 5.0;
+	double totalTime = 10.0;
 	double dt = totalTime/steps;
-	int xCells = 14, yCells = 16;
-	double xLength = 4.5, yLength = 5.5;
+	int xCells = 14, yCells = 32;
+	double xLength = 4.5, yLength = 15.5;
 	double scale;
 	double AvogNum = 6.02214076E23;
 	int c1ID, c2ID, c3ID, c4ID, c5ID, c6ID;
@@ -578,6 +580,7 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 	double c1InitCon = 0.0, c2InitCon = 0.0, c3InitCon = 0.0, c4InitCon = 0.0;
 	double c5InitCon = 0.0, c6InitCon = 0.0;
 	double D_c1 = 0.0, D_c2 = 0.0, D_c3 = 0.0, D_c4 = 0.0, D_c5 = 0.0, D_c6 = 0.0;
+	double s1 = 0.0, s2 = 0.0, s3 = 0.0, s4 = 0.0, s5 = 0.0, s6 = 0.0;
    MatrixXd coeff(16,7);
 	Tensor<double, 3> ceoff3d(6, 13, 16);
 	std::vector<double> c1Coeffs = {lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -654,38 +657,42 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 	c6ID = spec.addSpecies(1.0, 0.0, D_c6);
 
 	// Sets BCs
-	spec.setBoundaryCondition("south", c1ID, c1InitCon);
-	spec.setBoundaryCondition("south", c2ID, c2InitCon);
-	spec.setBoundaryCondition("south", c3ID, c3InitCon);
-	spec.setBoundaryCondition("south", c4ID, c4InitCon);
-	spec.setBoundaryCondition("south", c5ID, c5InitCon);
-	spec.setBoundaryCondition("south", c6ID, c6InitCon);
+	spec.setBoundaryCondition("periodic","south", c1ID, c1InitCon);
+	spec.setBoundaryCondition("periodic","south", c2ID, c2InitCon);
+	spec.setBoundaryCondition("periodic","south", c3ID, c3InitCon);
+	spec.setBoundaryCondition("periodic","south", c4ID, c4InitCon);
+	spec.setBoundaryCondition("periodic","south", c5ID, c5InitCon);
+	spec.setBoundaryCondition("periodic","south", c6ID, c6InitCon);
 
-	spec.setBoundaryCondition("east", c1ID, 0.0);
-	spec.setBoundaryCondition("east", c2ID, 0.0);
-	spec.setBoundaryCondition("east", c3ID, 0.0);
-	spec.setBoundaryCondition("east", c4ID, 0.0);
-	spec.setBoundaryCondition("east", c5ID, 0.0);
-	spec.setBoundaryCondition("east", c6ID, 0.0);
-
-	spec.setBoundaryCondition("west", c1ID, 0.0);
-	spec.setBoundaryCondition("west", c2ID, 0.0);
-	spec.setBoundaryCondition("west", c3ID, 0.0);
-	spec.setBoundaryCondition("west", c4ID, 0.0);
-	spec.setBoundaryCondition("west", c5ID, 0.0);
-	spec.setBoundaryCondition("west", c6ID, 0.0);
+	spec.setBoundaryCondition("periodic","north", c1ID, c1InitCon);
+	spec.setBoundaryCondition("periodic","north", c2ID, c2InitCon);
+	spec.setBoundaryCondition("periodic","north", c3ID, c3InitCon);
+	spec.setBoundaryCondition("periodic","north", c4ID, c4InitCon);
+	spec.setBoundaryCondition("periodic","north", c5ID, c5InitCon);
+	spec.setBoundaryCondition("periodic","north", c6ID, c6InitCon);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
 		for (int j = 0; j < yCells; j++){
 			meshCell* cell = model.getCellByLoc(i,j);
 			scale = cos(cell->x/3.5);
-			spec.setSpeciesSource(i, j, c1ID, c1Coeffs, scale*coeff(j,c1ID));
-			spec.setSpeciesSource(i, j, c2ID, c2Coeffs, scale*coeff(j,c2ID));
-			spec.setSpeciesSource(i, j, c3ID, c3Coeffs, scale*coeff(j,c3ID));
-			spec.setSpeciesSource(i, j, c4ID, c4Coeffs, scale*coeff(j,c4ID));
-			spec.setSpeciesSource(i, j, c5ID, c5Coeffs, scale*coeff(j,c5ID));
-			spec.setSpeciesSource(i, j, c6ID, c6Coeffs, scale*coeff(j,c6ID));
+			if (j < 16){
+				s1 = scale*coeff(j,c1ID); 
+				s2 = scale*coeff(j,c2ID);
+				s3 = scale*coeff(j,c3ID);
+				s4 = scale*coeff(j,c4ID);
+				s5 = scale*coeff(j,c5ID);
+				s6 = scale*coeff(j,c6ID);
+			}
+			else{
+				s1 = 0.0, s2 = 0.0, s3 = 0.0, s4 = 0.0, s5 = 0.0, s6 = 0.0;
+			}
+			spec.setSpeciesSource(i, j, c1ID, c1Coeffs, s1);
+			spec.setSpeciesSource(i, j, c2ID, c2Coeffs, s2);
+			spec.setSpeciesSource(i, j, c3ID, c3Coeffs, s3);
+			spec.setSpeciesSource(i, j, c4ID, c4Coeffs, s4);
+			spec.setSpeciesSource(i, j, c5ID, c5Coeffs, s5);
+			spec.setSpeciesSource(i, j, c6ID, c6Coeffs, s6);
 		}
 	}
 
@@ -754,7 +761,7 @@ void testBenBenchmark(int myid){
 
 	// Adds xenon and iodine species
 	specID = spec.addSpecies(specMM, 0.0, D_spec);
-	spec.setBoundaryCondition("south", specID, 1.0);
+	spec.setBoundaryCondition("dirichlet", "south", specID, 1.0);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -803,7 +810,7 @@ int main(){
 	testXenonIodineYFlow(myid);
 	testXenonIodineXFlow(myid);
 	testDiffusion2D(myid);
-	//testNeutronPrecursorsFlow(myid);
+	testNeutronPrecursorsFlow(myid);
 	testNeutronPrecursorsMultiChanFlow(myid);
 	testBenBenchmark(myid);
 

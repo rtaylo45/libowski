@@ -26,31 +26,40 @@ alpha_0 = np.array([2.1248537104952237488e-16])
 def solveSystem(A, t, n_0):
     s = len(theta)
     A = A*t
-    n = 0*n_0
+    n = 0*A
     #A = sp.csc_matrix(A)
-    ident = sp.identity(np.shape(A)[0],format="csc")
-    #ident = np.identity(np.shape(A)[0])
+    #ident = sp.identity(np.shape(A)[0],format="csc")
+    ident = np.identity(np.shape(A)[0])
 
     for j in xrange(s):
-        n = n + spla.spsolve(A - theta[j]*ident, alpha[j]*n_0)
-        #n = n + np.linalg.solve(A - theta[j]*ident, alpha[j]*n_0)
+        #n = n + spla.spsolve(A - theta[j]*ident, alpha[j]*n_0)
+        n = n + np.linalg.pinv(A - theta[j]*ident).dot(alpha[j])
 
-    n = 2.*n.real
-    n = n + alpha_0*n_0
-    return n
+    n = 2.*n.real + alpha_0
+    print n
+    #n = n + alpha_0*np.power(n_0,1./2.)
+    n_kk = n.dot(n_0)
+    return n_kk
 
 if __name__ == "__main__":
     for x in xrange(1):
-        n = 1000000
-        A = sp.random(n,n,density=0.01, format="csc")
+        n = 10
+        A = np.zeros((3,3))
+        b = np.zeros((3,1))
+        A[0,0] = -0.5
+        A[1,0] = 0.5
+        A[1,1] = -0.25
+        A[2,1] = 0.25
+        A[2,2] = -1./6.
+        b[0,0] = 1000.
+        #A = sp.csc_matrix(A)
         #A = sp.random(n,n)
         #A = np.random.rand(n,n)
         t = 0.1
-        n0 = np.ones((n,1))
+        print sp.linalg.expm(A*t)
+        print 
         
-        start = time.time()
-        sol = solveSystem(A, t, n0)
-        end = time.time()
+        sol = solveSystem(A, t, b)
+        print 
+        print sol
         
-        runTime = end - start
-        print runTime
