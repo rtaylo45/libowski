@@ -8,6 +8,7 @@ import os
 xCells = 14
 yCells = 32
 numSpecs = 6
+maxs = [0.00411086, 0.0187643, 0.0115526, 0.0152787, 0.00151854, 0.000133036]
 
 def readData(fname):
     results = {}
@@ -66,7 +67,7 @@ for imageCount, key in enumerate(results.keys()):
         for row in xrange(data.shape[0]):
             dataArray[int(data[row,1]), int(data[row,0])] =  data[row,specID+1]
         print "Image: ",imageCount, " out of: ", len(results.keys())-1
-        h = sns.heatmap(dataArray, ax=ax, yticklabels=2, xticklabels=2)
+        h = sns.heatmap(dataArray, ax=ax, yticklabels=2, xticklabels=2, vmin = 0.0, vmax = maxs[specID-1])
         h.invert_yaxis()
         ax.set_title("Group "+str(specID))
         fig.suptitle('Time: ' + key + ' sec')
