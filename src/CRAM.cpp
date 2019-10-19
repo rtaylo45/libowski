@@ -1,6 +1,4 @@
 #include "CRAM.h"
-#include "mpiProcess.h"
-#include <iostream>
 #define MTAG1 1
 
 using namespace Eigen;
@@ -47,6 +45,18 @@ SolverType::SolverType(){
 //*****************************************************************************
 MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 
+	return solveBase(A, w0, t);
+}
+//*****************************************************************************
+// Base Matrix expotental solver. No matrix scaling
+//	param A		The coefficient matrix for the system of ODEs
+//	param w0		Initial condition 
+//	param t		Time of the solve
+//	
+//	return w	Solution vector
+//*****************************************************************************
+MatrixXd SolverType::solveBase(SparseMatrix<double> A, VectorXcd w0, double t){
+
 	// The sparse LU solver object
 	SparseLU<SparseMatrix<std::complex<double>>, COLAMDOrdering<int> > solver;
 
@@ -65,14 +75,14 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 
 	myW = 0.*w0cd, w = 0*w0cd;
 	At = A.cast<std::complex<double>>()*t;
+	// analyze the sparsisty pattern
+	solver.analyzePattern(tempA);
 
 	// Loops over the imaginary poles. This is a linear solve over 8 lineary 
 	// independent systems. The sum of all the independent solutions is w.
 	for (int k = myid; k < s; k += numprocs){
 		tempA = At - theta(k)*ident;
 		tempB = alpha(k)*w0cd;
-		// analyze the sparsisty pattern
-		solver.analyzePattern(tempA);
 		// Compute the numerical factorization
 		solver.factorize(tempA);
 
@@ -96,6 +106,59 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 	return w.real();
 }
 
+//*****************************************************************************
+// Scaled Matrix expotental solver.
+//	param A		The coefficient matrix for the system of ODEs
+//	param w0		Initial condition 
+//	param t		Time of the solve
+//	
+//	return w	Solution vector
+//*****************************************************************************
+MatrixXd SolverType::solveScale(SparseMatrix<double> A, VectorXcd w0, double t){
+
+	// MPI stuff
+	int myid = mpi.rank;
+	int numprocs = mpi.size;
+	int eleCount = A.rows();
+
+	// Number of poles
+	int s = 8;
+	SparseMatrix<std::complex<double>> At(A.rows(),A.cols());
+	SparseMatrix<std::complex<double>> tempA(A.rows(),A.cols()); 
+	SparseMatrix<std::complex<double>> w0cd;
+	SparseMatrix<std::complex<double>> myW;
+	VectorXcd w, tempB; 
+	w0cd = w0.cast<std::complex<double>>();
+	SparseMatrix<double> ident = buildSparseIdentity(A.rows());
+
+	myW = 0.A, w = 0*A;
+	At = A.cast<std::complex<double>>()*t;
+
+	// Loops over the imaginary poles. This is a linear solve over 8 lineary 
+	// independent systems. The sum of all the independent solutions is w.
+	for (int k = myid; k < s; k += numprocs){
+		tempA = At - theta(k)*ident;
+		tempB = alpha(k);
+
+		myW = myW;
+	}
+	if (myid != 0){
+		// Sends solution data to the master node 
+		mpi.send(myW, eleCount, 0, MTAG1);
+	}
+	else {
+		w = myW;
+		// Receives data from the slave nodes
+		for (int islave = 1; islave < numprocs; islave++) {
+			myW = mpi.recv(myW, eleCount, islave, MTAG1);
+			w = w + myW;
+		}
+	}
+	w = 2.*w.real();
+	w = w + alpha_0*w0cd;
+
+	return w.real();
+}
 //*****************************************************************************
 // Builds a sparse identity matrix
 //	param n		Square matrix size

@@ -14,6 +14,9 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <complex>
+#include <iostream>
+#include "mpiProcess.h"
+#include "linearAlgebra.h"
 
 
 //*****************************************************************************
@@ -44,5 +47,15 @@ class SolverType {
 	// Builds a sparse identity matrix
 	//*************************************************************************
 	Eigen::SparseMatrix<double> buildSparseIdentity(int n);
+
+	//*************************************************************************
+	// Solves CRAM with no matrix scaling
+	//*************************************************************************
+	Eigen::MatrixXd solveBase(Eigen::SparseMatrix<double>, Eigen::VectorXcd, double);
+
+	//*************************************************************************
+	// Solves CRAM with matrix scaling
+	//*************************************************************************
+	Eigen::MatrixXd solveScale(Eigen::SparseMatrix<double>, Eigen::VectorXcd, double);
 };
 #endif
