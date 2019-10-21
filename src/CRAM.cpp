@@ -127,18 +127,18 @@ MatrixXd SolverType::solveScale(SparseMatrix<double> A, VectorXcd w0, double t){
 	SparseMatrix<std::complex<double>> tempA(A.rows(),A.cols()); 
 	SparseMatrix<std::complex<double>> w0cd;
 	SparseMatrix<std::complex<double>> myW;
-	VectorXcd w, tempB; 
-	w0cd = w0.cast<std::complex<double>>();
+	VectorXcd w; 
+	//w0cd = w0.cast<std::complex<double>>();
 	SparseMatrix<double> ident = buildSparseIdentity(A.rows());
 
-	myW = 0.A, w = 0*A;
+	myW = 0*A.cast<std::complex<double>>();
+	w = 0*A.cast<std::complex<double>>();
 	At = A.cast<std::complex<double>>()*t;
 
 	// Loops over the imaginary poles. This is a linear solve over 8 lineary 
 	// independent systems. The sum of all the independent solutions is w.
 	for (int k = myid; k < s; k += numprocs){
 		tempA = At - theta(k)*ident;
-		tempB = alpha(k);
 
 		myW = myW;
 	}
@@ -150,7 +150,7 @@ MatrixXd SolverType::solveScale(SparseMatrix<double> A, VectorXcd w0, double t){
 		w = myW;
 		// Receives data from the slave nodes
 		for (int islave = 1; islave < numprocs; islave++) {
-			myW = mpi.recv(myW, eleCount, islave, MTAG1);
+			//myW = mpi.recv(myW, eleCount, islave, MTAG1);
 			w = w + myW;
 		}
 	}
