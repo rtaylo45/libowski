@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 project(libowski)
 
-# Sets source directory
+# Sets directories
 set(SRC_DIR src)
 set(LIB_DIR lib)
+set(UTIL_DIR ${LIB_DIR}/utils)
 
 # The find cmake flag. I have included eigen3 with my softwar now
 # so the user doesn't need to install it.
@@ -26,8 +27,10 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "-O3")
 
+# util directory
+add_subdirectory(${UTIL_DIR})
 # Add the source directory
-add_subdirectory(src)
+add_subdirectory(${SRC_DIR})
 # Enable testing
 ENABLE_TESTING()
 # Add unit test directory

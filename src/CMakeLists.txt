@@ -6,6 +6,8 @@ set(PROJECT_SOURCES CRAM.cpp mpiProcess.cpp modelMesh.cpp meshCellData.cpp
 # All sources that also need to be tested in unit tests go into a static library
 add_library(liblibowski STATIC ${PROJECT_SOURCES})
 target_include_directories(liblibowski PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(liblibowski PUBLIC utillibowski)
+
 if(${MPI_FOUND})
 	target_compile_definitions(liblibowski PRIVATE HAVE_MPI)
 endif()
