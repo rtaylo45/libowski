@@ -56,6 +56,16 @@ class mpiProcess{
 	VectorXcd recv(VectorXcd, int, int, int);
 
 	//**************************************************************************
+	// Sends complex eigen sparse matrix data
+	//**************************************************************************
+	void send(SparseMatrix<std::complex<double>>, int, int, int);
+	//**************************************************************************
+	// Receives complex eigen sparse matrix data
+	//**************************************************************************
+	SparseMatrix<std::complex<double>> recv(SparseMatrix<std::complex<double>>, 
+		int, int, int);
+
+	//**************************************************************************
 	// Initialization of the mpi object
 	//**************************************************************************
 	private:

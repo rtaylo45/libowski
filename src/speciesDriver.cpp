@@ -246,13 +246,14 @@ void speciesDriver::solve(double solveTime){
 	Eigen::VectorXd sol;
 	SolverType ExpSolver;
 	Eigen::MatrixXd dA;
-	double alpha = 14;
+	double alpha = 10;
 	double timeStep = solveTime - lastSolveTime;
 
 	if (not matrixInit){
 		A = buildTransMatrix();
-		//dA = Eigen::MatrixXd(A)/pow(2.,alpha);
+		//dA = Eigen::MatrixXd(A);
 		//std::cout << dA.eigenvalues() << std::endl;
+		//std::cout << " "  << std::endl;
 		//std::cout << A  << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		//std::cout << dA.norm() << std::endl;

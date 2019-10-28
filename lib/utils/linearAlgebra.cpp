@@ -21,9 +21,9 @@ SparseMatrix<std::complex<double>> MoorePenroseInv(
 
 	I.setIdentity();	
 	AConjugateTranspose = A.adjoint();
-	Atemp = A*AConjugateTranspose;
+	Atemp = AConjugateTranspose*A;
 	solver.compute(Atemp);
-	Ainv = AConjugateTranspose*solver.solve(I);
+	Ainv = solver.solve(I)*AConjugateTranspose;
 	return Ainv;
 }
 
@@ -42,10 +42,31 @@ SparseMatrix<double> MoorePenroseInv(SparseMatrix<double> A){
 
 	I.setIdentity();	
 	AConjugateTranspose = A.adjoint();
-	Atemp = A*AConjugateTranspose;
-	solver.analyzePattern(Atemp);
-	solver.factorize(Atemp);
-	//solver.compute(Atemp);
-	Ainv = AConjugateTranspose*solver.solve(I);
+	Atemp = AConjugateTranspose*A;
+	solver.compute(Atemp);
+	Ainv = solver.solve(I)*AConjugateTranspose;
 	return Ainv;
+}
+
+//*****************************************************************************
+// Matrix Squaring for sparse double matrix
+//
+// @param A			Matrix to be squared
+// @param alpha	Matrix power
+//*****************************************************************************
+SparseMatrix<double> MatrixSquare(SparseMatrix<double> A, int alpha){
+	SparseMatrix<double> Areturn;
+	SparseMatrix<double> ASquared;
+	Areturn = A;
+	
+	if (alpha != 1){
+		ASquared = A*A;
+		Areturn = ASquared;
+		
+		// Loops over the number of times to square the matrix	
+		for (int i = 0; i < alpha/2-1; i++){
+			Areturn = Areturn*ASquared;	
+		}
+	}
+	return Areturn;
 }

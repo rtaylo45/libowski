@@ -391,7 +391,7 @@ void testNeutronPrecursorsFlow(int myid){
 	int steps = 1;
 	double totalTime = 140.0;
 	double dt = totalTime/steps;
-	int xCells = 1, yCells = 50;
+	int xCells = 1, yCells = 20;
 	double xLength = 1.0, yLength = 10.0;
 	double scale;
 	double AvogNum = 6.02214076E23;
@@ -407,7 +407,7 @@ void testNeutronPrecursorsFlow(int myid){
 	double a1 = 8.30980E-04, a2 = 4.32710E-03, a3 = 4.19580E-03;
 	double a4 = 1.19610E-02, a5 = 3.47340E-03, a6 = 1.22760E-03;
 	double c1Error, c2Error, c3Error, c4Error, c5Error, c6Error;
-	double yVelocity = 0.1;
+	double yVelocity = 10.0;
    MatrixXd coeff(16,7);
 	std::vector<double> c1Coeffs = {-lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0};
 	std::vector<double> c2Coeffs = {0.0, -lambdaC2, 0.0, 0.0, 0.0, 0.0};
@@ -542,8 +542,8 @@ void testNeutronPrecursorsFlow(int myid){
 					//c5Error = std::abs(c5Con-c5Ana)/c5Ana;
 					//c6Error = std::abs(c6Con-c6Ana)/c6Ana;
 
-					//printf (" %2i %2i %F %F %F %F %F %F \n", i, j, c1Error, c2Error, c3Error, c4Error, c5Error,
-					//c6Error);
+					printf (" %2i %2i %F %F %F %F %F %F \n", i, j, c1Error, c2Error, c3Error, c4Error, c5Error,
+					c6Error);
 					//	c2Con, c3Con, c4Con, c5Con, c6Con);
 					outputFile << i << " " << j << " " << c1Con << " " << c2Con << " " 
 					<< c3Con << " " << c4Con << " " << c5Con << " " << c6Con << std::endl;
@@ -565,7 +565,7 @@ void testNeutronPrecursorsFlow(int myid){
 //*****************************************************************************
 void testNeutronPrecursorsMultiChanFlow(int myid){
 	double t = 0.0;
-	int steps = 250;
+	int steps = 1;
 	double totalTime = 25.0;
 	double dt = totalTime/steps;
 	int xCells = 14, yCells = 32;
@@ -850,7 +850,7 @@ int main(){
 	testXenonIodineXFlow(myid);
 	testDiffusion2D(myid);
 	testNeutronPrecursorsFlow(myid);
-	//testNeutronPrecursorsMultiChanFlow(myid);
+	testNeutronPrecursorsMultiChanFlow(myid);
 	//testBenBenchmark(myid);
 
 	mpi.finalize();

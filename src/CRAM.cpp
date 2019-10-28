@@ -43,7 +43,7 @@ SolverType::SolverType(){
 //	
 //	return w	Solution vector
 //*****************************************************************************
-MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
+MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXd w0, double t){
 
 	return solveBase(A, w0, t);
 }
@@ -55,7 +55,7 @@ MatrixXd SolverType::solve(SparseMatrix<double> A, VectorXcd w0, double t){
 //	
 //	return w	Solution vector
 //*****************************************************************************
-MatrixXd SolverType::solveBase(SparseMatrix<double> A, VectorXcd w0, double t){
+MatrixXd SolverType::solveBase(SparseMatrix<double> A, VectorXd w0, double t){
 
 	// The sparse LU solver object
 	SparseLU<SparseMatrix<std::complex<double>>, COLAMDOrdering<int> > solver;
@@ -71,7 +71,7 @@ MatrixXd SolverType::solveBase(SparseMatrix<double> A, VectorXcd w0, double t){
 	SparseMatrix<std::complex<double>> tempA(A.rows(),A.cols()); 
 	VectorXcd w, tempB, w0cd, myW; 
 	w0cd = w0.cast<std::complex<double>>();
-	SparseMatrix<double> ident = buildSparseIdentity(A.rows());
+	SparseMatrix<std::complex<double>> ident = buildSparseIdentity(A.rows());
 
 	myW = 0.*w0cd, w = 0*w0cd;
 	At = A.cast<std::complex<double>>()*t;
@@ -114,50 +114,58 @@ MatrixXd SolverType::solveBase(SparseMatrix<double> A, VectorXcd w0, double t){
 //	
 //	return w	Solution vector
 //*****************************************************************************
-MatrixXd SolverType::solveScale(SparseMatrix<double> A, VectorXcd w0, double t){
+MatrixXd SolverType::solveScale(SparseMatrix<double> A, VectorXd w0, double t){
 
 	// MPI stuff
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
-	int eleCount = A.rows();
+	int eleCount = A.rows()*A.rows();
+	int beta = 10;
+	double matrixReduction = pow(2.,beta);
+	int matrixPower = pow(2,beta);
 
 	// Number of poles
 	int s = 8;
 	SparseMatrix<std::complex<double>> At(A.rows(),A.cols());
 	SparseMatrix<std::complex<double>> tempA(A.rows(),A.cols()); 
-	SparseMatrix<std::complex<double>> w0cd;
-	SparseMatrix<std::complex<double>> myW;
-	VectorXcd w; 
-	//w0cd = w0.cast<std::complex<double>>();
-	SparseMatrix<double> ident = buildSparseIdentity(A.rows());
+	SparseMatrix<std::complex<double>> myExpA;
+	SparseMatrix<std::complex<double>> expA;
+	SparseMatrix<std::complex<double>> ident = buildSparseIdentity(A.rows());
+	SparseMatrix<double> expAReal;
+	SparseMatrix<double> expASquaredReal;
 
-	myW = 0*A.cast<std::complex<double>>();
-	w = 0*A.cast<std::complex<double>>();
-	At = A.cast<std::complex<double>>()*t;
+	myExpA = 0*A.cast<std::complex<double>>();
+	expA = 0*A.cast<std::complex<double>>();
+	At = A.cast<std::complex<double>>()*t/matrixReduction;
+	//std::cout << At << " " << matrixReduction << std::endl;
+	//std::cout << " " << std::endl;
 
 	// Loops over the imaginary poles. This is a linear solve over 8 lineary 
 	// independent systems. The sum of all the independent solutions is w.
 	for (int k = myid; k < s; k += numprocs){
 		tempA = At - theta(k)*ident;
 
-		myW = myW;
+		// Multipy A-1*alpha(K) because the matrix is 1-1 and only left invertible 
+		// because it has linearly independent columns but not rows. 
+		myExpA = myExpA + MoorePenroseInv(tempA)*alpha(k);
 	}
 	if (myid != 0){
 		// Sends solution data to the master node 
-		mpi.send(myW, eleCount, 0, MTAG1);
+		mpi.send(myExpA, eleCount, 0, MTAG1);
 	}
 	else {
-		w = myW;
+		expA = myExpA;
 		// Receives data from the slave nodes
 		for (int islave = 1; islave < numprocs; islave++) {
-			//myW = mpi.recv(myW, eleCount, islave, MTAG1);
-			w = w + myW;
+			myExpA = mpi.recv(myExpA, eleCount, islave, MTAG1);
+			expA = expA + myExpA;
 		}
 	}
-	w = 2.*w.real();
-	w = w + alpha_0*w0cd;
+	expAReal = 2.*expA.real();
+	expAReal = expAReal + alpha_0*ident.real();
+	expASquaredReal = MatrixSquare(expAReal, matrixPower);
 
-	return w.real();
+	return expASquaredReal*w0;
 }
 //*****************************************************************************
 // Builds a sparse identity matrix
@@ -165,9 +173,9 @@ MatrixXd SolverType::solveScale(SparseMatrix<double> A, VectorXcd w0, double t){
 //
 //	return nxn	identity matrix
 //*****************************************************************************
-SparseMatrix<double> SolverType::buildSparseIdentity(int n){
+SparseMatrix<std::complex<double>> SolverType::buildSparseIdentity(int n){
 
-	SparseMatrix<double> ident(n,n);
+	SparseMatrix<std::complex<double>> ident(n,n);
 	for (int i = 0; i < n; i++){
 		ident.insert(i,i) = 1.0;
 	}

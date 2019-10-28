@@ -12,10 +12,13 @@
 
 using namespace Eigen;
 
-// Pseudo inverse for complex double sparse matrix
-SparseMatrix<std::complex<double>> MoorePenroseInv(
-	SparseMatrix<std::complex<double>>);
-
-// Pseudo inverse for double sparse matrix
+// Pseudo inverse linearly independent columns for complex double sparse matrix
+SparseMatrix<std::complex<double>> MoorePenroseInv(SparseMatrix<std::complex<double>>);
+// Pseudo inverse lineary independent columns for double sparse matrix
 SparseMatrix<double> MoorePenroseInv(SparseMatrix<double>);
+
+// Compute matrix squaring for complex double sparse matrix
+//SparseMatrix<std::complex<double>> MatrixSquare(SparseMatrix<std::complex<double>>, int);
+// Compute matrix squaring for double sparse matrix
+SparseMatrix<double> MatrixSquare(SparseMatrix<double>, int);
 #endif
