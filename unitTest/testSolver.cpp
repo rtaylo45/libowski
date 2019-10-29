@@ -392,14 +392,14 @@ void xenonIodineProblem(int myid){
     	N_I = b/lambda_I*(1. - exp(-lambda_I*t)) + N_I_0*exp(-lambda_I*t);
 		
 		if (myid==0){
-			std::cout << N_xe << " " << sol(0) << std::endl;
-    		std::cout << N_I << " " << sol(1) << std::endl;
-			std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
-			std::cout << abs(N_I-sol(1))/N_xe << std::endl;
-    		std::cout << " " << std::endl;
+			//std::cout << N_xe << " " << sol(0) << std::endl;
+    		//std::cout << N_I << " " << sol(1) << std::endl;
+			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
+			//std::cout << abs(N_I-sol(1))/N_xe << std::endl;
+    		//std::cout << " " << std::endl;
 
-			//assert(isApprox(sol(0), N_xe));
-			//assert(isApprox(sol(1), N_I));
+			assert(isApprox(sol(0), N_xe));
+			assert(isApprox(sol(1), N_I));
 			
 		}
 	}
@@ -541,7 +541,7 @@ int main(){
 
 
 	//testSolverTime(myid, numprocs);
-	//tankProblem(myid);
+	tankProblem(myid);
 	xenonIodineProblem(myid);
 	//neutronPrecursorProblem(myid);
 
