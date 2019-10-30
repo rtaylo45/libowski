@@ -240,17 +240,16 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 	}
 }
 //*****************************************************************************
-// Solves the species transport equation
+// Solves the transient species transport equation
 //*****************************************************************************
 void speciesDriver::solve(double solveTime){
 	Eigen::VectorXd sol;
 	SolverType ExpSolver;
 	Eigen::MatrixXd dA;
-	double alpha = 10;
 	double timeStep = solveTime - lastSolveTime;
 
 	if (not matrixInit){
-		A = buildTransMatrix();
+		A = buildTransMatrix(true);
 		//dA = Eigen::MatrixXd(A);
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << " "  << std::endl;
@@ -268,9 +267,34 @@ void speciesDriver::solve(double solveTime){
 }
 
 //*****************************************************************************
-// Builds the transition matrix 
+// Solves the steady state species transport equation
 //*****************************************************************************
-Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
+void speciesDriver::solve(){
+	Eigen::VectorXd sol;
+	Eigen::VectorXd b;
+	Eigen::MatrixXd dA;
+	SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > LinearSolver;
+
+	A = buildTransMatrix(false);
+	dA = Eigen::MatrixXd(A);
+	std::cout << dA.eigenvalues() << std::endl;
+	b = buildbVector();
+
+	LinearSolver.compute(A);
+	sol = LinearSolver.solve(b);
+	if (mpi.rank == 0){unpackSolution(sol);};
+}
+
+//*****************************************************************************
+// Builds the transition matrix 
+//
+// @param Augmented	If set to true then the source terms will be moved to into
+//							the A matrix and a dummy species will be used to how 
+//							their coefficient. If set to false then the source terms
+//							will be moved to the other side of the equal sign. This
+//							is done for a steady state solve.
+//*****************************************************************************
+Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(bool Augmented){
 	// i, j index of transition matrix
 	int i, j;
 	typedef Eigen::Triplet<double> T;
@@ -284,6 +308,12 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 	double psiN, psiS, psiE, psiW;
 	double aN, aS, aE, aW;
 	tripletList.reserve(nonZeros);	
+
+	// if the matrix is not augmented then we no longer need to add a dummy
+	// spec to hold the constant source coefficients.
+	if (not Augmented){
+		dummySpec = 0;
+	}
 
 	// Init A matrix
 	Eigen::SparseMatrix<double> A(totalCells*totalSpecs + dummySpec, 
@@ -416,7 +446,7 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(){
 			tripletList.push_back(T(i, i, thisCoeff));
 
 			// Sets the constant source terms
-			tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
+			if (Augmented){tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));};
 			// Resets the boundary coefficients
 			aSb = 0.0, aNb = 0.0, aWb = 0.0, aEb = 0.0;
 		}
@@ -449,6 +479,31 @@ Eigen::VectorXd speciesDriver::buildInitialConditionVector(){
 	}
 	if(dummySpec){N0[N0.size()-1] = 1.0;};
 	return N0;
+}
+
+//*****************************************************************************
+// Builds the b vector 
+//*****************************************************************************
+Eigen::VectorXd speciesDriver::buildbVector(){
+	int i;
+	int totalSpecs = numOfSpecs;
+	int totalCells = modelPtr->numOfTotalCells;
+	Eigen::VectorXd b(totalSpecs*totalCells);
+
+	// Loops over cells
+	for (int cellID = 0; cellID < totalCells; cellID++){
+		// Gets cell pointer
+		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
+
+		// Loop over species
+		for (int specID = 0; specID < totalSpecs; specID++){
+			// Gets the species pointer
+			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
+			i = getAi(cellID, totalCells, specID, totalSpecs);
+			b[i] = -thisSpecPtr->s;
+		}
+	}
+	return b;
 }
 
 //*****************************************************************************

@@ -6,8 +6,11 @@ using namespace Eigen;
 // Initialization of solver
 //*************************************************************************
 SolverType::SolverType(){
+	// Method 0 == CRAM
+	// Method 1 == Hyperbolic
+	// Method 2 == Parabilic
 	int order = 16;
-	int method = 2;
+	int method = 0;
 	Matrix<std::complex<double>, 8, 1> theta_m16;
 	Matrix<std::complex<double>, 8, 1> alpha_m16;
 
