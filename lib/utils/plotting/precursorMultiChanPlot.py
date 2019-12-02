@@ -8,7 +8,7 @@ import os
 xCells = 14
 yCells = 32
 numSpecs = 6
-maxs = [0.00411086, 0.0187643, 0.0115526, 0.0152787, 0.00151854, 0.000133036]
+#maxs = [0.00411086, 0.0187643, 0.0115526, 0.0152787, 0.00151854, 0.000133036]
 
 def readData(fname):
     results = {}
@@ -31,12 +31,22 @@ def readData(fname):
 
     return results
 
+def normalizeData(results):
+    for key in results.keys():
+        data = results[key]
+        for specID in xrange(2,8):
+            specData = data[:,specID]
+            data[:,specID] = specData/np.sum(specData)
+    return results
+
 
 fname = sys.argv[1]
 results = readData(fname)
 cwd = os.getcwd()
 imgd = cwd+'/precursorMultiChanImages'
 os.chdir(imgd)
+
+#results = normalizeData(results)
 
 """
 for specID in xrange(1,2):
@@ -67,7 +77,7 @@ for imageCount, key in enumerate(results.keys()):
         for row in xrange(data.shape[0]):
             dataArray[int(data[row,1]), int(data[row,0])] =  data[row,specID+1]
         print "Image: ",imageCount, " out of: ", len(results.keys())-1
-        h = sns.heatmap(dataArray, ax=ax, yticklabels=2, xticklabels=2, vmin = 0.0, vmax = maxs[specID-1])
+        h = sns.heatmap(dataArray, ax=ax, yticklabels=4, xticklabels=2)
         h.invert_yaxis()
         ax.set_title("Group "+str(specID))
         fig.suptitle('Time: ' + key + ' sec')

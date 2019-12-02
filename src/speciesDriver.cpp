@@ -4,6 +4,10 @@
 #include "speciesDriver.h"
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string>
+#include <fstream>
 
 //*****************************************************************************
 // Constructor
@@ -246,11 +250,16 @@ void speciesDriver::solve(double solveTime){
 	Eigen::VectorXd sol;
 	SolverType ExpSolver;
 	Eigen::MatrixXd dA;
+	bool augmented = true;
 	double timeStep = solveTime - lastSolveTime;
 
 	if (not matrixInit){
-		A = buildTransMatrix(true);
+		A = buildTransMatrix(augmented, 0.0);
 		//dA = Eigen::MatrixXd(A);
+		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
+		//std::ofstream outputFile;
+		//outputFile.open("matrix.out", std::ios_base::app);
+		//outputFile << dA << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << " "  << std::endl;
 		//std::cout << A  << std::endl;
@@ -259,9 +268,32 @@ void speciesDriver::solve(double solveTime){
 		//std::cout << N0  << std::endl;
 		matrixInit = true;
 	}
-	N0 = buildInitialConditionVector();
+	N0 = buildInitialConditionVector(augmented);
 
 	sol = ExpSolver.solve(A, N0, timeStep);
+	if (mpi.rank == 0){unpackSolution(sol);};
+	lastSolveTime = solveTime;
+}
+
+//*****************************************************************************
+// Solves the implicit transient species transport equation
+//*****************************************************************************
+void speciesDriver::solveImplicit(double solveTime){
+	Eigen::VectorXd b;
+	Eigen::VectorXd sol;
+	Eigen::VectorXd cOld;
+	SolverType ExpSolver;
+	Eigen::MatrixXd dA;
+	bool augmented = false;
+	SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > LinearSolver;
+	double timeStep = solveTime - lastSolveTime;
+
+	cOld = buildInitialConditionVector(augmented);
+	A = buildTransMatrix(augmented, timeStep);
+	b = -cOld/timeStep + buildbVector();
+
+	LinearSolver.compute(A);
+	sol = LinearSolver.solve(b);
 	if (mpi.rank == 0){unpackSolution(sol);};
 	lastSolveTime = solveTime;
 }
@@ -273,15 +305,14 @@ void speciesDriver::solve(){
 	Eigen::VectorXd sol;
 	Eigen::VectorXd b;
 	Eigen::MatrixXd dA;
+	bool augmented = false;
 	SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > LinearSolver;
 
-	A = buildTransMatrix(false);
-	dA = Eigen::MatrixXd(A);
-	std::cout << dA.eigenvalues() << std::endl;
+	A = buildTransMatrix(augmented, 0.0);
 	b = buildbVector();
 
 	LinearSolver.compute(A);
-	sol = LinearSolver.solve(b);
+	sol = LinearSolver.solve(-b);
 	if (mpi.rank == 0){unpackSolution(sol);};
 }
 
@@ -293,8 +324,12 @@ void speciesDriver::solve(){
 //							their coefficient. If set to false then the source terms
 //							will be moved to the other side of the equal sign. This
 //							is done for a steady state solve.
+//
+//	@param dt			Time step over the solve. Only != to zero for implicit
+//							transient solves
 //*****************************************************************************
-Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(bool Augmented){
+Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(bool Augmented, 
+	double dt){
 	// i, j index of transition matrix
 	int i, j;
 	typedef Eigen::Triplet<double> T;
@@ -439,8 +474,10 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(bool Augmented){
 				psiS/2.*(std::max(sTran,0.0) + std::max(-sTran,0.0)) - 
 				diffusionCoeff*dS - diffusionCoeff*dN;
 
-			// Adds the coeff for this species 
-			thisCoeff += aPx + aPy;
+			// Adds the coeff for this species implicit solve
+			if (dt != 0.0){thisCoeff += aPx + aPy - 1./dt;};
+			// Steady state or matrix exp solve
+			if (dt == 0.0){thisCoeff += aPx + aPy;};
 			// Adds the coefficents if the cell in a boundary
 			thisCoeff -= (aSb + aNb + aWb + aEb);
 			tripletList.push_back(T(i, i, thisCoeff));
@@ -458,10 +495,11 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(bool Augmented){
 //*****************************************************************************
 // Builds the initial condition vector
 //*****************************************************************************
-Eigen::VectorXd speciesDriver::buildInitialConditionVector(){
+Eigen::VectorXd speciesDriver::buildInitialConditionVector(bool augmented){
 	int i;
 	int totalSpecs = numOfSpecs;
 	int totalCells = modelPtr->numOfTotalCells;
+	if (not augmented){dummySpec = 0;};
 	Eigen::VectorXd N0(totalSpecs*totalCells + dummySpec);
 
 	// Loops over cells

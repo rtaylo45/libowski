@@ -1,6 +1,7 @@
 import numpy as np
 import time
 from scipy import sparse as sp
+from scipy import linalg as LA
 import scipy.sparse.linalg as spla
 
 theta = np.array([ -10.843917078696988026 + 19.277446167181652284j,
@@ -32,14 +33,10 @@ def solveSystem(A, t, n_0):
     ident = np.identity(np.shape(A)[0])
 
     for j in xrange(s):
-        #n = n + spla.spsolve(A - theta[j]*ident, alpha[j]*n_0)
-        n = n + np.linalg.pinv(A - theta[j]*ident).dot(alpha[j])
+        n = n + LA.solve(A - theta[j]*ident, alpha[j]*n_0)
 
-    n = 2.*n.real + alpha_0
-    print n
-    #n = n + alpha_0*np.power(n_0,1./2.)
-    n_kk = n.dot(n_0)
-    return n_kk
+    n = 2.*n.real + alpha_0*n_0
+    return n
 
 if __name__ == "__main__":
     for x in xrange(1):
@@ -52,14 +49,6 @@ if __name__ == "__main__":
         A[2,1] = 0.25
         A[2,2] = -1./6.
         b[0,0] = 1000.
-        #A = sp.csc_matrix(A)
-        #A = sp.random(n,n)
-        #A = np.random.rand(n,n)
         t = 0.1
-        print sp.linalg.expm(A*t)
-        print 
-        
-        sol = solveSystem(A, t, b)
-        print 
-        print sol
+        print LA.expm(A*t)
         

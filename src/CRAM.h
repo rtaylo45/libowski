@@ -31,8 +31,8 @@ class SolverType {
 	// Residues of these poles
 	Eigen::Matrix<std::complex<double>, Dynamic, 1> alpha;
 	// Limit of r at infinity
-	//double alpha_0 = 2.1248537104952237488e-16;
-	double alpha_0 = 0.0;
+	double alpha_0 = 2.1248537104952237488e-16;
+	//double alpha_0 = 0.0;
 
 	//*************************************************************************
 	// Initialization of solver
