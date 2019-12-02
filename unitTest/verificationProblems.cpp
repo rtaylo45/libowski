@@ -78,7 +78,7 @@ void testXenonIodineNoFlow(int myid){
 	double xLength = 1.0, yLength = 1.0;
 	double xenonInitCon = 0.0, iodineInitCon = 0.0;
 	double xenonMM = 135.0, iodineMM = 135.0;
-	double numOfSteps = 10000.;
+	double numOfSteps = 10.;
 	double tEnd = 1000.0;
 	double t;
 	double dt = tEnd/numOfSteps;
@@ -136,10 +136,10 @@ void testXenonIodineNoFlow(int myid){
 				for (int j = 0; j < yCells; j++){
 					xenonCon = spec.getSpecies(i, j, xenonID);
 					iodineCon = spec.getSpecies(i, j, iodineID);
-					std::cout << std::abs(iodineCon - N_I)/N_I << std::endl;
-					std::cout << std::abs(xenonCon - N_xe)/N_xe <<  std::endl;
-					//assert(isApprox(xenonCon, N_xe, 1.e-8, 1.e-9));
-					//assert(isApprox(iodineCon, N_I, 1.e-8, 1.e-9));
+					//std::cout << std::abs(iodineCon - N_I)/N_I << std::endl;
+					//std::cout << std::abs(xenonCon - N_xe)/N_xe <<  std::endl;
+					assert(isApprox(xenonCon, N_xe, 1.e5, 1.e-11));
+					assert(isApprox(iodineCon, N_I, 1.e5, 1.e-11));
 				}
 			}
 		}
@@ -232,9 +232,9 @@ void testXenonIodineYFlow(int myid){
 // Test Xenon iodine flow problem in the x direction
 //*****************************************************************************
 void testXenonIodineXFlow(int myid){
-	int xCells = 50, yCells = 1;
+	int xCells = 500, yCells = 1;
 	double xLength = 10.0, yLength = 1.0;
-	double xVelocity = 0.001;
+	double xVelocity = 8.0;
 	double xenonInitCon = 5e-6, iodineInitCon = 5e-6;
 	double xenonMM = 135.0, iodineMM = 135.0;
 	double AvogNum = 6.02214076E23;
@@ -295,10 +295,10 @@ void testXenonIodineXFlow(int myid){
    			double N_I = b + (iodineInitCon - b)*exp(-lambda_I/xVelocity*x);
 
 				//std::cout << xenonCon << " " << iodineCon << " " << N_I << std::endl;
-				iodineError = std::abs(iodineCon-N_I)/N_I;
+				//iodineError = std::abs(iodineCon-N_I)/N_I;
 				//printf (" %2i %2i %e \n", i, j, iodineError);
 				//error = std::max(std::abs(iodineCon - N_I)/N_I, error);
-				//std::cout << y << " " << error << std::endl;
+				//std::cout << x << " " << iodineError << std::endl;
 				assert(isApprox(iodineCon, N_I));
 			}
 		}
