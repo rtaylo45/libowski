@@ -542,9 +542,9 @@ int main(){
 
 
 	testSolverTime(myid, numprocs);
-	//tankProblem(myid);
-	//xenonIodineProblem(myid);
-	//neutronPrecursorProblem(myid);
+	tankProblem(myid);
+	xenonIodineProblem(myid);
+	neutronPrecursorProblem(myid);
 
 	mpi.finalize();
 }
