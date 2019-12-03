@@ -71,17 +71,17 @@ SparseMatrix<double> buildJMatrix(int n){
 	std::vector<T> tripletList;
 	tripletList.reserve(3*n);
    SparseMatrix<double> A(n,n);
-	tripletList.push_back(T(0,0,1.0));
+	tripletList.push_back(T(0,0,-1.0));
 	tripletList.push_back(T(0,1,-1.0));
 
 	for (int j = 1; j < n-1; j++){
-		tripletList.push_back(T(j,j,2.0/(pow(n,2.0))));
+		tripletList.push_back(T(j,j,1.+-2.0/(pow(n,2.0))));
 	}
 	for (int j = 1; j < n-1; j++){
-		tripletList.push_back(T(j,j+1,-1.0));
-		tripletList.push_back(T(j,j+1,-1.0));
+		tripletList.push_back(T(j,j+1,1.0));
+		tripletList.push_back(T(j,j-1,-1.0));
 	}
-	tripletList.push_back(T(n-1,n-1,1.0));
+	tripletList.push_back(T(n-1,n-1,-1.0));
 	tripletList.push_back(T(n-1,n-2,-1.0));
 
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
@@ -210,13 +210,14 @@ void testSolverTime(int myid, int numprocs){
 	std::string fileName = strNumProcs + "procs.out";
 	outputFile.open(fileName);
 
-	for (int n = 100; n <= 1e7; n = n*10){
+	for (int n = 10; n <= 10; n = n*10){
 		if (myid==0){std::cout << "Size: "+std::to_string(n) << std::endl;};
 		if (myid==0){outputFile << "Size: "+std::to_string(n)+"\n";};
 
    	SparseMatrix<double> A(n,n);
    	SparseVector<double> n0(n);
-		A = buildAMatrix(n);
+		A = buildJMatrix(n);
+		std::cout << A << std::endl;
 		n0 = buildN0Vector(n);
 
 		for (int i = 0; i < iters; i++){
@@ -392,14 +393,14 @@ void xenonIodineProblem(int myid){
     	N_I = b/lambda_I*(1. - exp(-lambda_I*t)) + N_I_0*exp(-lambda_I*t);
 		
 		if (myid==0){
-			std::cout << N_xe << " " << sol(0) << std::endl;
-    		std::cout << N_I << " " << sol(1) << std::endl;
-			std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
-			std::cout << abs(N_I-sol(1))/N_xe << std::endl;
-    		std::cout << " " << std::endl;
+			//std::cout << N_xe << " " << sol(0) << std::endl;
+    		//std::cout << N_I << " " << sol(1) << std::endl;
+			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
+			//std::cout << abs(N_I-sol(1))/N_xe << std::endl;
+    		//std::cout << " " << std::endl;
 
-			//assert(isApprox(sol(0), N_xe));
-			//assert(isApprox(sol(1), N_I));
+			assert(isApprox(sol(0), N_xe));
+			assert(isApprox(sol(1), N_I));
 			
 		}
 	}
@@ -540,9 +541,9 @@ int main(){
 	int numprocs = mpi.size;
 
 
-	//testSolverTime(myid, numprocs);
+	testSolverTime(myid, numprocs);
 	//tankProblem(myid);
-	xenonIodineProblem(myid);
+	//xenonIodineProblem(myid);
 	//neutronPrecursorProblem(myid);
 
 	mpi.finalize();

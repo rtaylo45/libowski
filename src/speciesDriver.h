@@ -59,16 +59,22 @@ class speciesDriver {
 	void setBoundaryCondition(std::string, std::string, int, double);
 	// Call to make solver rebuild the A matrix before the next solve
 	void resetMatrix();
-	// Solves the species transport equation
+	// Solves the transient species transport equation with matrix exp
 	void solve(double);
+	// Solves the transient species transport equation with implicit solve
+	void solveImplicit(double);
+	// Solves the steady state species transport equation
+	void solve();
 	// Cleans species
 	void clean();
 
 	private:
 	// Builds the transition matrix
-	Eigen::SparseMatrix<double> buildTransMatrix();
+	Eigen::SparseMatrix<double> buildTransMatrix(bool, double);
 	// Builds the initial condition vector
-	Eigen::VectorXd buildInitialConditionVector();
+	Eigen::VectorXd buildInitialConditionVector(bool);
+	// Builds the b vector (holding the constant sources) 
+	Eigen::VectorXd buildbVector();
 	// Unpacks the solution
 	void unpackSolution(Eigen::VectorXd);
 	// Gets the i or j index for transition matrix

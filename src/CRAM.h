@@ -27,11 +27,12 @@ class SolverType {
 	// Private attributes
 	private:
 	// Poles of the radional function r
-	Eigen::Matrix<std::complex<double>,8,1> theta;
+	Eigen::Matrix<std::complex<double>, Dynamic, 1> theta;
 	// Residues of these poles
-	Eigen::Matrix<std::complex<double>,8,1> alpha;
+	Eigen::Matrix<std::complex<double>, Dynamic, 1> alpha;
 	// Limit of r at infinity
 	double alpha_0 = 2.1248537104952237488e-16;
+	//double alpha_0 = 0.0;
 
 	//*************************************************************************
 	// Initialization of solver
