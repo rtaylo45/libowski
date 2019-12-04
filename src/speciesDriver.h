@@ -7,11 +7,15 @@
 #ifndef SPECIESDRIVER_H
 #define SPECIESDRIVER_H
 #include <vector>
-#include <Eigen/Core>
-#include <Eigen/Sparse>
 #include <iostream>
 #include <algorithm>
 #include <string>
+#include <Eigen/Eigenvalues>
+#include <Eigen/Core>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string>
+#include <fstream>
 #include "modelMesh.h"
 #include "meshCellData.h"
 #include "meshCellFace.h"
@@ -19,6 +23,8 @@
 #include "CRAM.h"
 #include "convectionLimiter.h"
 #include "mpiProcess.h"
+#include "matrixTypes.h"
+#include "vectorTypes.h"
 
 class speciesDriver {
 
@@ -35,9 +41,9 @@ class speciesDriver {
 	// Last solve time 
 	double lastSolveTime = 0.0;
 	// Transition matrix
-	Eigen::SparseMatrix<double> A;
+	SparseMatrixD A;
 	// Initial condition
-	Eigen::VectorXd N0;
+	VectorD N0;
 	// Convection flux limiter type
 	fluxLimiter fluxLim = fluxLimiter(0);
 
@@ -70,13 +76,13 @@ class speciesDriver {
 
 	private:
 	// Builds the transition matrix
-	Eigen::SparseMatrix<double> buildTransMatrix(bool, double);
+	SparseMatrixD buildTransMatrix(bool, double);
 	// Builds the initial condition vector
-	Eigen::VectorXd buildInitialConditionVector(bool);
+	VectorD buildInitialConditionVector(bool);
 	// Builds the b vector (holding the constant sources) 
-	Eigen::VectorXd buildbVector();
+	VectorD buildbVector();
 	// Unpacks the solution
-	void unpackSolution(Eigen::VectorXd);
+	void unpackSolution(VectorD);
 	// Gets the i or j index for transition matrix
 	int getAi(int, int, int, int);
 	// Calculates the species convection slope across in a cell

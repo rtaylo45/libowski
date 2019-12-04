@@ -106,49 +106,6 @@ void testSpeciesDriver(){
 }
 
 //*****************************************************************************
-// Test that the species driver sets up the problem right and solves the 
-// system right. 
-//*****************************************************************************
-void testYDirectionAdvection(){
-	int xCells = 1, yCells = 10;
-	double xLength = 1.0, yLength = 100.0;
-	double specInitCon = 10.0;
-	double numOfSteps = 5.;
-	double tEnd = 60.0; 
-	double dt = tEnd/numOfSteps;
-	double yVelocity = 6.0; // ft/s
-	int specID, spec2ID;
-	std::vector<double> coeffs = {0.0};
-	double dx = yLength/(float)yCells;
-
-	// Builds the mesh
-	modelMesh model(xCells, yCells, xLength, yLength);
-
-	// Sets the x velocity
-	model.setConstantYVelocity(yVelocity);
-
-	// Sets species driver
-	speciesDriver spec = speciesDriver(&model);
-
-	// Adds species to the model
-	specID = spec.addSpecies(1.0, 10.0, 0.0);
-	spec.setBoundaryCondition("dirichlet", "south", specID, 2.*specInitCon);
-
-	for (int step = 1; step <= numOfSteps; step++){
-		double t = step*dt;
-		// Solve with CRAM
-		spec.solve(t);
-
-		// Outlet concentration	
-		double specConOut = spec.getSpecies(0, yCells-1, specID);
-		double specConIn = spec.getSpecies(0, 0, specID);
-		printf (" %4.2f %6.3f %6.3f\n", t, specConIn, specConOut);
-	}
-	model.clean();
-	spec.clean();
-}
-
-//*****************************************************************************
 // Main test
 //*****************************************************************************
 int main(){
@@ -157,7 +114,6 @@ int main(){
 
 	testInit();
 	testSpeciesDriver();
-	//testYDirectionAdvection();
 
 	mpi.finalize();
 }

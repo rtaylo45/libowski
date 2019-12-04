@@ -5,20 +5,22 @@
 //*****************************************************************************
 #ifndef UTILLINEARALGEBRA_H
 #define UTILLINEARALGEBRA_H
-#include <Eigen/Sparse>
-#include <Eigen/SparseQR>
-#include <complex>
-#include <iostream>
+#include "matrixTypes.h"
+#include "vectorTypes.h"
 
 using namespace Eigen;
 
+// Pseudo inverse linearly independent columns for complex long double sparse matrix
+SparseMatrixCLD MoorePenroseInv(SparseMatrixCLD);
 // Pseudo inverse linearly independent columns for complex double sparse matrix
-SparseMatrix<std::complex<double>> MoorePenroseInv(SparseMatrix<std::complex<double>>);
+SparseMatrixCD MoorePenroseInv(SparseMatrixCD);
+// Pseudo inverse lineary independent columns for long double sparse matrix
+SparseMatrixLD MoorePenroseInv(SparseMatrixLD);
 // Pseudo inverse lineary independent columns for double sparse matrix
-SparseMatrix<double> MoorePenroseInv(SparseMatrix<double>);
+SparseMatrixD MoorePenroseInv(SparseMatrixD);
 
-// Compute matrix squaring for complex double sparse matrix
-//SparseMatrix<std::complex<double>> MatrixSquare(SparseMatrix<std::complex<double>>, int);
+// Compute matrix squaring for long double sparse matrix
+SparseMatrixLD MatrixSquare(SparseMatrixLD, int);
 // Compute matrix squaring for double sparse matrix
-SparseMatrix<double> MatrixSquare(SparseMatrix<double>, int);
+SparseMatrixD MatrixSquare(SparseMatrixD, int);
 #endif

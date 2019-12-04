@@ -136,8 +136,8 @@ void testXenonIodineNoFlow(int myid){
 				for (int j = 0; j < yCells; j++){
 					xenonCon = spec.getSpecies(i, j, xenonID);
 					iodineCon = spec.getSpecies(i, j, iodineID);
-					//std::cout << std::abs(iodineCon - N_I)/N_I << std::endl;
-					//std::cout << std::abs(xenonCon - N_xe)/N_xe <<  std::endl;
+					std::cout << std::abs(iodineCon - N_I)/N_I << std::endl;
+					std::cout << std::abs(xenonCon - N_xe)/N_xe <<  std::endl;
 					assert(isApprox(xenonCon, N_xe, 1.e5, 1.e-11));
 					assert(isApprox(iodineCon, N_I, 1.e5, 1.e-11));
 				}
@@ -419,7 +419,7 @@ void testNeutronPrecursorsFlow(int myid){
 	double a4 = 1.19610E-02, a5 = 3.47340E-03, a6 = 1.22760E-03;
 	double c1Error, c2Error, c3Error, c4Error, c5Error, c6Error;
 	double yVelocity = 7.0;
-   MatrixXd coeff(16,7);
+   MatrixD coeff(16,7);
 	std::ofstream outputFile;
 	std::vector<double> c1Coeffs = {-lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0};
 	std::vector<double> c2Coeffs = {0.0, -lambdaC2, 0.0, 0.0, 0.0, 0.0};
@@ -622,7 +622,7 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 	double s1 = 0.0, s2 = 0.0, s3 = 0.0, s4 = 0.0, s5 = 0.0, s6 = 0.0;
 	double maxC1 = 0.0, maxC2 = 0.0, maxC3 = 0.0, maxC4 = 0.0, maxC5 = 0.0, maxC6 = 0.0;
 	double velocityScale = 1.0;
-   MatrixXd coeff(16,7);
+   MatrixD coeff(16,7);
 	Tensor<double, 3> ceoff3d(6, 13, 16);
 	std::ofstream outputFile;
 	std::vector<double> c1Coeffs = {lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0};
