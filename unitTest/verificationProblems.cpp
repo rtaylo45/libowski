@@ -136,8 +136,8 @@ void testXenonIodineNoFlow(int myid){
 				for (int j = 0; j < yCells; j++){
 					xenonCon = spec.getSpecies(i, j, xenonID);
 					iodineCon = spec.getSpecies(i, j, iodineID);
-					//std::cout << std::abs(iodineCon - N_I)/N_I << std::endl;
-					//std::cout << std::abs(xenonCon - N_xe)/N_xe <<  std::endl;
+					std::cout << std::abs(iodineCon - N_I)/N_I << std::endl;
+					std::cout << std::abs(xenonCon - N_xe)/N_xe <<  std::endl;
 					assert(isApprox(xenonCon, N_xe, 1.e5, 1.e-11));
 					assert(isApprox(iodineCon, N_I, 1.e5, 1.e-11));
 				}

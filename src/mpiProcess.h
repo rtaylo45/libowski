@@ -16,12 +16,11 @@
 #ifndef MPIPROCESS_H
 #define MPIPROCESS_H
 #include <complex>
-#include <Eigen/Sparse>
+#include "matrixTypes.h"
+#include "vectorTypes.h"
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
-
-using namespace Eigen;
 
 class mpiProcess{
 
@@ -47,23 +46,22 @@ class mpiProcess{
 	//**************************************************************************
 	void finalize();
 	//**************************************************************************
-	// Sends complex eigen vector data
+	// Sends complex long double eigen vector data
 	//**************************************************************************
-	void send(VectorXcd, int, int, int);
+	void send(VectorCLD, int, int, int);
 	//**************************************************************************
-	// Receives complex eigen vector data
+	// Receives complex long double eigen vector data
 	//**************************************************************************
-	VectorXcd recv(VectorXcd, int, int, int);
+	VectorCLD recv(VectorCLD, int, int, int);
 
 	//**************************************************************************
-	// Sends complex eigen sparse matrix data
+	// Sends complex long double eigen sparse matrix data
 	//**************************************************************************
-	void send(SparseMatrix<std::complex<double>>, int, int, int);
+	void send(SparseMatrixCLD, int, int, int);
 	//**************************************************************************
-	// Receives complex eigen sparse matrix data
+	// Receives complex long double eigen sparse matrix data
 	//**************************************************************************
-	SparseMatrix<std::complex<double>> recv(SparseMatrix<std::complex<double>>, 
-		int, int, int);
+	SparseMatrixCLD recv(SparseMatrixCLD, int, int, int);
 
 	//**************************************************************************
 	// Initialization of the mpi object

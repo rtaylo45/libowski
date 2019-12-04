@@ -21,7 +21,7 @@ typedef Matrix<long double, Dynamic, Dynamic> MatrixLD;
 
 // Useful type definitions for sparce matrix
 // Complex long double dynamic matrix
-typedef SparseMatrix<std::complex<long double>> SpaseMatrixCLD;
+typedef SparseMatrix<std::complex<long double>> SparseMatrixCLD;
 // Complex double dynamic matrix
 typedef SparseMatrix<std::complex<double>> SparseMatrixCD;
 // Double dynamic matrix

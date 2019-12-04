@@ -10,8 +10,6 @@
 //*****************************************************************************
 #ifndef CRAM_H
 #define CRAM_H
-#include <Eigen/Core>
-#include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <complex>
 #include <iostream>
@@ -29,9 +27,9 @@ class SolverType {
 	// Private attributes
 	private:
 	// Poles of the radional function r
-	Eigen::Matrix<std::complex<double>, Dynamic, 1> theta;
+	MatrixCLD theta;
 	// Residues of these poles
-	Eigen::Matrix<std::complex<double>, Dynamic, 1> alpha;
+	MatrixCLD alpha;
 	// Limit of r at infinity
 	long double alpha_0 = 0.0;
 
@@ -43,21 +41,16 @@ class SolverType {
 	//*************************************************************************
 	// Solver function
 	//*************************************************************************
-	Eigen::MatrixXd solve(Eigen::SparseMatrix<double>, Eigen::VectorXd, double);
+	VectorD solve(SparseMatrixD, VectorD, double);
 	private:
-	//*************************************************************************
-	// Builds a sparse identity matrix
-	//*************************************************************************
-	Eigen::SparseMatrix<std::complex<double>> buildSparseIdentity(int n);
-
 	//*************************************************************************
 	// Solves CRAM with no matrix scaling
 	//*************************************************************************
-	Eigen::MatrixXd solveBase(Eigen::SparseMatrix<double>, Eigen::VectorXd, double);
+	VectorD solveBase(SparseMatrixD, VectorD, double);
 
 	//*************************************************************************
 	// Solves CRAM with matrix scaling
 	//*************************************************************************
-	Eigen::MatrixXd solveScale(Eigen::SparseMatrix<double>, Eigen::VectorXd, double);
+	VectorD solveScale(SparseMatrixD, VectorD, double);
 };
 #endif
