@@ -197,6 +197,7 @@ SolverType::SolverType(){
 		alpha_m16(0,0) = aCRAM1; alpha_m16(1,0) = aCRAM2; alpha_m16(2,0) = aCRAM3; 
 		alpha_m16(3,0) = aCRAM4; alpha_m16(4,0) = aCRAM5; alpha_m16(5,0) = aCRAM6; 
 		alpha_m16(6,0) = aCRAM7; alpha_m16(7,0) = aCRAM8; 
+		alpha_0 = 2.1248537104952237488e-16;
 	}
 	else if (method == 1){
 		alpha_m16(0,0) = aH16QUAD1; alpha_m16(1,0) = aH16QUAD2; alpha_m16(2,0) = aH16QUAD3; 
