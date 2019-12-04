@@ -2,12 +2,6 @@
 // Author: Zack Taylor
 //*****************************************************************************
 #include "speciesDriver.h"
-#include <Eigen/Eigenvalues>
-#include <Eigen/Core>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string>
-#include <fstream>
 
 //*****************************************************************************
 // Constructor
@@ -247,9 +241,9 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 // Solves the transient species transport equation
 //*****************************************************************************
 void speciesDriver::solve(double solveTime){
-	Eigen::VectorXd sol;
+	VectorD sol;
 	SolverType ExpSolver;
-	Eigen::MatrixXd dA;
+	MatrixD dA;
 	bool augmented = true;
 	double timeStep = solveTime - lastSolveTime;
 
@@ -279,13 +273,13 @@ void speciesDriver::solve(double solveTime){
 // Solves the implicit transient species transport equation
 //*****************************************************************************
 void speciesDriver::solveImplicit(double solveTime){
-	Eigen::VectorXd b;
-	Eigen::VectorXd sol;
-	Eigen::VectorXd cOld;
+	VectorD b;
+	VectorD sol;
+	VectorD cOld;
 	SolverType ExpSolver;
-	Eigen::MatrixXd dA;
+	MatrixD dA;
 	bool augmented = false;
-	SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > LinearSolver;
+	SparseLU<SparseMatrixD, COLAMDOrdering<int> > LinearSolver;
 	double timeStep = solveTime - lastSolveTime;
 
 	cOld = buildInitialConditionVector(augmented);
@@ -302,11 +296,11 @@ void speciesDriver::solveImplicit(double solveTime){
 // Solves the steady state species transport equation
 //*****************************************************************************
 void speciesDriver::solve(){
-	Eigen::VectorXd sol;
-	Eigen::VectorXd b;
-	Eigen::MatrixXd dA;
+	VectorD sol;
+	VectorD b;
+	MatrixD dA;
 	bool augmented = false;
-	SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > LinearSolver;
+	SparseLU<SparseMatrixD, COLAMDOrdering<int> > LinearSolver;
 
 	A = buildTransMatrix(augmented, 0.0);
 	b = buildbVector();
@@ -328,8 +322,7 @@ void speciesDriver::solve(){
 //	@param dt			Time step over the solve. Only != to zero for implicit
 //							transient solves
 //*****************************************************************************
-Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(bool Augmented, 
-	double dt){
+SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	// i, j index of transition matrix
 	int i, j;
 	typedef Eigen::Triplet<double> T;
@@ -351,8 +344,8 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(bool Augmented,
 	}
 
 	// Init A matrix
-	Eigen::SparseMatrix<double> A(totalCells*totalSpecs + dummySpec, 
-			totalCells*totalSpecs + dummySpec);
+	SparseMatrixD A(totalCells*totalSpecs + dummySpec, totalCells*totalSpecs + 
+		dummySpec);
 	// Loop over cells
 	for (int cellID = 0; cellID < totalCells; cellID++){
 		// Gets cell pointer
@@ -495,12 +488,12 @@ Eigen::SparseMatrix<double> speciesDriver::buildTransMatrix(bool Augmented,
 //*****************************************************************************
 // Builds the initial condition vector
 //*****************************************************************************
-Eigen::VectorXd speciesDriver::buildInitialConditionVector(bool augmented){
+VectorD speciesDriver::buildInitialConditionVector(bool augmented){
 	int i;
 	int totalSpecs = numOfSpecs;
 	int totalCells = modelPtr->numOfTotalCells;
 	if (not augmented){dummySpec = 0;};
-	Eigen::VectorXd N0(totalSpecs*totalCells + dummySpec);
+	VectorD N0(totalSpecs*totalCells + dummySpec);
 
 	// Loops over cells
 	for (int cellID = 0; cellID < totalCells; cellID++){
@@ -522,11 +515,11 @@ Eigen::VectorXd speciesDriver::buildInitialConditionVector(bool augmented){
 //*****************************************************************************
 // Builds the b vector 
 //*****************************************************************************
-Eigen::VectorXd speciesDriver::buildbVector(){
+VectorD speciesDriver::buildbVector(){
 	int i;
 	int totalSpecs = numOfSpecs;
 	int totalCells = modelPtr->numOfTotalCells;
-	Eigen::VectorXd b(totalSpecs*totalCells);
+	VectorD b(totalSpecs*totalCells);
 
 	// Loops over cells
 	for (int cellID = 0; cellID < totalCells; cellID++){
@@ -547,7 +540,7 @@ Eigen::VectorXd speciesDriver::buildbVector(){
 //*****************************************************************************
 // Unpacks the solution from the matrix exp solve
 //*****************************************************************************
-void speciesDriver::unpackSolution(Eigen::VectorXd sol){
+void speciesDriver::unpackSolution(VectorD sol){
 	int i;
 	int totalSpecs = numOfSpecs;
 	int totalCells = modelPtr->numOfTotalCells;
