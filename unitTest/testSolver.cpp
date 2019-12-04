@@ -1,8 +1,4 @@
-#include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <Eigen/Eigenvalues>
-#include "CRAM.h"
-#include "mpiProcess.h"
 #include <chrono>
 #include <assert.h>
 #include <iostream>
@@ -11,9 +7,12 @@
 #include <fstream>
 #include <string>
 #include <math.h>
+#include "CRAM.h"
+#include "mpiProcess.h"
+#include "matrixTypes.h"
+#include "vectorTypes.h"
 
 using namespace std::chrono;
-using namespace Eigen;
 
 //*****************************************************************************
 // Functions used in unit testing
@@ -43,11 +42,11 @@ bool isApprox(double goalVal, double testVal, double rtol = 1e-5, double atol = 
 //
 // @param n		Matrix size
 //*****************************************************************************
-SparseMatrix<double> buildAMatrix(int n){
+SparseMatrixD buildAMatrix(int n){
 	typedef Eigen::Triplet<double> T;
 	std::vector<T> tripletList;
 	tripletList.reserve(3*n);
-   SparseMatrix<double> A(n,n);
+   SparseMatrixD A(n,n);
 
 	for (int j = 0; j < n; j++){
 		tripletList.push_back(T(j,j,-3.0));
@@ -66,11 +65,11 @@ SparseMatrix<double> buildAMatrix(int n){
 //
 // @param n		Matrix size
 //*****************************************************************************
-SparseMatrix<double> buildJMatrix(int n){
+SparseMatrixD buildJMatrix(int n){
 	typedef Eigen::Triplet<double> T;
 	std::vector<T> tripletList;
 	tripletList.reserve(3*n);
-   SparseMatrix<double> A(n,n);
+   SparseMatrixD A(n,n);
 	tripletList.push_back(T(0,0,-1.0));
 	tripletList.push_back(T(0,1,-1.0));
 
@@ -92,11 +91,11 @@ SparseMatrix<double> buildJMatrix(int n){
 //
 // @param n		Matrix size
 //*****************************************************************************
-SparseMatrix<double> buildSMatrix(int n){
+SparseMatrixD buildSMatrix(int n){
 	typedef Eigen::Triplet<double> T;
 	std::vector<T> tripletList;
 	tripletList.reserve(3*n);
-   SparseMatrix<double> A(n,n);
+   SparseMatrixD A(n,n);
 
 	for (int j = 0; j < n; j++){
 		tripletList.push_back(T(j,j,3.0));
@@ -116,8 +115,8 @@ SparseMatrix<double> buildSMatrix(int n){
 //
 // @param n		Vector size
 //*****************************************************************************
-SparseVector<double> buildN0Vector(int n){
-	SparseVector<double> n0(n);
+SparseVectorD buildN0Vector(int n){
+	SparseVectorD n0(n);
 	for (int j = 0; j < n; j++){
 		n0.insert(j) = 1.0;
 	}
@@ -130,7 +129,7 @@ SparseVector<double> buildN0Vector(int n){
 // @param sol	Soltuion at time t
 // @param t		Time over which the solve takes place
 //*****************************************************************************
-void writePrecursorSolution(MatrixXd sol, double t){
+void writePrecursorSolution(MatrixD sol, double t){
 	int specs = 6, cells = 16;
 	int s = 0, c = 0;
 	std::ofstream outputFile;
@@ -153,14 +152,14 @@ void writePrecursorSolution(MatrixXd sol, double t){
 // Builds the species matrix for precursor problem
 //
 //*****************************************************************************
-SparseMatrix<double> BuildSpeciesMatrix(MatrixXd coeff, MatrixXd varCoeff,
+SparseMatrixD BuildSpeciesMatrix(MatrixD coeff, MatrixD varCoeff,
 	int numOfSpecs, int numOfLvls, double flux){
 
 	typedef Eigen::Triplet<double> T;
 	std::vector<T> tripletList;
 	int nonZeros = 2*numOfSpecs + 3*numOfSpecs*(numOfLvls-1);
 	tripletList.reserve(nonZeros);
-   SparseMatrix<double> A(numOfSpecs*numOfLvls+1,numOfSpecs*numOfLvls+1);
+   SparseMatrixD A(numOfSpecs*numOfLvls+1,numOfSpecs*numOfLvls+1);
 	double val1, val2;
 	int s = 0; // species index
 	int c = 0; // cell  index
@@ -214,8 +213,8 @@ void testSolverTime(int myid, int numprocs){
 		if (myid==0){std::cout << "Size: "+std::to_string(n) << std::endl;};
 		if (myid==0){outputFile << "Size: "+std::to_string(n)+"\n";};
 
-   	SparseMatrix<double> A(n,n);
-   	SparseVector<double> n0(n);
+   	SparseMatrixD A(n,n);
+   	SparseVectorD n0(n);
 		A = buildJMatrix(n);
 		std::cout << A << std::endl;
 		n0 = buildN0Vector(n);
@@ -227,10 +226,10 @@ void testSolverTime(int myid, int numprocs){
 			SolverType ExpSolver;
 
 			// Build random dense matrix
-			//MatrixXd A = MatrixXd::Random(n,n);
-			//MatrixXd n0 = MatrixXd::Random(n,1);
+			//MatrixD A = MatrixD::Random(n,n);
+			//MatrixD n0 = MatrixD::Random(n,1);
 
-			MatrixXd sol;
+			MatrixD sol;
 
 			// Start time
 			auto start = high_resolution_clock::now();
@@ -277,9 +276,9 @@ void tankProblem(int myid){
 	int steps = 10;
 	double totalTime = 20.0;
 	double dt = totalTime/steps;
-   SparseMatrix<double> A(3,3);
-   SparseVector<double> b(3);
-	MatrixXd sol;
+   SparseMatrixD A(3,3);
+   SparseVectorD b(3);
+	MatrixD sol;
 	std::vector<T> tripletList;
 	tripletList.reserve(5);
 
@@ -355,9 +354,9 @@ void xenonIodineProblem(int myid){
 	double gamma_I = 0.063033;
 	double xenonMM = 135.0, iodineMM = 135.0;
 	double AvogNum = 6.02214076E23;
-   SparseMatrix<double> A(3,3);
-   SparseVector<double> N0(3);
-	MatrixXd sol;
+   SparseMatrixD A(3,3);
+   SparseVectorD N0(3);
+	MatrixD sol;
 	std::vector<T> tripletList;
 	tripletList.reserve(5);
 
@@ -445,12 +444,12 @@ void neutronPrecursorProblem(int myid){
 	double lambdaC1 = 0.0125, lambdaC2 = 0.0318, lambdaC3 = 0.109;
 	double lambdaC4 = 0.3170, lambdaC5 = 1.3500, lambdaC6 = 8.640;
 	double val1, val2;
-   SparseMatrix<double> A(numOfSpecs*numOfLvls+1,numOfSpecs*numOfLvls+1);
+   SparseMatrixD A(numOfSpecs*numOfLvls+1,numOfSpecs*numOfLvls+1);
    //SparseVector<double> N0(numOfSpecs*numOfLvls+1);
-   VectorXd N0(numOfSpecs*numOfLvls+1);
-	MatrixXd sol;
-	MatrixXd coeff(16,7);
-	VectorXd varCoeff(7);
+   VectorD N0(numOfSpecs*numOfLvls+1);
+	MatrixD sol;
+	MatrixD coeff(16,7);
+	VectorD varCoeff(7);
 	double flux = 0.2, diff = 0.0;
 	std::vector<T> tripletList;
 	tripletList.reserve(nonZeros);

@@ -6,17 +6,19 @@
 #include <vector>
 #include "linearAlgebra.h"
 #include "mpiProcess.h"
+#include "matrixTypes.h"
+#include "vectorTypes.h"
 
 //*****************************************************************************
 // Builds a nonsymmetric square matrix sparse
 //
 // @param n		Matrix size
 //*****************************************************************************
-SparseMatrix<double> buildAMatrixSparse(int n){
+SparseMatrixD buildAMatrixSparse(int n){
 	typedef Eigen::Triplet<double> T;
 	std::vector<T> tripletList;
 	tripletList.reserve(3*n);
-   SparseMatrix<double> A(n,n);
+   SparseMatrixD A(n,n);
 
 	for (int j = 0; j < n-1; j++){
 		tripletList.push_back(T(j,j,-3.0));
@@ -35,11 +37,11 @@ SparseMatrix<double> buildAMatrixSparse(int n){
 //
 // @param n		Matrix size
 //*****************************************************************************
-SparseMatrix<double> buildJMatrixSparse(int n){
+SparseMatrixD buildJMatrixSparse(int n){
 	typedef Eigen::Triplet<double> T;
 	std::vector<T> tripletList;
 	tripletList.reserve(3*n);
-   SparseMatrix<double> A(n,n);
+   SparseMatrixD A(n,n);
 	tripletList.push_back(T(0,0,1.0));
 	tripletList.push_back(T(0,1,-1.0));
 
@@ -62,8 +64,8 @@ SparseMatrix<double> buildJMatrixSparse(int n){
 //
 // @param n		Matrix size
 //*****************************************************************************
-MatrixXd buildAMatrixDense(int n){
-   MatrixXd A(n,n);
+MatrixD buildAMatrixDense(int n){
+	MatrixD A(n,n);
 
 	for (int j = 0; j < n-1; j++){
 		A(j,j) = 3.0;
@@ -81,8 +83,8 @@ MatrixXd buildAMatrixDense(int n){
 //
 // @param n		Matrix size
 //*****************************************************************************
-MatrixXd buildJMatrixDense(int n){
-   MatrixXd A(n,n);
+MatrixD buildJMatrixDense(int n){
+   MatrixD A(n,n);
 	A(0,0) = 1.0;
 	A(0,1)= -1.0;
 
@@ -113,14 +115,14 @@ void testPseudoInverse(int myid){
 	double flux = 2.5E16;
 	double gamma_xe = 0.002468;
 	double gamma_I = 0.063033;
-   SparseMatrix<double> AxeISparse(3,3);
-   SparseMatrix<double> AtankSparse(3,3);
-   SparseMatrix<double> AaMatrixSparse(5,5);
-   SparseMatrix<double> AjMatrixSparse(5,5);
-	MatrixXd AtankDense(3,3);
-	MatrixXd AxeIDense(3,3);
-	MatrixXd AaMatrixDense(5,5);
-	MatrixXd AjMatrixDense(5,5);
+   SparseMatrixD AxeISparse(3,3);
+   SparseMatrixD AtankSparse(3,3);
+   SparseMatrixD AaMatrixSparse(5,5);
+   SparseMatrixD AjMatrixSparse(5,5);
+	MatrixD AtankDense(3,3);
+	MatrixD AxeIDense(3,3);
+	MatrixD AaMatrixDense(5,5);
+	MatrixD AjMatrixDense(5,5);
 	std::vector<T> tripletListTank;
 	std::vector<T> tripletListXeI;
 	std::vector<T> tripletListTest;
@@ -189,7 +191,7 @@ void testPseudoInverse(int myid){
 void testMatrixSquare(int myid){
 
 	typedef Eigen::Triplet<double> T;
-   SparseMatrix<double> A(2,2);
+   SparseMatrixD A(2,2);
 	MatrixXd Solution(2,2);
 	std::vector<T> tripletList;
 	tripletList.reserve(4);
