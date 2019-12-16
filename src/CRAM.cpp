@@ -234,16 +234,35 @@ SolverType::SolverType(){
 }
 
 //*****************************************************************************
+// Over rides the solver type 
+//
+// @param solveType	Type of solve  to use
+//							"CRAM"
+//							"CRAMScaled"
+//*****************************************************************************
+void SolverType::setSolveType(std::string solveType){
+	assert(solveType == "CRAM" or solveType == "CRAMScaled");
+
+	if (solveType == "CRAM"){
+		solverPtr = &SolverType::solveBase;
+	}
+	else if (solveType == "CRAMScaled"){
+		solverPtr = &SolverType::solveScale;
+	}
+}
+
+//*****************************************************************************
 // Matrix expotental solver
-//	param A		The coefficient matrix for the system of ODEs
-//	param w0		Initial condition 
-//	param t		Time of the solve
+//
+//	@param A		The coefficient matrix for the system of ODEs
+//	@param w0		Initial condition 
+//	@param t		Time of the solve
 //	
 //	return w	Solution vector
 //*****************************************************************************
 VectorD SolverType::solve(SparseMatrixD A, VectorD w0, double t){
 
-	return solveBase(A, w0, t);
+	return (this->*solverPtr)(A, w0, t);
 }
 //*****************************************************************************
 // Base Matrix expotental solver. No matrix scaling

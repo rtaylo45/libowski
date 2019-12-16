@@ -13,6 +13,7 @@
 #include <Eigen/Sparse>
 #include <complex>
 #include <iostream>
+#include <assert.h>
 #include "mpiProcess.h"
 #include "linearAlgebra.h"
 #include "vectorTypes.h"
@@ -42,7 +43,20 @@ class SolverType {
 	// Solver function
 	//*************************************************************************
 	VectorD solve(SparseMatrixD, VectorD, double);
+
+	//*************************************************************************
+	// Sets the solver type for CRAM
+	//*************************************************************************
+	void setSolveType(std::string);
+
 	private:
+	//*************************************************************************
+	// Solver pointer to the method of matrix exponential solve type. 
+	// Default is the base solve without scaling and squaring.
+	//*************************************************************************
+	VectorD (SolverType::*solverPtr)(SparseMatrixD, VectorD, double) = 
+		&SolverType::solveBase;
+
 	//*************************************************************************
 	// Solves CRAM with no matrix scaling
 	//*************************************************************************
