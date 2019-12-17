@@ -82,7 +82,7 @@ class speciesDriver {
 	// Builds the b vector (holding the constant sources) 
 	VectorD buildbVector();
 	// Unpacks the solution
-	void unpackSolution(VectorD);
+	void unpackSolution(const VectorD&);
 	// Gets the i or j index for transition matrix
 	int getAi(int, int, int, int);
 	// Calculates the species convection slope across in a cell
