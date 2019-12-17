@@ -11,7 +11,7 @@
 // @param A		matrix
 //*****************************************************************************
 template <typename derived>
-SparseMatrix<derived> MoorePenroseInv(SparseMatrix<derived> A){
+SparseMatrix<derived> MoorePenroseInv(const SparseMatrix<derived>& A){
 	SparseMatrix<derived> Ainv;
 	SparseMatrix<derived> AConjugateTranspose;
 	SparseMatrix<derived> Atemp;
@@ -33,7 +33,7 @@ SparseMatrix<derived> MoorePenroseInv(SparseMatrix<derived> A){
 // @param alpha	Matrix power
 //*****************************************************************************
 template <typename derived>
-SparseMatrix<derived> MatrixSquare(SparseMatrix<derived> A, int alpha){
+SparseMatrix<derived> MatrixSquare(const SparseMatrix<derived>& A, int alpha){
 	SparseMatrix<derived> Areturn;
 	SparseMatrix<derived> ASquared;
 	Areturn = A;
@@ -51,10 +51,10 @@ SparseMatrix<derived> MatrixSquare(SparseMatrix<derived> A, int alpha){
 }
 
 // Data types that can use the template functions
-template SparseMatrixLD MoorePenroseInv(SparseMatrixLD A);
-template SparseMatrixD MoorePenroseInv(SparseMatrixD A);
-template SparseMatrixCLD MoorePenroseInv(SparseMatrixCLD A);
-template SparseMatrixCD MoorePenroseInv(SparseMatrixCD A);
+template SparseMatrixLD MoorePenroseInv(const SparseMatrixLD& A);
+template SparseMatrixD MoorePenroseInv(const SparseMatrixD& A);
+template SparseMatrixCLD MoorePenroseInv(const SparseMatrixCLD& A);
+template SparseMatrixCD MoorePenroseInv(const SparseMatrixCD& A);
 
-template SparseMatrixLD MatrixSquare(SparseMatrixLD A, int alpha);
-template SparseMatrixD MatrixSquare(SparseMatrixD A, int alpha);
+template SparseMatrixLD MatrixSquare(const SparseMatrixLD& A, int alpha);
+template SparseMatrixD MatrixSquare(const SparseMatrixD& A, int alpha);

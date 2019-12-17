@@ -10,11 +10,16 @@
 
 using namespace Eigen;
 
-// Pseudo inverse linearly independent columns for sparse matrix
-template <typename derived>
-SparseMatrix<derived> MoorePenroseInv(SparseMatrix<derived>);
 
-// Compute matrix squaring for sparse matrix
+//*****************************************************************************
+// Pseudo inverse linearly independent columns for sparse matrix
+//*****************************************************************************
 template <typename derived>
-SparseMatrix<derived> MatrixSquare(SparseMatrix<derived>, int);
+SparseMatrix<derived> MoorePenroseInv(const SparseMatrix<derived>&);
+
+//*****************************************************************************
+// Compute matrix squaring for sparse matrix
+//*****************************************************************************
+template <typename derived>
+SparseMatrix<derived> MatrixSquare(const SparseMatrix<derived>&, int);
 #endif

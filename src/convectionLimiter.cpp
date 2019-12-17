@@ -40,7 +40,6 @@ fluxLimiter::fluxLimiter(int limitType){
 // @param r		Species concentration slope
 //*****************************************************************************
 double fluxLimiter::getPsi(double r){
-	//double psi = superbee(r);
 	double psi = (this->*fluxLimiterPtr)(r);
 	return psi;
 }
