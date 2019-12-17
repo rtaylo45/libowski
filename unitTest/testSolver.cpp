@@ -307,13 +307,43 @@ void tankProblem(int myid){
     		//std::cout << x2 << " " << sol(1) << std::endl;
     		//std::cout << x3 << " " << sol(2) << std::endl;
     		//std::cout << " " << std::endl;
-			//std::cout << abs(x1-sol(0))/sol(0) << std::endl;
-			//std::cout << abs(x2-sol(1))/sol(1) << std::endl;
-			//std::cout << abs(x3-sol(2))/sol(2) << std::endl;
+			//std::cout << abs(x1-sol(0)) << std::endl;
+			//std::cout << abs(x2-sol(1)) << std::endl;
+			//std::cout << abs(x3-sol(2)) << std::endl;
 
-			assert(isApprox(x1, sol(0)));
-			assert(isApprox(x2, sol(1)));
-			assert(isApprox(x3, sol(2)));
+			assert(isApprox(x1, sol(0), 1.e-11, 1.e-11));
+			assert(isApprox(x2, sol(1), 1.e-11, 1.e-11));
+			assert(isApprox(x3, sol(2), 1.e-11, 1.e-11));
+		}
+	}
+
+	// Rerun the problem using the scaled cram method. (Not as accurate)
+	// Sets the scaled cram method
+   ExpSolver.setSolveType("CRAMScaled");
+	t = 0.0;
+
+	for (int i = 0; i < steps; i++){
+
+		t = t + dt;
+
+		sol = ExpSolver.solve(A, b, t);
+    	x1 = x1_0*exp(-t/2.);
+    	x2 = -2.*x1_0*exp(-t/2.) + (x2_0 + 2.*x1_0)*exp(-t/4.);
+    	x3 = (3./2.)*x1_0*exp(-t/2.) - 3.*(x3_0 + 2.*x1_0)*exp(-t/4) +
+    	    (x3_0 - (3./2.)*x1_0 + 3.*(x2_0 + 2.*x1_0))*exp(-t/6.);
+	
+		if (myid==0){
+			//std::cout << x1 << " " << sol(0) << std::endl;
+    		//std::cout << x2 << " " << sol(1) << std::endl;
+    		//std::cout << x3 << " " << sol(2) << std::endl;
+    		//std::cout << " " << std::endl;
+			//std::cout << abs(x1-sol(0)) << std::endl;
+			//std::cout << abs(x2-sol(1)) << std::endl;
+			//std::cout << abs(x3-sol(2)) << std::endl;
+
+			assert(isApprox(x1, sol(0), 1.e-11, 1.e-11));
+			assert(isApprox(x2, sol(1), 1.e-11, 1.e-11));
+			assert(isApprox(x3, sol(2), 1.e-11, 1.e-11));
 		}
 	}
 }
@@ -370,6 +400,44 @@ void xenonIodineProblem(int myid){
 	tripletList.push_back(T(1,1,-lambda_I));
 	tripletList.push_back(T(1,2,gamma_I*Sigma_f*flux*iodineMM/AvogNum)); 
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
+
+	for (int i = 0; i < steps; i++){
+
+		t = t + dt;
+
+		sol = ExpSolver.solve(A, N0, t);
+
+		a = lambda_xe + sigma_a*flux;
+		b = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
+		d = lambda_I*N_I_0;
+		k = N_xe_0 - (d-b)/(a - lambda_I) - 
+			(b + gamma_xe*Sigma_f*flux*xenonMM/AvogNum)/a;
+
+		// Xenon solution
+    	N_xe = -b/(a-lambda_I)*exp(-lambda_I*t) + b/a +
+			d*exp(-lambda_I*t)/(a - lambda_I) + k*exp(-a*t) +
+			gamma_xe*Sigma_f*flux*xenonMM/AvogNum/a;
+
+		// Iodine solution
+    	N_I = b/lambda_I*(1. - exp(-lambda_I*t)) + N_I_0*exp(-lambda_I*t);
+		
+		if (myid==0){
+			//std::cout << N_xe << " " << sol(0) << std::endl;
+    		//std::cout << N_I << " " << sol(1) << std::endl;
+			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
+			//std::cout << abs(N_I-sol(1))/N_xe << std::endl;
+    		//std::cout << " " << std::endl;
+
+			assert(isApprox(sol(0), N_xe));
+			assert(isApprox(sol(1), N_I));
+			
+		}
+	}
+
+	// Rerun the problem using the scaled cram method. (Not as accurate)
+	// Sets the scaled cram method
+   ExpSolver.setSolveType("CRAMScaled");
+	t = 0.0;
 
 	for (int i = 0; i < steps; i++){
 

@@ -23,14 +23,14 @@ fluxLimiter::fluxLimiter(int limitType){
 	assert(limitType <= 6 and limitType >= 0);
 	limiterType = limitType;
 
-	//switch (limitType) {
-	//	case 0: fluxLimiterPtr = &fluxLimiter::superbee; break;
-	//	case 1: fluxLimiterPtr = &fluxLimiter::vanLeer; break;
-	//	case 2: fluxLimiterPtr = &fluxLimiter::vanAlbada; break;
-	//	case 3: fluxLimiterPtr = &fluxLimiter::minMod; break;
-	//	case 4: fluxLimiterPtr = &fluxLimiter::sweby; break;
+	switch (limitType) {
+		case 0: fluxLimiterPtr = &fluxLimiter::superbee; break;
+		case 1: fluxLimiterPtr = &fluxLimiter::vanLeer; break;
+		case 2: fluxLimiterPtr = &fluxLimiter::vanAlbada; break;
+		case 3: fluxLimiterPtr = &fluxLimiter::minMod; break;
+		case 4: fluxLimiterPtr = &fluxLimiter::sweby; break;
 
-	//}
+	}
 }
 
 
@@ -40,10 +40,7 @@ fluxLimiter::fluxLimiter(int limitType){
 // @param r		Species concentration slope
 //*****************************************************************************
 double fluxLimiter::getPsi(double r){
-	double psi = superbee(r);
-	psi = 0.0;
-	//std::cout << r << " "<< superbee(r) << std::endl;
-	//double psi = *fluxLimiterPtr(r);
+	double psi = (this->*fluxLimiterPtr)(r);
 	return psi;
 }
 

@@ -33,7 +33,7 @@ class fluxLimiter {
 	double getPsi(double);
 	private:
 	// Pointer to specific limiter function
-	double (fluxLimiter::*fluxLimiterPtr)(double);
+	double (fluxLimiter::*fluxLimiterPtr)(double) = nullptr;
 	// Van Leer limiter
 	double vanLeer(double);
 	//	Van Albada limiter

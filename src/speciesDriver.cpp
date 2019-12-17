@@ -540,7 +540,7 @@ VectorD speciesDriver::buildbVector(){
 //*****************************************************************************
 // Unpacks the solution from the matrix exp solve
 //*****************************************************************************
-void speciesDriver::unpackSolution(VectorD sol){
+void speciesDriver::unpackSolution(const VectorD& sol){
 	int i;
 	int totalSpecs = numOfSpecs;
 	int totalCells = modelPtr->numOfTotalCells;

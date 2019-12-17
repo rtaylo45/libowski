@@ -48,20 +48,20 @@ class mpiProcess{
 	//**************************************************************************
 	// Sends complex long double eigen vector data
 	//**************************************************************************
-	void send(VectorCLD, int, int, int);
+	void send(const VectorCLD&, int, int, int);
 	//**************************************************************************
 	// Receives complex long double eigen vector data
 	//**************************************************************************
-	VectorCLD recv(VectorCLD, int, int, int);
+	VectorCLD recv(const VectorCLD&, int, int, int);
 
 	//**************************************************************************
 	// Sends complex long double eigen sparse matrix data
 	//**************************************************************************
-	void send(SparseMatrixCLD, int, int, int);
+	void send(const SparseMatrixCLD&, int, int, int);
 	//**************************************************************************
 	// Receives complex long double eigen sparse matrix data
 	//**************************************************************************
-	SparseMatrixCLD recv(SparseMatrixCLD, int, int, int);
+	SparseMatrixCLD recv(const SparseMatrixCLD&, int, int, int);
 
 	//**************************************************************************
 	// Initialization of the mpi object
