@@ -1,5 +1,5 @@
 # libowski
-A numberical solver even the Dude can git behind
+A numerical solver even the Dude can git behind
 ![The Dude](https://images2.minutemediacdn.com/image/upload/c_crop,h_1191,w_2118,x_41,y_0/f_auto,q_auto,w_1100/v1554931540/shape/mentalfloss/61708-gramercy_pictures.jpg "The Dude")
 
 This is a matrix expotential library that is being build as part of my PhD work. The purpose is to solve the set of nuclear burnup equations along with species transport. The governing equations are a set of linear first order ODEs as follows.
