@@ -38,7 +38,7 @@ void mpiProcess::finalize(){
 // @param id		Processor ID
 // @param MTAG		Message tag
 //**************************************************************************
-void mpiProcess::send(SparseMatrixCLD x, int count, int id, int MTAG){
+void mpiProcess::send(const SparseMatrixCLD& x, int count, int id, int MTAG){
 #ifdef HAVE_MPI
 	MPI_Send(x.data(), count, MPI::LONG_DOUBLE_COMPLEX, id, MTAG, MPI_COMM_WORLD);
 #endif
@@ -56,7 +56,7 @@ void mpiProcess::send(SparseMatrixCLD x, int count, int id, int MTAG){
 // why the data that you recieve is an input argument to the method. If 
 // HAVE_MPI is not defined then the method just returns an empty vector.
 //**************************************************************************
-SparseMatrixCLD mpiProcess::recv(SparseMatrixCLD x, int count, int islave, int MTAG){
+SparseMatrixCLD mpiProcess::recv(const SparseMatrixCLD& x, int count, int islave, int MTAG){
 	// Inits a zero return vector
 	SparseMatrixCLD xRet;
 #ifdef HAVE_MPI
@@ -76,7 +76,7 @@ SparseMatrixCLD mpiProcess::recv(SparseMatrixCLD x, int count, int islave, int M
 // @param id		Processor ID
 // @param MTAG		Message tag
 //**************************************************************************
-void mpiProcess::send(VectorCLD x, int count, int id, int MTAG){
+void mpiProcess::send(const VectorCLD& x, int count, int id, int MTAG){
 #ifdef HAVE_MPI
 	MPI_Send(x.data(), count, MPI::LONG_DOUBLE_COMPLEX, id, MTAG, MPI_COMM_WORLD);
 #endif
@@ -94,7 +94,7 @@ void mpiProcess::send(VectorCLD x, int count, int id, int MTAG){
 // why the data that you recieve is an input argument to the method. If 
 // HAVE_MPI is not defined then the method just returns an empty vector.
 //**************************************************************************
-VectorCLD mpiProcess::recv(VectorCLD x, int count, int islave, int MTAG){
+VectorCLD mpiProcess::recv(const VectorCLD& x, int count, int islave, int MTAG){
 	// Inits a zero return vector
 	VectorCLD xRet;
 #ifdef HAVE_MPI

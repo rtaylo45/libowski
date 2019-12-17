@@ -42,7 +42,7 @@ class SolverType {
 	//*************************************************************************
 	// Solver function
 	//*************************************************************************
-	VectorD solve(SparseMatrixD, VectorD, double);
+	VectorD solve(const SparseMatrixD&, const VectorD&, double);
 
 	//*************************************************************************
 	// Sets the solver type for CRAM
@@ -54,17 +54,17 @@ class SolverType {
 	// Solver pointer to the method of matrix exponential solve type. 
 	// Default is the base solve without scaling and squaring.
 	//*************************************************************************
-	VectorD (SolverType::*solverPtr)(SparseMatrixD, VectorD, double) = 
-		&SolverType::solveBase;
+	VectorD (SolverType::*solverPtr)(const SparseMatrixD&, const VectorD&, 
+		double) = &SolverType::solveBase;
 
 	//*************************************************************************
 	// Solves CRAM with no matrix scaling
 	//*************************************************************************
-	VectorD solveBase(SparseMatrixD, VectorD, double);
+	VectorD solveBase(const SparseMatrixD&, const VectorD&, double);
 
 	//*************************************************************************
 	// Solves CRAM with matrix scaling
 	//*************************************************************************
-	VectorD solveScale(SparseMatrixD, VectorD, double);
+	VectorD solveScale(const SparseMatrixD&, const VectorD&, double);
 };
 #endif

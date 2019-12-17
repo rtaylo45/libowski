@@ -260,7 +260,7 @@ void SolverType::setSolveType(std::string solveType){
 //	
 //	return w	Solution vector
 //*****************************************************************************
-VectorD SolverType::solve(SparseMatrixD A, VectorD w0, double t){
+VectorD SolverType::solve(const SparseMatrixD& A, const VectorD& w0, double t){
 
 	return (this->*solverPtr)(A, w0, t);
 }
@@ -272,7 +272,7 @@ VectorD SolverType::solve(SparseMatrixD A, VectorD w0, double t){
 //	
 //	return w	Solution vector
 //*****************************************************************************
-VectorD SolverType::solveBase(SparseMatrixD A, VectorD w0, double t){
+VectorD SolverType::solveBase(const SparseMatrixD& A, const VectorD& w0, double t){
 
 	// The sparse LU solver object
 	Eigen::SparseLU<SparseMatrixCLD, COLAMDOrdering<int> > solver;
@@ -334,7 +334,7 @@ VectorD SolverType::solveBase(SparseMatrixD A, VectorD w0, double t){
 //	
 //	return w	Solution vector
 //*****************************************************************************
-VectorD SolverType::solveScale(SparseMatrixD A, VectorD w0, double t){
+VectorD SolverType::solveScale(const SparseMatrixD& A, const VectorD& w0, double t){
 
 	// MPI stuff
 	int myid = mpi.rank;
