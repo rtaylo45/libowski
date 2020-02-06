@@ -256,7 +256,7 @@ void speciesDriver::solve(double solveTime){
 		//outputFile << dA << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << " "  << std::endl;
-		//std::cout << A  << std::endl;
+		//std::cout << dA  << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		//std::cout << dA.norm() << std::endl;
 		//std::cout << N0  << std::endl;

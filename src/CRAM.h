@@ -32,7 +32,7 @@ class SolverType {
 	// Residues of these poles
 	MatrixCLD alpha;
 	// Limit of r at infinity
-	long double alpha_0 = 0.0;
+	long double alpha_0 = 0.0L;
 
 	//*************************************************************************
 	// Initialization of solver
@@ -50,6 +50,16 @@ class SolverType {
 	void setSolveType(std::string);
 
 	private:
+	//*************************************************************************
+	// Calculates the quadrature points for the parabolic contour
+	//*************************************************************************
+	MatrixCLD parabolicContourCoeffs(int);
+
+	//*************************************************************************
+	// Calculates the quadrature points for the hyperbolic contour
+	//*************************************************************************
+	MatrixCLD hyperbolicContourCoeffs(int);
+
 	//*************************************************************************
 	// Solver pointer to the method of matrix exponential solve type. 
 	// Default is the base solve without scaling and squaring.

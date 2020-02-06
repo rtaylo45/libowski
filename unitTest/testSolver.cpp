@@ -310,6 +310,7 @@ void tankProblem(int myid){
 			//std::cout << abs(x1-sol(0)) << std::endl;
 			//std::cout << abs(x2-sol(1)) << std::endl;
 			//std::cout << abs(x3-sol(2)) << std::endl;
+    		//std::cout << " " << std::endl;
 
 			assert(isApprox(x1, sol(0), 1.e-11, 1.e-11));
 			assert(isApprox(x2, sol(1), 1.e-11, 1.e-11));
@@ -425,7 +426,7 @@ void xenonIodineProblem(int myid){
 			//std::cout << N_xe << " " << sol(0) << std::endl;
     		//std::cout << N_I << " " << sol(1) << std::endl;
 			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
-			//std::cout << abs(N_I-sol(1))/N_xe << std::endl;
+			//std::cout << abs(N_I-sol(1))/N_I << std::endl;
     		//std::cout << " " << std::endl;
 
 			assert(isApprox(sol(0), N_xe));
