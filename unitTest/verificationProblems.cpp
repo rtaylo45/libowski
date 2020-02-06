@@ -70,6 +70,73 @@ double precursorAnalitical(double y, double vel, double a, double length,
 }
 
 //*****************************************************************************
+// Three speceis test problem
+//
+// dN1/dt = -lambda1*N1 + lambda3*N3
+// dN2/dt = -lambda2*N2 + lambda1*N1
+// dN3/dt = -lambda3*N3 + lambda2*N2
+//*****************************************************************************
+void testProblem1NoFlow(int myid){
+	int xCells = 1, yCells = 1;
+	double xLength = 1.0, yLength = 1.0;
+	double N1InitCon = 10000.0, N2InitCon = 0.0, N3InitCon = 0.0;
+	double N1MM = 1.0, N2MM = 1.0, N3MM = 1.0;
+	double numOfSteps = 100;
+	double tEnd = 850.0;
+	double t;
+	double dt = tEnd/numOfSteps;
+   double lambda1 = 1.0/1.0e2, lambda2 = 0.5/1.0e2, lambda3 = 1.1/1.0e2;
+	double DN1 = 0.0, DN2 = 0.0, DN3 = 0.0;
+	int N1ID, N2ID, N3ID;
+	double N1Con, N2Con, N3Con;
+	std::vector<double> N1Coeffs = {-lambda1, 0.0, lambda3};
+	std::vector<double> N2Coeffs = {lambda1, -lambda2, 0.0};
+	std::vector<double> N3Coeffs = {0.0, lambda2, -lambda3};
+
+	modelMesh model(xCells, yCells, xLength, yLength);
+	speciesDriver spec = speciesDriver(&model);
+	N1ID = spec.addSpecies(N1MM, N1InitCon, DN1);
+	N2ID = spec.addSpecies(N2MM, N2InitCon, DN2);
+	N3ID = spec.addSpecies(N3MM, N3InitCon, DN3);
+
+	// Set source
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			spec.setSpeciesSource(i, j, N1ID, N1Coeffs, 0.0);
+			spec.setSpeciesSource(i, j, N2ID, N2Coeffs, 0.0);
+			spec.setSpeciesSource(i, j, N3ID, N3Coeffs, 0.0);
+		}
+	}
+	
+	for (int step = 1; step <= numOfSteps; step++){
+		t = step*dt;
+		// Solve with CRAM
+		spec.solve(t);
+
+		std::ofstream outputFile;
+		outputFile.open("problem1.out", std::ios_base::app);
+		//outputFile << "Time: "+std::to_string(t)+"\n";
+		//std::cout.precision(16);
+
+		// Gets species Concentrations
+		if (myid==0){
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					N1Con = spec.getSpecies(i, j, N1ID);
+					N2Con = spec.getSpecies(i, j, N2ID);
+					N3Con = spec.getSpecies(i, j, N3ID);
+					//std::cout << t << " " << N1Con << std::endl;
+					//outputFile <<  std::setprecision(16) << t << " " << N1Con 
+					//<< " " << N2Con << " " << N3Con <<  std::endl;
+				}
+			}
+		}
+	}
+	
+	model.clean();
+	spec.clean();
+}
+//*****************************************************************************
 // Test that the species driver sets up the problem right and solves the 
 // system right. 
 //*****************************************************************************
@@ -399,7 +466,7 @@ void testDiffusion2D(int myid){
 //*****************************************************************************
 void testNeutronPrecursorsFlow(int myid){
 	double t = 0.0;
-	int steps = 1;
+	int steps = 500;
 	double totalTime = 50.0;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 100;
@@ -581,12 +648,12 @@ void testNeutronPrecursorsFlow(int myid){
 					//c5Error = std::abs(c5Con-c5Ana)/c5Ana;
 					//c6Error = std::abs(c6Con-c6Ana)/c6Ana;
 
-					//printf (" %2i %2i %e %e %e %e %e %e \n", i, j, c1Error, c2Error, c3Error, c4Error, c5Error,
-					//c6Error);
+					printf (" %2i %2i %e %e %e %e %e %e \n", i, j, c1Error, c2Error, c3Error, c4Error, c5Error,
+					c6Error);
 					//	c2Con, c3Con, c4Con, c5Con, c6Con);
-					outputFile << i << " " << j << " " << c1Con << " " << c2Con << " " 
+					//outputFile << i << " " << j << " " << c1Con << " " << c2Con << " " 
 					//std::cout << i << " " << j << " " << c1Con << " " << c2Con << " " 
-					<< c3Con << " " << c4Con << " " << c5Con << " " << c6Con << std::endl;
+					//<< c3Con << " " << c4Con << " " << c5Con << " " << c6Con << std::endl;
 
 				}
 			}
@@ -605,8 +672,8 @@ void testNeutronPrecursorsFlow(int myid){
 //*****************************************************************************
 void testNeutronPrecursorsMultiChanFlow(int myid){
 	double t = 0.0;
-	int steps = 1;
-	double totalTime = 5.0;
+	int steps = 2;
+	double totalTime = 10.0;
 	double dt = totalTime/steps;
 	int xCells = 14, yCells = 32;
 	double xLength = 4.5, yLength = 15.5;
@@ -746,9 +813,9 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 		spec.solve(t);
 		//spec.solve();
 
-		outputFile.open("precursorsMultiChan.out", std::ios_base::app);
-		outputFile << "Time: "+std::to_string(t)+"\n";
-		//printf (" %4.6f \n", t);
+		//outputFile.open("precursorsMultiChan.out", std::ios_base::app);
+		//outputFile << "Time: "+std::to_string(t)+"\n";
+		printf (" %4.6f \n", t);
 	}
 	std::cout.precision(16);
 		// Gets species Concentrations
@@ -771,8 +838,8 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 
 					//printf (" %2i %2i %*E %*E %*E %*E %*E %*E\n", i, j, c1Con, 
 					//	c2Con, c3Con, c4Con, c5Con, c6Con);
-					outputFile << i << " " << j << " " << c1Con << " " << c2Con << " " 
-					//std::cout << i << " " << j << " " << c1Con << " " << c2Con << " " 
+					//outputFile << i << " " << j << " " << c1Con << " " << c2Con << " " 
+					std::cout << i << " " << j << " " << c1Con << " " << c2Con << " " 
 						<< c3Con << " " << c4Con << " " << c5Con << " " << c6Con << std::endl;
 
 				}
@@ -866,11 +933,12 @@ int main(){
 	int numprocs = mpi.size;
 
 	testXenonIodineNoFlow(myid);
+	testProblem1NoFlow(myid);
 	testXenonIodineYFlow(myid);
 	testXenonIodineXFlow(myid);
 	testDiffusion2D(myid);
 	testNeutronPrecursorsFlow(myid);
-	testNeutronPrecursorsMultiChanFlow(myid);
+	//testNeutronPrecursorsMultiChanFlow(myid);
 	//testBenBenchmark(myid);
 
 	mpi.finalize();
