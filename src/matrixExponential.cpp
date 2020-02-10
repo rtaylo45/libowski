@@ -1,7 +1,7 @@
 #include "matrixExponential.h"
 #define MTAG1 1
 //*****************************************************************************
-// Methods for MatrixExponential class
+// Methods for MatrixExponential factory class
 //*****************************************************************************
 matrixExponential *matrixExponentialFactory::getExpSolver(std::string type){
 	matrixExponential *solver = nullptr;
