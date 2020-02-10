@@ -27,6 +27,119 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type){
 }
 
 //*****************************************************************************
+// Methods for Pade Class
+//
+// The pade functions are taken from the eigen3 unsuported matrix exponential
+// code. I didn't like the linear solver they used and the solver they used
+// is not avaliable for sparsematrices so idk how it work when you pass in one.
+//*****************************************************************************
+
+//*****************************************************************************
+// Pade approximation for order (3,3)
+//
+// @param A		Sparse matrix
+//*****************************************************************************
+void pade::pade3(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
+	// Pade coefficients
+	long double b[] = {120.L, 60.L, 12.L, 1.L};
+	const SparseMatrixD A2 = A*A;
+	SparseMatrixD ident(A.rows(), A.cols()), temp;
+
+	ident.setIdentity();
+	temp = b[3]*A2 + b[1]*ident;
+	U = A*temp;
+	V = b[2]*A2 + b[0]*ident;
+
+}
+//*****************************************************************************
+// Pade approximation for order (5,5)
+//
+// @param A		Sparse matrix
+//*****************************************************************************
+void pade::pade5(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
+	// Pade coefficients
+	long double b[] = {30240.L, 15120.L, 3360.L, 420.L, 30.L, 1.L};
+	const SparseMatrixD A2 = A*A;
+	const SparseMatrixD A4 = A2*A2;
+	SparseMatrixD ident(A.rows(), A.cols()), temp;
+
+	ident.setIdentity();
+	temp = b[5]*A4 + b[3]*A2 + b[1]*ident;
+	U = A*temp;
+	V = b[4]*A4 + b[2]*A2 + b[0]*ident;
+	
+}
+//*****************************************************************************
+// Pade approximation for order (7,7)
+//
+// @param A		Sparse matrix
+//*****************************************************************************
+void pade::pade7(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
+	// Pade coefficients
+	long double b[] = {17297280.L, 8648640.L, 1995840.L, 277200.L, 25200.L, 
+							 1512.L, 56.L, 1.L};
+	const SparseMatrixD A2 = A*A;
+	const SparseMatrixD A4 = A2*A2;
+	const SparseMatrixD A6 = A4*A2;
+	SparseMatrixD ident(A.rows(), A.cols()), temp;
+
+	ident.setIdentity();
+	temp = b[7] * A6 + b[5]*A4 + b[3]*A2 + b[1]*ident;
+	U = A*temp;
+	V = b[4]*A4 + b[2]*A2 + b[0]*ident;
+	
+}
+//*****************************************************************************
+// Pade approximation for order (9,9)
+//
+// @param A		Sparse matrix
+//*****************************************************************************
+void pade::pade9(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
+	// Pade coefficients
+	long double b[] = {17643225600.L, 8821612800.L, 2075673600.L, 302702400.L, 
+						    30270240.L, 2162160.L, 110880.L, 3960.L, 90.L, 1.L}; 
+	const SparseMatrixD A2 = A*A;
+	const SparseMatrixD A4 = A2*A2;
+	const SparseMatrixD A6 = A4*A2;
+	const SparseMatrixD A8 = A6*A2;
+	SparseMatrixD ident(A.rows(), A.cols()), temp;
+	temp = b[9]*A8 + b[7]*A6 + b[5]*A4 + b[3]*A2 + b[1]*ident;
+	U = A*temp;
+	V = b[8]*A8 + b[6]*A6 + b[4]*A4 + b[2]*A2 + b[0]*ident;
+
+}
+//*****************************************************************************
+// Pade approximation for order (13,13)
+//
+// @param A		Sparse matrix
+//*****************************************************************************
+void pade::pade13(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
+	// Pade coefficients
+	long double b[] = {64764752532480000.L, 32382376266240000.L, 
+							 7771770303897600.L, 1187353796428800.L, 129060195264000.L, 
+							 10559470521600.L, 670442572800.L, 33522128640.L, 
+							 1323241920.L, 40840800.L, 960960.L, 16380.L, 182.L, 1.L};
+	const SparseMatrixD A2 = A*A;
+	const SparseMatrixD A4 = A2*A2;
+	const SparseMatrixD A6 = A4*A2;
+	SparseMatrixD ident(A.rows(), A.cols()), temp;
+	V = b[13]*A6 + b[11]*A4 + b[9]*A2;
+	temp = A6*V + b[7]*A6 + b[5]*A4 + b[3]*A2 + b[1]*ident;
+	U = A*temp;
+	temp = b[12]*A6 + b[10]*A4 + b[8]*A2;
+	V = A6*temp + b[6]*A6 + b[4]*A4 + b[2]*A2 + b[0]*ident;
+
+}
+
+//*****************************************************************************
+// Methods for pade class method1
+//
+//*****************************************************************************
+//void method1::run(
+
+
+
+//*****************************************************************************
 // Methods for Cauchy Class
 //*****************************************************************************
 
@@ -43,18 +156,19 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 	Eigen::SparseLU<SparseMatrixCLD, COLAMDOrdering<int> > solver;
 	
 	// MPI stuff
-	int myid = mpi.rank;			// Processor ID
-	int numprocs = mpi.size;	// Number of processors
-	int eleCount = A.rows();	// Number of species in the system
+	const int myid = mpi.rank;			// Processor ID
+	const int numprocs = mpi.size;	// Number of processors
+	const int eleCount = A.rows();	// Number of species in the system
 
 	// Number of poles
-	int s = theta.rows();	
-	SparseMatrixCLD At(A.rows(),A.cols());			// Scaled matrix with time
-	SparseMatrixCLD tempA(A.rows(),A.cols());		// Temp variable in solution
+	
+	const int s = theta.rows();	
+	SparseMatrixCLD At(A.rows(),A.cols());		// Scaled matrix with time
+	SparseMatrixCLD tempA(A.rows(),A.cols());			// Temp variable in solution
 	VectorCLD v, tempB, v0cd, myV; 
-	VectorD solutionVector;								// Solution
+	VectorD solutionVector;									// Solution
 	v0cd = v0.cast<std::complex<long double>>();
-	SparseMatrixCLD ident(A.rows(),A.cols());		// Identity matrix
+	SparseMatrixCLD ident(A.rows(),A.cols());	// Identity matrix
 
 	myV = 0.*v0cd, v = 0*v0cd;
 	ident.setIdentity();									// Builds matrix
@@ -99,12 +213,12 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 
 	// MPI stuff
-	int myid = mpi.rank;
-	int numprocs = mpi.size;
-	int eleCount = A.rows()*A.rows();
+	const int myid = mpi.rank;
+	const int numprocs = mpi.size;
+	const int eleCount = A.rows()*A.rows();
 
 	// Number of poles
-	int s = theta.rows();
+	const int s = theta.rows();
 	SparseMatrixCLD At(A.rows(),A.cols());
 	SparseMatrixCLD tempA(A.rows(),A.cols()); 
 	SparseMatrixCLD myExpA;

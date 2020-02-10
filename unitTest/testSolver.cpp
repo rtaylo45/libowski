@@ -7,7 +7,7 @@
 #include <fstream>
 #include <string>
 #include <math.h>
-#include "CRAM.h"
+
 #include "matrixExponential.h"
 #include "mpiProcess.h"
 #include "matrixTypes.h"

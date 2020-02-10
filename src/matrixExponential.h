@@ -42,40 +42,57 @@ class pade : public matrixExponential{
 	protected:
 	//**************************************************************************
 	// Pade approximetion of order (3,3) 
-	//
-	// @param A		Sparse matrix 
 	//**************************************************************************
-	MatrixD pade3(const SparseMatrixD& A);
+	void pade3(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V);
 	//**************************************************************************
 	// Pade approximetion of order (5,5) 
-	//
-	// @param A		Sparse matrix 
 	//**************************************************************************
-	MatrixD pade5(const SparseMatrixD& A);
+	void pade5(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V);
 	//**************************************************************************
 	// Pade approximetion of order (7,7) 
-	//
-	// @param A		Sparse matrix 
 	//**************************************************************************
-	MatrixD pade7(const SparseMatrixD& A);
+	void pade7(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V);
 	//**************************************************************************
 	// Pade approximetion of order (9,9) 
-	//
-	// @param A		Sparse matrix 
 	//**************************************************************************
-	MatrixD pade9(const SparseMatrixD& A);
+	void pade9(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V);
 	//**************************************************************************
 	// Pade approximetion of order (13,13) 
-	//
-	// @param A		Sparse matrix 
 	//**************************************************************************
-	MatrixD pade13(const SparseMatrixD& A);
+	void pade13(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V);
 	//**************************************************************************
-	// Pade approximetion of order (17,17) 
-	//
-	// @param A		Sparse matrix 
+	// Runs the algorithm
 	//**************************************************************************
-	MatrixD pade17(const SparseMatrixD& A);
+	void run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V, int& alpha);	
+};
+
+//*****************************************************************************
+// Pade class for method 1. Based on the algorithm
+//
+// The scaling and squaring method for the matrix exponential
+// revisited.
+// SIAM Journal on  Matrix Analysis  and  Applications, 26(4):1179–1193, 2005
+//*****************************************************************************
+class method1 : public pade{
+	protected:
+	//**************************************************************************
+	// Runs the algorithm
+	//**************************************************************************
+	void run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V, int& alpha);	
+};
+
+//*****************************************************************************
+// Pade class for method 2. Based on the algorithm
+//
+// A new scaling and squaring algorithm for the matrix exponential.
+// SIAM  Journal  on  Matrix  Analysis  and  Applications, 31, 01 2009
+//*****************************************************************************
+class method2 : public pade{
+	protected:
+	//**************************************************************************
+	// Runs the algorithm
+	//**************************************************************************
+	void run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V, int& alpha);	
 };
 
 //*****************************************************************************

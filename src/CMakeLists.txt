@@ -1,6 +1,6 @@
 project(libowski_prog)
 
-set(PROJECT_SOURCES CRAM.cpp mpiProcess.cpp modelMesh.cpp meshCellData.cpp
+set(PROJECT_SOURCES mpiProcess.cpp modelMesh.cpp meshCellData.cpp
 	meshCellFace.cpp species.cpp speciesDriver.cpp convectionLimiter.cpp
 	matrixExponential.cpp)
 

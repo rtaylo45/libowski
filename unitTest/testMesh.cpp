@@ -10,7 +10,6 @@
 #include <string>
 #include <fstream>
 
-#include "CRAM.h"
 #include "mpiProcess.h"
 #include "modelMesh.h"
 #include "speciesDriver.h"
