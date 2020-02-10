@@ -8,6 +8,7 @@
 #include <string>
 #include <math.h>
 #include "CRAM.h"
+#include "matrixExponential.h"
 #include "mpiProcess.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
@@ -190,7 +191,7 @@ SparseMatrixD BuildSpeciesMatrix(MatrixD coeff, MatrixD varCoeff,
 // Unit test
 //*****************************************************************************
 
-void testSolverTime(int myid, int numprocs){
+void testSolverTime(int myid, int numprocs, matrixExponential *expSolver){
 //*****************************************************************************
 //	Problem statement:
 //		A is a 100,000 x 100,000 size tridiagonal matrix. The matrix entries
@@ -216,24 +217,20 @@ void testSolverTime(int myid, int numprocs){
    	SparseMatrixD A(n,n);
    	SparseVectorD n0(n);
 		A = buildJMatrix(n);
-		std::cout << A << std::endl;
+		//std::cout << A << std::endl;
 		n0 = buildN0Vector(n);
 
 		for (int i = 0; i < iters; i++){
-			if (myid==0){std::cout << "Iter: "+std::to_string(i) << std::endl;};
-
-			// Get the solver object
-			SolverType ExpSolver;
+			//if (myid==0){std::cout << "Iter: "+std::to_string(i) << std::endl;};
 
 			// Build random dense matrix
 			//MatrixD A = MatrixD::Random(n,n);
 			//MatrixD n0 = MatrixD::Random(n,1);
-
 			MatrixD sol;
 
 			// Start time
 			auto start = high_resolution_clock::now();
-			sol = ExpSolver.solve(A, n0, 1.0);
+			sol = expSolver->apply(A, n0, 1.0);
 			auto end = high_resolution_clock::now();
 			auto duration = duration_cast<microseconds>(end - start);
 
@@ -252,7 +249,7 @@ void testSolverTime(int myid, int numprocs){
 	outputFile.close();
 }
 
-void tankProblem(int myid){
+void tankProblem(int myid, matrixExponential *expSolver){
 //*****************************************************************************
 //	Problem statement:
 //		Let brine tanks 1, 2, 3 be given of volumes 20, 40, 60, It is supposed 
@@ -289,14 +286,11 @@ void tankProblem(int myid){
 	tripletList.push_back(T(2,2,-1./6.)); 
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 
-	// Sets the solver
-   SolverType ExpSolver;
-
 	for (int i = 0; i < steps; i++){
 
 		t = t + dt;
 
-		sol = ExpSolver.solve(A, b, t);
+		sol = expSolver->apply(A, b, t);
     	x1 = x1_0*exp(-t/2.);
     	x2 = -2.*x1_0*exp(-t/2.) + (x2_0 + 2.*x1_0)*exp(-t/4.);
     	x3 = (3./2.)*x1_0*exp(-t/2.) - 3.*(x3_0 + 2.*x1_0)*exp(-t/4) +
@@ -318,16 +312,14 @@ void tankProblem(int myid){
 		}
 	}
 
-	// Rerun the problem using the scaled cram method. (Not as accurate)
-	// Sets the scaled cram method
-   ExpSolver.setSolveType("CRAMScaled");
+	// Rerun the problem using the compute method. (Not as accurate)
 	t = 0.0;
 
 	for (int i = 0; i < steps; i++){
 
 		t = t + dt;
 
-		sol = ExpSolver.solve(A, b, t);
+		sol = expSolver->compute(A, t)*b;
     	x1 = x1_0*exp(-t/2.);
     	x2 = -2.*x1_0*exp(-t/2.) + (x2_0 + 2.*x1_0)*exp(-t/4.);
     	x3 = (3./2.)*x1_0*exp(-t/2.) - 3.*(x3_0 + 2.*x1_0)*exp(-t/4) +
@@ -349,7 +341,7 @@ void tankProblem(int myid){
 	}
 }
 
-void xenonIodineProblem(int myid){
+void xenonIodineProblem(int myid, matrixExponential *expSolver){
 //*****************************************************************************
 //	Problem statement:
 //		dN_xe/dt = gamma_xe*Sigma_f*flux - sigma_a*flux*N_xe + lamba_I*N_I 
@@ -391,9 +383,6 @@ void xenonIodineProblem(int myid){
 	std::vector<T> tripletList;
 	tripletList.reserve(5);
 
-	// Sets the solver
-   SolverType ExpSolver;
-
 	N0.insert(2,0) = N_d_0;
 	tripletList.push_back(T(0,0,-lambda_xe - sigma_a*flux));
 	tripletList.push_back(T(0,1,lambda_I*xenonMM/iodineMM)); 
@@ -406,7 +395,7 @@ void xenonIodineProblem(int myid){
 
 		t = t + dt;
 
-		sol = ExpSolver.solve(A, N0, t);
+		sol = expSolver->apply(A, N0, t);
 
 		a = lambda_xe + sigma_a*flux;
 		b = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
@@ -435,16 +424,14 @@ void xenonIodineProblem(int myid){
 		}
 	}
 
-	// Rerun the problem using the scaled cram method. (Not as accurate)
-	// Sets the scaled cram method
-   ExpSolver.setSolveType("CRAMScaled");
+	// Rerun the problem using the compute method. (Not as accurate)
 	t = 0.0;
 
 	for (int i = 0; i < steps; i++){
 
 		t = t + dt;
 
-		sol = ExpSolver.solve(A, N0, t);
+		sol = expSolver->compute(A, t)*N0;
 
 		a = lambda_xe + sigma_a*flux;
 		b = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
@@ -473,7 +460,7 @@ void xenonIodineProblem(int myid){
 		}
 	}
 }
-void neutronPrecursorProblem(int myid){
+void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 //*****************************************************************************
 //	Problem statement:
 //		Neutron precursors problem. This is a reactor with 16 axial levels, the 
@@ -571,17 +558,13 @@ void neutronPrecursorProblem(int myid){
 	A = BuildSpeciesMatrix(coeff, varCoeff, numOfSpecs, numOfLvls, flux);
 	N0(A.cols()-1) = 1.0;
 	//std::cout << A;
-	
-
-	// Sets the solver
-   SolverType ExpSolver;
 
 	//auto start = high_resolution_clock::now();
 	for (int i = 0; i < 80; i++){
 
 		t = t + dt;
 
-		sol = ExpSolver.solve(A, N0, t);
+		sol = expSolver->apply(A, N0, t);
 		if (myid==0){ writePrecursorSolution(sol, t);}
 	}
 
@@ -595,7 +578,7 @@ void neutronPrecursorProblem(int myid){
 		t = t + dt;
 		tnew = tnew + dt;
 
-		sol = ExpSolver.solve(A, N0, tnew);
+		sol = expSolver->apply(A, N0, tnew);
 		if (myid==0){ writePrecursorSolution(sol, t);}
 	}
 	//auto end = high_resolution_clock::now();
@@ -607,12 +590,28 @@ void neutronPrecursorProblem(int myid){
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
+	matrixExponential *expSolver;
 
+	// Test the CRAM solver
+	expSolver = matrixExponentialFactory::getExpSolver("CRAM");
+	testSolverTime(myid, numprocs, expSolver);
+	tankProblem(myid, expSolver);
+	xenonIodineProblem(myid, expSolver);
+	neutronPrecursorProblem(myid, expSolver);
 
-	testSolverTime(myid, numprocs);
-	tankProblem(myid);
-	xenonIodineProblem(myid);
-	neutronPrecursorProblem(myid);
+	// Test the parabolic solver
+	expSolver = matrixExponentialFactory::getExpSolver("parabolic");
+	testSolverTime(myid, numprocs, expSolver);
+	tankProblem(myid, expSolver);
+	xenonIodineProblem(myid, expSolver);
+	neutronPrecursorProblem(myid, expSolver);
+
+	// Test the hyperbolic solver
+	expSolver = matrixExponentialFactory::getExpSolver("hyperbolic");
+	testSolverTime(myid, numprocs, expSolver);
+	tankProblem(myid, expSolver);
+	xenonIodineProblem(myid, expSolver);
+	neutronPrecursorProblem(myid, expSolver);
 
 	mpi.finalize();
 }

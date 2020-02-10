@@ -10,6 +10,7 @@
 //*****************************************************************************
 speciesDriver::speciesDriver(modelMesh* model){
 	modelPtr = model;
+	expSolver = matrixExponentialFactory::getExpSolver("CRAM");
 }
 
 //*****************************************************************************
@@ -242,7 +243,6 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 //*****************************************************************************
 void speciesDriver::solve(double solveTime){
 	VectorD sol;
-	SolverType ExpSolver;
 	MatrixD dA;
 	bool augmented = true;
 	double timeStep = solveTime - lastSolveTime;
@@ -264,7 +264,7 @@ void speciesDriver::solve(double solveTime){
 	}
 	N0 = buildInitialConditionVector(augmented);
 
-	sol = ExpSolver.solve(A, N0, timeStep);
+	sol = expSolver->apply(A, N0, timeStep);
 	if (mpi.rank == 0){unpackSolution(sol);};
 	lastSolveTime = solveTime;
 }
@@ -276,7 +276,6 @@ void speciesDriver::solveImplicit(double solveTime){
 	VectorD b;
 	VectorD sol;
 	VectorD cOld;
-	SolverType ExpSolver;
 	MatrixD dA;
 	bool augmented = false;
 	SparseLU<SparseMatrixD, COLAMDOrdering<int> > LinearSolver;
