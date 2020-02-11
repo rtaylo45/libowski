@@ -1,6 +1,6 @@
 #include <Eigen/Sparse>
 #include <iostream>
-#include "CRAM.h"
+#include "matrixExponential.h"
 #include "mpiProcess.h"
 #include <chrono>
 #include <math.h>
@@ -23,6 +23,7 @@ void tankProblem(){
 	MatrixXd sol;
 	std::vector<T> tripletList;
 	tripletList.reserve(5);
+   matrixExponential *expSolver;
 
 	// Set the A matrix and inition condition vector b
 	b.insert(0,0) = x1_0;
@@ -32,14 +33,14 @@ void tankProblem(){
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 
 	// Sets the solver
+	expSolver = matrixExponentialFactory::getExpSolver("CRAM");
 	myid = mpi.rank;
-   SolverType ExpSolver;
 
 	for (int i = 0; i < steps; i++){
 
 		t = t + dt;
 
-		sol = ExpSolver.solve(A, b, t);
+		sol = expSolver->apply(A, b, t);
     	x1 = x1_0*exp(-t/2.);
     	x2 = -2.*x1_0*exp(-t/2.) + (x2_0 + 2.*x1_0)*exp(-t/4.);
     	x3 = (3./2.)*x1_0*exp(-t/2.) - 3.*(x3_0 + 2.*x1_0)*exp(-t/4) +

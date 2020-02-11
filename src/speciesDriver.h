@@ -20,7 +20,7 @@
 #include "meshCellData.h"
 #include "meshCellFace.h"
 #include "species.h"
-#include "CRAM.h"
+#include "matrixExponential.h"
 #include "convectionLimiter.h"
 #include "mpiProcess.h"
 #include "matrixTypes.h"
@@ -51,6 +51,8 @@ class speciesDriver {
 	public:
 	// Constructor
 	speciesDriver(modelMesh* model);
+	// Exponential solver
+	matrixExponential *expSolver;
 	// Adds a species to the system
 	int addSpecies(double, double, double);
 	// Gets a pointer to the species object
