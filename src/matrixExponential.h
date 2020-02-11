@@ -43,27 +43,37 @@ class pade : public matrixExponential{
 	//**************************************************************************
 	// Pade approximetion of order (3,3) 
 	//**************************************************************************
-	void pade3(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V);
+	void pade3(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&);
 	//**************************************************************************
 	// Pade approximetion of order (5,5) 
 	//**************************************************************************
-	void pade5(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V);
+	void pade5(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&);
 	//**************************************************************************
 	// Pade approximetion of order (7,7) 
 	//**************************************************************************
-	void pade7(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V);
+	void pade7(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&);
 	//**************************************************************************
 	// Pade approximetion of order (9,9) 
 	//**************************************************************************
-	void pade9(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V);
+	void pade9(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&);
 	//**************************************************************************
 	// Pade approximetion of order (13,13) 
 	//**************************************************************************
-	void pade13(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V);
+	void pade13(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&);
 	//**************************************************************************
 	// Runs the algorithm
 	//**************************************************************************
-	void run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V, int& alpha);	
+	virtual void run(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&, int&)=0;
+
+	public:
+	//**************************************************************************
+	// Computes the matrix exponential action on a vector. exp(A*t)v
+	//**************************************************************************
+	virtual VectorD apply(const SparseMatrixD&, const VectorD&, double);
+	//**************************************************************************
+	// Computes the matrix exponential. exp(A*t)
+	//**************************************************************************
+	virtual SparseMatrixD compute(const SparseMatrixD&, double);
 };
 
 //*****************************************************************************
@@ -78,7 +88,7 @@ class method1 : public pade{
 	//**************************************************************************
 	// Runs the algorithm
 	//**************************************************************************
-	void run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V, int& alpha);	
+	virtual void run(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&, int&);	
 };
 
 //*****************************************************************************
@@ -92,7 +102,7 @@ class method2 : public pade{
 	//**************************************************************************
 	// Runs the algorithm
 	//**************************************************************************
-	void run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V, int& alpha);	
+	virtual void run(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&, int&);	
 };
 
 //*****************************************************************************
@@ -177,6 +187,6 @@ class hyperbolic : public cauchy{
 //*****************************************************************************
 class matrixExponentialFactory{
 	public:
-	static matrixExponential *getExpSolver(std::string type);
+	static matrixExponential *getExpSolver(std::string);
 };
 #endif 

@@ -289,7 +289,6 @@ void tankProblem(int myid, matrixExponential *expSolver){
 	for (int i = 0; i < steps; i++){
 
 		t = t + dt;
-
 		sol = expSolver->apply(A, b, t);
     	x1 = x1_0*exp(-t/2.);
     	x2 = -2.*x1_0*exp(-t/2.) + (x2_0 + 2.*x1_0)*exp(-t/4.);
@@ -608,6 +607,13 @@ int main(){
 
 	// Test the hyperbolic solver
 	expSolver = matrixExponentialFactory::getExpSolver("hyperbolic");
+	testSolverTime(myid, numprocs, expSolver);
+	tankProblem(myid, expSolver);
+	xenonIodineProblem(myid, expSolver);
+	neutronPrecursorProblem(myid, expSolver);
+
+	// Test the pade method 1 solver
+	expSolver = matrixExponentialFactory::getExpSolver("pade-method1");
 	testSolverTime(myid, numprocs, expSolver);
 	tankProblem(myid, expSolver);
 	xenonIodineProblem(myid, expSolver);

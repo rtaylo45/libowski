@@ -1,4 +1,5 @@
 #include "matrixExponential.h"
+#include <unsupported/Eigen/MatrixFunctions>
 #define MTAG1 1
 //*****************************************************************************
 // Methods for MatrixExponential factory class
@@ -16,6 +17,10 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type){
 	}
 	else if (type == "hyperbolic"){
 		solver = new hyperbolic;
+		return solver;
+	}
+	else if (type == "pade-method1"){
+		solver = new method1;
 		return solver;
 	}
 	else {
@@ -51,6 +56,7 @@ void pade::pade3(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
 	V = b[2]*A2 + b[0]*ident;
 
 }
+
 //*****************************************************************************
 // Pade approximation for order (5,5)
 //
@@ -69,6 +75,7 @@ void pade::pade5(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
 	V = b[4]*A4 + b[2]*A2 + b[0]*ident;
 	
 }
+
 //*****************************************************************************
 // Pade approximation for order (7,7)
 //
@@ -89,6 +96,7 @@ void pade::pade7(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
 	V = b[4]*A4 + b[2]*A2 + b[0]*ident;
 	
 }
+
 //*****************************************************************************
 // Pade approximation for order (9,9)
 //
@@ -103,11 +111,13 @@ void pade::pade9(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
 	const SparseMatrixD A6 = A4*A2;
 	const SparseMatrixD A8 = A6*A2;
 	SparseMatrixD ident(A.rows(), A.cols()), temp;
+	ident.setIdentity();
 	temp = b[9]*A8 + b[7]*A6 + b[5]*A4 + b[3]*A2 + b[1]*ident;
 	U = A*temp;
 	V = b[8]*A8 + b[6]*A6 + b[4]*A4 + b[2]*A2 + b[0]*ident;
 
 }
+
 //*****************************************************************************
 // Pade approximation for order (13,13)
 //
@@ -123,21 +133,101 @@ void pade::pade13(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
 	const SparseMatrixD A4 = A2*A2;
 	const SparseMatrixD A6 = A4*A2;
 	SparseMatrixD ident(A.rows(), A.cols()), temp;
+	ident.setIdentity();
 	V = b[13]*A6 + b[11]*A4 + b[9]*A2;
-	temp = A6*V + b[7]*A6 + b[5]*A4 + b[3]*A2 + b[1]*ident;
+	temp = A6 * V;
+	temp += b[7]*A6 + b[5]*A4 + b[3]*A2 + b[1]*ident;
 	U = A*temp;
 	temp = b[12]*A6 + b[10]*A4 + b[8]*A2;
-	V = A6*temp + b[6]*A6 + b[4]*A4 + b[2]*A2 + b[0]*ident;
-
+	V = A6*temp;
+	V += b[6]*A6 + b[4]*A4 + b[2]*A2 + b[0]*ident;
 }
 
 //*****************************************************************************
-// Methods for pade class method1
+// Calculates exp(A*t)v. The action of the matrix expoential on a vector
 //
+// @param A		The coefficient matrix for the system of ODE's
+// @param v0	Initial condition vector
+// @param t		Time step of the solve
 //*****************************************************************************
-//void method1::run(
+VectorD pade::apply(const SparseMatrixD& A, const VectorD& v0, double t){
+	SparseMatrixD matExp = compute(A, t);
+	return matExp*v0;
+}
 
+//*****************************************************************************
+// Calculates exp(A*t). The the matrix expoential
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param t		Time step of the solve
+//*****************************************************************************
+SparseMatrixD pade::compute(const SparseMatrixD& A, double t){
+	// The sparse LU solver object
+	Eigen::SparseLU<SparseMatrixD, COLAMDOrdering<int> > solver;
+	SparseMatrixD U, V, At, denominator, numerator, R;
+	int alpha;
+	At = A*t;
+	run(At, U, V, alpha);	
+	denominator = -U + V;
+	numerator = U + V;
+	solver.analyzePattern(denominator);
+	solver.factorize(denominator);
 
+	R = solver.solve(numerator);
+	for (int k=0; k<alpha; k++){
+		R = R*R;
+	}
+	return R;	
+}
+
+//*****************************************************************************
+// Run method for pade class method1
+//
+// @param A			Sparse matrix
+// @param U			U matrix of pade solver
+// @param V			V matrix of pade solver
+// @param alpha	Number of times to square the matrix
+//*****************************************************************************
+void method1::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
+	int& alpha){
+	const double l1Norm = (A.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
+	double maxnorm, scale;
+	alpha = 0;
+
+	if (l1Norm < 1.495585217958292e-002){
+		pade3(A, U, V);
+	}
+	else if (l1Norm < 2.539398330063230e-001){
+		pade5(A, U, V);
+	}
+	else if (l1Norm < 9.504178996162932e-001){
+		pade7(A, U, V);
+	}
+	else if (l1Norm < 2.097847961257068e+000){
+		pade9(A, U, V);
+	}
+	else{
+		maxnorm = 5.371920351148152;
+		std::frexp(l1Norm/maxnorm, &alpha);
+		if (alpha < 0){alpha = 0;};
+		scale = std::pow(2,alpha); 
+		SparseMatrixD A_ = A/scale;
+		pade13(A_, U, V);
+	}
+}
+
+//*****************************************************************************
+// Methods for pade class method2
+//
+// @param A			Sparse matrix
+// @param U			U matrix of pade solver
+// @param V			V matrix of pade solver
+// @param alpha	Number of times to square the matrix
+//*****************************************************************************
+void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
+	int& alpha){
+	double l1Norm = (A.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
+}
 
 //*****************************************************************************
 // Methods for Cauchy Class
