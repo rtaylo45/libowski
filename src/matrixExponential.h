@@ -14,6 +14,8 @@
 #include <string>
 #include <iostream>
 #include <assert.h>
+#include <cmath>
+#include <algorithm>
 #include "mpiProcess.h"
 #include "linearAlgebra.h"
 #include "vectorTypes.h"
@@ -84,7 +86,7 @@ class pade : public matrixExponential{
 // SIAM Journal on  Matrix Analysis  and  Applications, 26(4):1179–1193, 2005
 //*****************************************************************************
 class method1 : public pade{
-	protected:
+	private:
 	//**************************************************************************
 	// Runs the algorithm
 	//**************************************************************************
@@ -98,11 +100,26 @@ class method1 : public pade{
 // SIAM  Journal  on  Matrix  Analysis  and  Applications, 31, 01 2009
 //*****************************************************************************
 class method2 : public pade{
-	protected:
+	private:
 	//**************************************************************************
 	// Runs the algorithm
 	//**************************************************************************
-	virtual void run(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&, int&);	
+	virtual void run(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&, int&);
+	
+	//**************************************************************************
+	// Normest, some fucntion they define in updated method 
+	//**************************************************************************
+	double normest(const SparseMatrixD&, const SparseMatrixD&);
+	
+	//**************************************************************************
+	// Normest, some fucntion they define in updated method 
+	//**************************************************************************
+	double normest(const SparseMatrixD&, const int);
+
+	//**************************************************************************
+	// ell, some fucntion they define in updated method 
+	//**************************************************************************
+	int ell(const SparseMatrixD&, const int);
 };
 
 //*****************************************************************************

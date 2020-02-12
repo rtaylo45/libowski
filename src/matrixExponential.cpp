@@ -230,6 +230,65 @@ void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 }
 
 //*****************************************************************************
+// Normest
+// Produces the l1norm of A*B
+//
+// @param A		Sparse matrix
+// @param B		Sparse matrix
+//*****************************************************************************
+double method2::normest(const SparseMatrixD& A, const SparseMatrixD& B){
+	const SparseMatrixD& C = A*B;
+	double l1Norm = (C.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
+	return l1Norm;
+}
+
+//*****************************************************************************
+// Normest
+// Produces the l1norm of A^m
+//
+// @param A		Sparse matrix
+// @param m		integer, power of the matrix
+//*****************************************************************************
+double method2::normest(const SparseMatrixD& A, const int m){
+	SparseMatrixD C(A.rows(), A.cols());
+	double l1Norm;
+
+	// Rises the matrix to power m
+	for (int i; i<m; i++){
+		C = C*A;
+	}
+	l1Norm = (C.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
+	return l1Norm;
+}
+//*****************************************************************************
+// Ell
+// Returns the integer max((log2(alpha/u)/(2m)), 0), where 
+// alpha = = |c_(2m+1)|normest(|A|, 2m + 1)/l1norm(A1)
+//
+// @param A		Sparse matrix
+// @param m		integer, power of the matrix
+//*****************************************************************************
+int method2::ell(const SparseMatrixD& A, const int m){
+	double c, u, A1NormMatrixPower, A1Norm, alpha, log2AlphaOverU;
+	int p, value;
+	p = 2*m + 1;
+
+	// Leading coeffcient
+	c = std::abs((double)1./(binomialCoeff(2*p, p)*factorial(2*p+1))); 
+	// unit round off IEE double
+	u = std::pow(2,-53); 
+	// l1 norm of matrix power
+	A1NormMatrixPower = normest(A.cwiseAbs(), p);
+	// l1 norm of matrix
+	A1Norm = (A.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();	
+
+	alpha = c*A1NormMatrixPower/A1Norm;
+	log2AlphaOverU = std::log2(alpha/u);
+	value = (int) std::ceil(log2AlphaOverU/(2.*m));
+	return std::max(value, 0);
+}
+
+//*****************************************************************************
 // Methods for Cauchy Class
 //*****************************************************************************
 

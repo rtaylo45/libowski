@@ -22,4 +22,14 @@ SparseMatrix<derived> MoorePenroseInv(const SparseMatrix<derived>&);
 //*****************************************************************************
 template <typename derived>
 SparseMatrix<derived> MatrixSquare(const SparseMatrix<derived>&, int);
+
+//*****************************************************************************
+// Binomial Coefficient
+//*****************************************************************************
+int binomialCoeff(int, int);
+
+//*****************************************************************************
+// Factorial
+//*****************************************************************************
+int factorial(int);
 #endif
