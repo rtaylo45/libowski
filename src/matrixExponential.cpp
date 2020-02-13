@@ -43,11 +43,12 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type){
 // Pade approximation for order (3,3)
 //
 // @param A		Sparse matrix
+// @param A2	Sparse matrix A^2
 //*****************************************************************************
-void pade::pade3(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
+void pade::pade3(const SparseMatrixD& A, const SparseMatrixD& A2, 
+	SparseMatrixD& U, SparseMatrixD& V){
 	// Pade coefficients
 	long double b[] = {120.L, 60.L, 12.L, 1.L};
-	const SparseMatrixD A2 = A*A;
 	SparseMatrixD ident(A.rows(), A.cols()), temp;
 
 	ident.setIdentity();
@@ -61,12 +62,13 @@ void pade::pade3(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
 // Pade approximation for order (5,5)
 //
 // @param A		Sparse matrix
+// @param A2	Sparse matrix A^2
+// @param A4	Sparse matrix A^4
 //*****************************************************************************
-void pade::pade5(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
+void pade::pade5(const SparseMatrixD& A, const SparseMatrixD& A2, 
+	const SparseMatrixD& A4, SparseMatrixD& U, SparseMatrixD& V){
 	// Pade coefficients
 	long double b[] = {30240.L, 15120.L, 3360.L, 420.L, 30.L, 1.L};
-	const SparseMatrixD A2 = A*A;
-	const SparseMatrixD A4 = A2*A2;
 	SparseMatrixD ident(A.rows(), A.cols()), temp;
 
 	ident.setIdentity();
@@ -80,14 +82,16 @@ void pade::pade5(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
 // Pade approximation for order (7,7)
 //
 // @param A		Sparse matrix
+// @param A2	Sparse matrix A^2
+// @param A4	Sparse matrix A^4
+// @param A6	Sparse matrix A^6
 //*****************************************************************************
-void pade::pade7(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
+void pade::pade7(const SparseMatrixD& A, const SparseMatrixD& A2, 
+	const SparseMatrixD& A4, const SparseMatrixD& A6, SparseMatrixD& U, 
+	SparseMatrixD& V){
 	// Pade coefficients
 	long double b[] = {17297280.L, 8648640.L, 1995840.L, 277200.L, 25200.L, 
 							 1512.L, 56.L, 1.L};
-	const SparseMatrixD A2 = A*A;
-	const SparseMatrixD A4 = A2*A2;
-	const SparseMatrixD A6 = A4*A2;
 	SparseMatrixD ident(A.rows(), A.cols()), temp;
 
 	ident.setIdentity();
@@ -101,15 +105,17 @@ void pade::pade7(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
 // Pade approximation for order (9,9)
 //
 // @param A		Sparse matrix
+// @param A2	Sparse matrix A^2
+// @param A4	Sparse matrix A^4
+// @param A6	Sparse matrix A^6
+// @param A8	Sparse matrix A^8
 //*****************************************************************************
-void pade::pade9(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
+void pade::pade9(const SparseMatrixD& A, const SparseMatrixD& A2, 
+	const SparseMatrixD& A4, const SparseMatrixD& A6, const SparseMatrixD& A8,
+	SparseMatrixD& U, SparseMatrixD& V){
 	// Pade coefficients
 	long double b[] = {17643225600.L, 8821612800.L, 2075673600.L, 302702400.L, 
 						    30270240.L, 2162160.L, 110880.L, 3960.L, 90.L, 1.L}; 
-	const SparseMatrixD A2 = A*A;
-	const SparseMatrixD A4 = A2*A2;
-	const SparseMatrixD A6 = A4*A2;
-	const SparseMatrixD A8 = A6*A2;
 	SparseMatrixD ident(A.rows(), A.cols()), temp;
 	ident.setIdentity();
 	temp = b[9]*A8 + b[7]*A6 + b[5]*A4 + b[3]*A2 + b[1]*ident;
@@ -122,16 +128,18 @@ void pade::pade9(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
 // Pade approximation for order (13,13)
 //
 // @param A		Sparse matrix
+// @param A2	Sparse matrix A^2
+// @param A4	Sparse matrix A^4
+// @param A6	Sparse matrix A^6
 //*****************************************************************************
-void pade::pade13(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
+void pade::pade13(const SparseMatrixD& A, const SparseMatrixD& A2, 
+	const SparseMatrixD& A4, const SparseMatrixD& A6, SparseMatrixD& U, 
+	SparseMatrixD& V){
 	// Pade coefficients
 	long double b[] = {64764752532480000.L, 32382376266240000.L, 
 							 7771770303897600.L, 1187353796428800.L, 129060195264000.L, 
 							 10559470521600.L, 670442572800.L, 33522128640.L, 
 							 1323241920.L, 40840800.L, 960960.L, 16380.L, 182.L, 1.L};
-	const SparseMatrixD A2 = A*A;
-	const SparseMatrixD A4 = A2*A2;
-	const SparseMatrixD A6 = A4*A2;
 	SparseMatrixD ident(A.rows(), A.cols()), temp;
 	ident.setIdentity();
 	V = b[13]*A6 + b[11]*A4 + b[9]*A2;
@@ -142,7 +150,6 @@ void pade::pade13(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V){
 	V = A6*temp;
 	V += b[6]*A6 + b[4]*A4 + b[2]*A2 + b[0]*ident;
 }
-
 //*****************************************************************************
 // Calculates exp(A*t)v. The action of the matrix expoential on a vector
 //
@@ -166,14 +173,21 @@ SparseMatrixD pade::compute(const SparseMatrixD& A, double t){
 	Eigen::SparseLU<SparseMatrixD, COLAMDOrdering<int> > solver;
 	SparseMatrixD U, V, At, denominator, numerator, R;
 	int alpha;
+	// Calculate At matrix
 	At = A*t;
+	// Runs the pade algorithm to find matrices U and V
 	run(At, U, V, alpha);	
+	// Builds numerator and denominator
 	denominator = -U + V;
 	numerator = U + V;
+	// Analyze sparcisity patern
 	solver.analyzePattern(denominator);
+	// Compute LU decomp
 	solver.factorize(denominator);
 
+	// Solve for the matrix exponential
 	R = solver.solve(numerator);
+	// unscale the matrix if needed
 	for (int k=0; k<alpha; k++){
 		R = R*R;
 	}
@@ -191,33 +205,49 @@ SparseMatrixD pade::compute(const SparseMatrixD& A, double t){
 void method1::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 	int& alpha){
 	const double l1Norm = (A.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
+	SparseMatrixD Ascaled;
 	double maxnorm, scale;
+	const SparseMatrixD A2 = A*A;
 	alpha = 0;
 
 	if (l1Norm < 1.495585217958292e-002){
-		pade3(A, U, V);
+		pade3(A, A2, U, V);
 	}
 	else if (l1Norm < 2.539398330063230e-001){
-		pade5(A, U, V);
+		const SparseMatrixD A4 = A2*A2;
+		pade5(A, A2, A4, U, V);
 	}
 	else if (l1Norm < 9.504178996162932e-001){
-		pade7(A, U, V);
+		const SparseMatrixD A4 = A2*A2;
+		const SparseMatrixD A6 = A4*A2;
+		pade7(A, A2, A4, A6, U, V);
 	}
 	else if (l1Norm < 2.097847961257068e+000){
-		pade9(A, U, V);
+		const SparseMatrixD A4 = A2*A2;
+		const SparseMatrixD A6 = A4*A2;
+		const SparseMatrixD A8 = A6*A2;
+		pade9(A, A2, A4, A6, A8, U, V);
 	}
 	else{
 		maxnorm = 5.371920351148152;
+		// Calculate the number of squarings
 		std::frexp(l1Norm/maxnorm, &alpha);
 		if (alpha < 0){alpha = 0;};
+		// Get the scale
 		scale = std::pow(2,alpha); 
-		SparseMatrixD A_ = A/scale;
-		pade13(A_, U, V);
+		// Scale the matrix
+		Ascaled = A/scale;
+		// Calculate the squared matrices based on the new scaled matrix
+		const SparseMatrixD A2scaled = Ascaled*Ascaled;
+		const SparseMatrixD A4scaled = A2scaled*A2scaled;
+		const SparseMatrixD A6scaled = A4scaled*A2scaled;
+		pade13(Ascaled, A2scaled, A4scaled, A6scaled, U, V);
 	}
 }
 
+
 //*****************************************************************************
-// Methods for pade class method2
+// Runs the algorithm for method 2
 //
 // @param A			Sparse matrix
 // @param U			U matrix of pade solver
