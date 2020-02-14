@@ -89,6 +89,18 @@ int factorial(int n)
 	}		
 }
 
+//*****************************************************************************
+// l1 norm of a sparse matrix
+//
+// @param A		Sparse matrix
+//*****************************************************************************
+double l1norm(const SparseMatrixD& A){
+	double norm;
+	norm = (A.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
+	return norm;
+
+}
+
 // Data types that can use the template functions
 template SparseMatrixLD MoorePenroseInv(const SparseMatrixLD& A);
 template SparseMatrixD MoorePenroseInv(const SparseMatrixD& A);
@@ -97,3 +109,4 @@ template SparseMatrixCD MoorePenroseInv(const SparseMatrixCD& A);
 
 template SparseMatrixLD MatrixSquare(const SparseMatrixLD& A, int alpha);
 template SparseMatrixD MatrixSquare(const SparseMatrixD& A, int alpha);
+

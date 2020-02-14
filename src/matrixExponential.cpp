@@ -23,6 +23,10 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type){
 		solver = new method1;
 		return solver;
 	}
+	else if (type == "pade-method2"){
+		solver = new method2;
+		return solver;
+	}
 	else {
 		std::cout << "You fucked up and tried to pick a matrix \n"
 			"exponential solver that Zack has not put in. \n"
@@ -204,25 +208,25 @@ SparseMatrixD pade::compute(const SparseMatrixD& A, double t){
 //*****************************************************************************
 void method1::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 	int& alpha){
-	const double l1Norm = (A.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
+	const double A1norm = l1norm(A);
 	SparseMatrixD Ascaled;
 	double maxnorm, scale;
 	const SparseMatrixD A2 = A*A;
 	alpha = 0;
 
-	if (l1Norm < 1.495585217958292e-002){
+	if (A1norm < 1.495585217958292e-002){
 		pade3(A, A2, U, V);
 	}
-	else if (l1Norm < 2.539398330063230e-001){
+	else if (A1norm < 2.539398330063230e-001){
 		const SparseMatrixD A4 = A2*A2;
 		pade5(A, A2, A4, U, V);
 	}
-	else if (l1Norm < 9.504178996162932e-001){
+	else if (A1norm < 9.504178996162932e-001){
 		const SparseMatrixD A4 = A2*A2;
 		const SparseMatrixD A6 = A4*A2;
 		pade7(A, A2, A4, A6, U, V);
 	}
-	else if (l1Norm < 2.097847961257068e+000){
+	else if (A1norm < 2.097847961257068e+000){
 		const SparseMatrixD A4 = A2*A2;
 		const SparseMatrixD A6 = A4*A2;
 		const SparseMatrixD A8 = A6*A2;
@@ -231,7 +235,7 @@ void method1::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 	else{
 		maxnorm = 5.371920351148152;
 		// Calculate the number of squarings
-		std::frexp(l1Norm/maxnorm, &alpha);
+		std::frexp(A1norm/maxnorm, &alpha);
 		if (alpha < 0){alpha = 0;};
 		// Get the scale
 		scale = std::pow(2,alpha); 
@@ -256,20 +260,87 @@ void method1::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 //*****************************************************************************
 void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 	int& alpha){
-	double l1Norm = (A.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
+	double d4, d6, d8, d10, eta1, eta2, eta3, eta4, eta5, log2EtaOverTheta;
+	int value;
+	SparseMatrixD B, B2, B4, B6;
+	const double A1norm = l1norm(A);
+	const double theta13 = 4.25;
+	alpha = 0;
+
+	// try pade3
+	const SparseMatrixD A2 = A*A;
+	d6 = std::pow(normest(A2,3), 1./6.);
+	eta1 = std::max(std::pow(normest(A2,2), 1./4.), d6);
+	if (eta1 < 1.495585217958292e-002 and ell(A,3) == 0){
+		// Calculate U and V using pade3
+		pade3(A, A2, U, V);
+		// exit the function
+		return;
+	}
+
+	// try pade5
+	const SparseMatrixD A4 = A2*A2;
+	d4 = std::pow(A1norm, 1./4.);
+	eta2 = std::max(d4, d6);
+	if (eta2 < 2.539398330063230e-001 and ell(A,5) == 0){
+		// Calculate U and V using pade5
+		pade5(A, A2, A4, U, V);
+		// exit the function
+		return;
+
+	}
+	// try pade 7 and 9
+	const SparseMatrixD A6 = A4*A2;
+	d6 = std::pow(l1norm(A6), 1./6.);
+	d8 = std::pow(normest(A4,2),1./8.);
+	eta3 = std::max(d6, d8);
+	if (eta3 < 9.504178996162932e-001 and ell(A,7) == 0){
+		// Calculate U and V using pade7
+		pade7(A, A2, A4, A6, U, V);
+		// exit the function
+		return;
+	}
+	if (eta3 < 2.097847961257068e+000 and ell(A,9) == 0){
+		const SparseMatrixD A8 = A6*A2;
+		// Calculate U and V using pade9
+		pade9(A, A2, A4, A6, A8, U, V);
+		// exit the function
+		return;
+	}
+
+	// Do pade 13
+	d10 = std::pow(normest(A4, A6), 1./10.);
+	eta4 = std::max(d8, d10);
+	eta5 = std::min(eta3, eta4);
+	log2EtaOverTheta = std::log2(eta5/theta13);
+	value = (int) std::ceil(log2EtaOverTheta);
+	// find number of squarings 
+	alpha = std::max(value, 0);
+	alpha = alpha + ell(A*std::pow(2,-alpha), 13);
+	// Scale down the matrices
+	B = A*std::pow(2,-alpha);
+	B2 = A2*std::pow(2,-2*alpha);
+	B4 = A4*std::pow(2,-4*alpha);
+	B6 = A6*std::pow(2,-6*alpha);
+	// Solve for U and V
+	pade13(B, B2, B4, B6, U, V);
+	// exit function
+	return;
+
 }
 
 //*****************************************************************************
 // Normest
-// Produces the l1norm of A*B
+// Produces the l1norm of A*B. Need to eventually change this to use the 
+// estiment of the norm which is used in the paper.
 //
 // @param A		Sparse matrix
 // @param B		Sparse matrix
 //*****************************************************************************
 double method2::normest(const SparseMatrixD& A, const SparseMatrixD& B){
 	const SparseMatrixD& C = A*B;
-	double l1Norm = (C.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
-	return l1Norm;
+	double C1norm = l1norm(C);
+	return C1norm;
 }
 
 //*****************************************************************************
@@ -280,15 +351,16 @@ double method2::normest(const SparseMatrixD& A, const SparseMatrixD& B){
 // @param m		integer, power of the matrix
 //*****************************************************************************
 double method2::normest(const SparseMatrixD& A, const int m){
-	SparseMatrixD C(A.rows(), A.cols());
-	double l1Norm;
+	SparseMatrixD C = A;
+	double C1norm;
+
 
 	// Rises the matrix to power m
 	for (int i; i<m; i++){
 		C = C*A;
 	}
-	l1Norm = (C.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
-	return l1Norm;
+	C1norm = l1norm(C);
+	return C1norm;
 }
 //*****************************************************************************
 // Ell
@@ -310,7 +382,7 @@ int method2::ell(const SparseMatrixD& A, const int m){
 	// l1 norm of matrix power
 	A1NormMatrixPower = normest(A.cwiseAbs(), p);
 	// l1 norm of matrix
-	A1Norm = (A.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();	
+	A1Norm = l1norm(A);
 
 	alpha = c*A1NormMatrixPower/A1Norm;
 	log2AlphaOverU = std::log2(alpha/u);
