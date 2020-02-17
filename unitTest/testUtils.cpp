@@ -20,13 +20,13 @@ SparseMatrixD buildAMatrixSparse(int n){
 	tripletList.reserve(3*n);
    SparseMatrixD A(n,n);
 
-	for (int j = 0; j < n-1; j++){
+	for (int j = 0; j < n; j++){
 		tripletList.push_back(T(j,j,-3.0));
 	}
-	for (int j = 0; j < n-2; j++){
+	for (int j = 0; j < n-1; j++){
 		tripletList.push_back(T(j,j+1,1.0));
 	}
-	for (int j = n; j < n-1; j++){
+	for (int j = n; j < n; j++){
 		tripletList.push_back(T(j,j-1,1.0));
 	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
@@ -46,7 +46,7 @@ SparseMatrixD buildJMatrixSparse(int n){
 	tripletList.push_back(T(0,1,-1.0));
 
 	for (int j = 1; j < n-1; j++){
-		tripletList.push_back(T(j,j,2.0/(pow(n,2.0))));
+		tripletList.push_back(T(j,j,2.0 + 1./(pow(n,2.0))));
 	}
 	for (int j = 1; j < n-1; j++){
 		tripletList.push_back(T(j,j+1,-1.0));
@@ -102,7 +102,7 @@ MatrixD buildJMatrixDense(int n){
 }
 
 //*****************************************************************************
-// Sets the pseudo inverse
+// Tests the pseudo inverse
 //
 //*****************************************************************************
 void testPseudoInverse(int myid){
@@ -185,43 +185,100 @@ void testPseudoInverse(int myid){
 }
 
 //*****************************************************************************
-// Tests matrix squaring 
-//
+// Test the factorial function
 //*****************************************************************************
-void testMatrixSquare(int myid){
+void testFactorial(int myid){
 
-	typedef Eigen::Triplet<double> T;
-   SparseMatrixD A(2,2);
-	MatrixXd Solution(2,2);
-	std::vector<T> tripletList;
-	tripletList.reserve(4);
-	int nMax = 5;
+	// Test values
+	const int testValue1 = 3*2*1;
+	const int testValue2 = 4*3*2*1;
+	const int testValue3 = 5*4*3*2*1;
+	const int testValue4 = 6*5*4*3*2*1;
 
-	A.insert(0,0) = 2.;
-	A.insert(0,1) = 1.;
-	A.insert(1,0) = 1.;
-	A.insert(1,1) = 2.;
-
-	for (int n = 0; n < nMax; n++){
-		int nPow = pow(2,n);
-		// Got from online solution
-		// https://yutsumura.com/how-to-find-a-formula-of-the-power-of-a-matrix/
-		Solution(0,0) = 0.5*(pow(-1.,nPow) + pow(3,nPow));
-		Solution(0,1) = 0.5*(pow(-1.,nPow+1) + pow(3,nPow));
-		Solution(1,0) = 0.5*(pow(-1.,nPow+1) + pow(3,nPow));
-		Solution(1,1) = 0.5*(pow(-1.,nPow) + pow(3,nPow));
-
-		std::cout << Solution << std::endl;
-		std::cout << MatrixSquare(A, nPow) << std::endl;
-	}
-
+	// Test the function
+	assert(factorial(3) == testValue1);
+	assert(factorial(4) == testValue2);
+	assert(factorial(5) == testValue3);
+	assert(factorial(6) == testValue4);
 }
+
+//*****************************************************************************
+// Test the binomial coefficient function
+//*****************************************************************************
+void testBinomialCoeff(int myid){
+
+	// Test values
+	const int n1test = 12;
+	const int k1test = 2;
+	const int test1Answer = 66;
+
+	const int n2test = 50;
+	const int k2test = 3;
+	const int test2Answer = 19600;
+
+	const int n3test = 12;
+	const int k3test = 0;
+	const int test3Answer = 1;
+
+	const int n4test = 24;
+	const int k4test = 8;
+	const int test4Answer = 735471;
+
+	// Test the function
+	assert(binomialCoeff(n1test, k1test) == test1Answer);
+	assert(binomialCoeff(n2test, k2test) == test2Answer);
+	assert(binomialCoeff(n3test, k3test) == test3Answer);
+	assert(binomialCoeff(n4test, k4test) == test4Answer);
+}
+
+//*****************************************************************************
+// Test the Arnoldi algorithm
+//
+// This unit test exploits the properties:
+//
+//		AV = VH
+//		H = V*HV
+//
+//	for n = m.
+//*****************************************************************************
+void testArnoldi(int myid){
+
+	MatrixD V;
+	SparseMatrixD H;
+	SparseMatrixD A = buildJMatrixSparse(5);
+	VectorD b = VectorD::Ones(A.cols());
+	double eps = 1.e-12;
+	int matrixSize = 5;
+
+	// Test matrix
+	arnoldi(A, b, 5, V, H);
+	// checks to make sure they are equal
+	assert((A*V - V*H).norm() < eps);
+	assert((MatrixD(H) - V.adjoint()*A*V).norm() < eps);
+
+	// Loops and builds random matrices
+	for (int i = 0; i < 20; i++){
+		A = MatrixD::Random(matrixSize,matrixSize).sparseView();
+		b = VectorD::Ones(A.cols());
+		arnoldi(A, b, matrixSize, V, H);
+
+		// checks to make sure they are equal
+		assert((A*V - V*H).norm() < eps);
+		assert((MatrixD(H) - V.adjoint()*A*V).norm() < eps);
+		
+	}
+	
+}
+
+
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
 	//testPseudoInverse(myid);
-	testMatrixSquare(myid);
+	testFactorial(myid);
+	testBinomialCoeff(myid);
+	testArnoldi(myid);
 
 	mpi.finalize();
 }

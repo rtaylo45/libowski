@@ -18,12 +18,6 @@ template <typename derived>
 SparseMatrix<derived> MoorePenroseInv(const SparseMatrix<derived>&);
 
 //*****************************************************************************
-// Compute matrix squaring for sparse matrix
-//*****************************************************************************
-template <typename derived>
-SparseMatrix<derived> MatrixSquare(const SparseMatrix<derived>&, int);
-
-//*****************************************************************************
 // Binomial Coefficient
 //*****************************************************************************
 int binomialCoeff(int, int);
@@ -37,5 +31,11 @@ int factorial(int);
 // l1 norm sparse matrix
 //*****************************************************************************
 double l1norm(const SparseMatrixD&);
+
+//*****************************************************************************
+// Arnoldi algorithm
+//*****************************************************************************
+void arnoldi(const SparseMatrixD& A, const VectorD& b, const int n, 
+	MatrixD& V, SparseMatrixD& H);
 
 #endif
