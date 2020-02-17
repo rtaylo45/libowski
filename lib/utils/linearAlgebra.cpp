@@ -107,6 +107,13 @@ void arnoldi(const SparseMatrixD& A, const VectorD& b, const int n,
 	const int m = A.cols();
 	const double eps = 1.e-12;
 
+	// if the subspace dim is greater than the A matrix dim, kill program
+	if (n > m) {
+		std::string errorMessage = " The Krylov subspace dimension is \n"
+			" greater than the input matrix size\n";
+		libowskiException::runtimeError(errorMessage);
+	}
+
 	// Set temp matrices to build the subspace
 	MatrixD Vtemp = MatrixD::Zero(m, n+1);
 	SparseMatrixD Htemp(n+1, n);

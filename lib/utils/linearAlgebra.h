@@ -7,9 +7,9 @@
 #define UTILLINEARALGEBRA_H
 #include "matrixTypes.h"
 #include "vectorTypes.h"
+#include "exception.h"
 
 using namespace Eigen;
-
 
 //*****************************************************************************
 // Pseudo inverse linearly independent columns for sparse matrix

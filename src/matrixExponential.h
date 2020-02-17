@@ -38,8 +38,7 @@ class matrixExponential{
 	//**************************************************************************
 	// Consturcture
 	//**************************************************************************
-	matrixExponential(bool = false, int = 10);	
-
+	matrixExponential(bool, int);	
 	protected:
 	//**************************************************************************
 	// Logic to set if the krylov subspace method should be applied to the 
@@ -50,6 +49,7 @@ class matrixExponential{
 	// Krylov subspace dimension
 	//**************************************************************************
 	int krylovSubspaceDim = 10;
+
 };
 
 //*****************************************************************************
@@ -90,6 +90,10 @@ class pade : public matrixExponential{
 
 	public:
 	//**************************************************************************
+	// Constructor
+	//**************************************************************************
+	pade(bool, int);
+	//**************************************************************************
 	// Computes the matrix exponential action on a vector. exp(A*t)v
 	//**************************************************************************
 	virtual VectorD apply(const SparseMatrixD&, const VectorD&, double);
@@ -107,6 +111,11 @@ class pade : public matrixExponential{
 // SIAM Journal on  Matrix Analysis  and  Applications, 26(4):1179–1193, 2005
 //*****************************************************************************
 class method1 : public pade{
+	public:
+	//**************************************************************************
+	// Constructor
+	//**************************************************************************
+	method1(bool, int);
 	private:
 	//**************************************************************************
 	// Runs the algorithm
@@ -121,6 +130,12 @@ class method1 : public pade{
 // SIAM  Journal  on  Matrix  Analysis  and  Applications, 31, 01 2009
 //*****************************************************************************
 class method2 : public pade{
+	public:
+	//**************************************************************************
+	// Constructor
+	//**************************************************************************
+	method2(bool, int);
+	
 	private:
 	//**************************************************************************
 	// Runs the algorithm
@@ -158,6 +173,10 @@ class cauchy : public matrixExponential{
 
 	public:
 	//**************************************************************************
+	// Constructer
+	//**************************************************************************
+	cauchy(bool, int);
+	//**************************************************************************
 	// Computes the matrix exponential action on a vector. exp(A*t)v
 	//**************************************************************************
 	virtual VectorD apply(const SparseMatrixD&, const VectorD&, double);
@@ -176,7 +195,7 @@ class CRAM : public cauchy{
 	//**************************************************************************
 	// Constructor for the CRAM class
 	//**************************************************************************
-	CRAM(bool = false, int = 10);
+	CRAM(bool krylovBool, int krylovDim);
 };
 
 //*****************************************************************************
@@ -189,7 +208,7 @@ class parabolic : public cauchy{
 	//**************************************************************************
 	// Constructor for the parabolic class
 	//**************************************************************************
-	parabolic(bool = false, int = 10);
+	parabolic(bool krylovBool, int krylovDim);
 
 	private:
 	// Order of the approximation
@@ -210,7 +229,7 @@ class hyperbolic : public cauchy{
 	//**************************************************************************
 	// Constructor for the hyperbolic class
 	//**************************************************************************
-	hyperbolic(bool = false, int = 10);
+	hyperbolic(bool krylovBool, int krylovDim);
 
 	private:
 	// Order of the approximation
@@ -225,6 +244,6 @@ class hyperbolic : public cauchy{
 //*****************************************************************************
 class matrixExponentialFactory{
 	public:
-	static matrixExponential *getExpSolver(std::string);
+	static matrixExponential *getExpSolver(std::string, bool = false, int = 10);
 };
 #endif 

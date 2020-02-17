@@ -4,27 +4,28 @@
 //*****************************************************************************
 // Methods for MatrixExponential factory class
 //*****************************************************************************
-matrixExponential *matrixExponentialFactory::getExpSolver(std::string type){
+matrixExponential *matrixExponentialFactory::getExpSolver(std::string type,
+	bool krylovBool, int krylovDim){
 	matrixExponential *solver = nullptr;
 
 	if (type == "CRAM"){
-		solver = new CRAM;
+		solver = new CRAM(krylovBool, krylovDim);
 		return solver;
 	}
 	else if (type == "parabolic"){
-		solver = new parabolic;
+		solver = new parabolic(krylovBool, krylovDim);
 		return solver;
 	}
 	else if (type == "hyperbolic"){
-		solver = new hyperbolic;
+		solver = new hyperbolic(krylovBool, krylovDim);
 		return solver;
 	}
 	else if (type == "pade-method1"){
-		solver = new method1;
+		solver = new method1(krylovBool, krylovDim);
 		return solver;
 	}
 	else if (type == "pade-method2"){
-		solver = new method2;
+		solver = new method2(krylovBool, krylovDim);
 		return solver;
 	}
 	else {
@@ -59,6 +60,12 @@ matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
 // code. I didn't like the linear solver they used and the solver they used
 // is not avaliable for sparsematrices so idk how it work when you pass in one.
 //*****************************************************************************
+
+//*****************************************************************************
+// Constructer for pade class
+//*****************************************************************************
+pade::pade(bool krylovBool, int krylovDim):matrixExponential(krylovBool, 
+	krylovDim){};
 
 //*****************************************************************************
 // Pade approximation for order (3,3)
@@ -179,14 +186,23 @@ void pade::pade13(const SparseMatrixD& A, const SparseMatrixD& A2,
 // @param t		Time step of the solve
 //*****************************************************************************
 VectorD pade::apply(const SparseMatrixD& A, const VectorD& v0, double t){
+	SparseMatrixD matExp;
 	// Generates the krylov subspace if needed
 	if (useKrylovSubspace){
-		MatrixD V;
+		// define matrices and variables
+		MatrixD Q;
 		SparseMatrixD H;
-
-		//arnoldi(At, b, subspaceSize, Q, H);
+		SparseMatrixD At = A*t;
+		double beta = v0.norm();
+		// Builds the krylov subspace
+		arnoldi(At, v0, krylovSubspaceDim, Q, H);
+		// Computes matrix exponential of krylov subsapce
+		matExp = compute(H, 1.0);	
+		// Computes the result
+		return beta*(Q*matExp*VectorD::Unit(krylovSubspaceDim,1));
 	}
-	SparseMatrixD matExp = compute(A, t);
+	// Computes it without krylov subspace
+	matExp = compute(A, t);
 	return matExp*v0;
 }
 
@@ -232,6 +248,12 @@ SparseMatrixD pade::compute(const SparseMatrixD& A, double t){
 	}
 	return R;	
 }
+
+
+//*****************************************************************************
+// Constructor for method1
+//*****************************************************************************
+method1::method1(bool krylovBool, int krylovDim):pade(krylovBool, krylovDim){};
 
 //*****************************************************************************
 // Run method for pade class method1
@@ -284,6 +306,10 @@ void method1::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 	}
 }
 
+//*****************************************************************************
+// Constructor for method2
+//*****************************************************************************
+method2::method2(bool krylovBool, int krylovDim):pade(krylovBool, krylovDim){};
 
 //*****************************************************************************
 // Runs the algorithm for method 2
@@ -429,6 +455,12 @@ int method2::ell(const SparseMatrixD& A, const int m){
 //*****************************************************************************
 
 //*****************************************************************************
+// Cauchy constructor
+//*****************************************************************************
+cauchy::cauchy(bool krylovBool, int krylovDim):matrixExponential(krylovBool, 
+	krylovDim){};
+
+//*****************************************************************************
 // Calculates exp(A*t)v. The action of the matrix expoential on a vector
 //
 // @param A		The coefficient matrix for the system of ODE's
@@ -446,7 +478,6 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 	const int eleCount = A.rows();	// Number of species in the system
 
 	// Number of poles
-	
 	const int s = theta.rows();	
 	SparseMatrixCLD At(A.rows(),A.cols());		// Scaled matrix with time
 	SparseMatrixCLD tempA(A.rows(),A.cols());			// Temp variable in solution
@@ -557,11 +588,8 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 //*****************************************************************************
 // Initilizer for the CRAM solver
 //*****************************************************************************
-CRAM::CRAM(bool krylovFlag, int subspaceDim){
-
-	// Krylov subspace flag 
-	useKrylovSubspace = krylovFlag;
-	krylovSubspaceDim = subspaceDim;
+CRAM::CRAM(bool krylovBool, int krylovDim):cauchy(krylovBool, krylovDim
+	){
 
 	MatrixCLD thetaCRAM(8,1);
 	MatrixCLD alphaCRAM(8,1);
@@ -605,10 +633,8 @@ CRAM::CRAM(bool krylovFlag, int subspaceDim){
 //*****************************************************************************
 // Initilizer for the parabolic solver
 //*****************************************************************************
-parabolic::parabolic(bool krylovFlag, int subspaceDim){
-	// Krylov subspace flag 
-	useKrylovSubspace = krylovFlag;
-	krylovSubspaceDim = subspaceDim;
+parabolic::parabolic(bool krylovBool, int krylovDim):cauchy(krylovBool, 
+	krylovDim){
 
 	// Gets the coefficients for the contour integral
 	MatrixCLD coeffs = parabolicContourCoeffs(order);
@@ -650,10 +676,8 @@ MatrixCLD parabolic::parabolicContourCoeffs(int N){
 //*****************************************************************************
 // Initilizer for the hyperbolic solver
 //*****************************************************************************
-hyperbolic::hyperbolic(bool krylovFlag, int subspaceDim){
-	// Krylov subspace flag 
-	useKrylovSubspace = krylovFlag;
-	krylovSubspaceDim = subspaceDim;
+hyperbolic::hyperbolic(bool krylovBool, int krylovDim):cauchy(krylovBool, 
+	krylovDim){
 
 	// Gets the coefficients for the contour integral
 	MatrixCLD coeffs = hyperbolicContourCoeffs(order);
