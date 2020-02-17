@@ -20,6 +20,7 @@
 #include "linearAlgebra.h"
 #include "vectorTypes.h"
 #include "matrixTypes.h"
+#include "exception.h"
 
 //*****************************************************************************
 // Abstract base matrix exponential class
@@ -34,6 +35,17 @@ class matrixExponential{
 	// Computes the matrix exponential. exp(A*t)
 	//**************************************************************************
 	virtual SparseMatrixD compute(const SparseMatrixD&, double) = 0;
+	//**************************************************************************
+	// Consturcture
+	//**************************************************************************
+	matrixExponential(bool = false);	
+
+	protected:
+	//**************************************************************************
+	// Logic to set if the krylov subspace method should be applied to the 
+	// solver
+	//**************************************************************************
+	bool useKrylovSubspace = false;
 };
 
 //*****************************************************************************
@@ -160,7 +172,7 @@ class CRAM : public cauchy{
 	//**************************************************************************
 	// Constructor for the CRAM class
 	//**************************************************************************
-	CRAM();
+	CRAM(bool = false);
 };
 
 //*****************************************************************************
@@ -173,7 +185,7 @@ class parabolic : public cauchy{
 	//**************************************************************************
 	// Constructor for the parabolic class
 	//**************************************************************************
-	parabolic();
+	parabolic(bool = false);
 
 	private:
 	// Order of the approximation
@@ -194,7 +206,7 @@ class hyperbolic : public cauchy{
 	//**************************************************************************
 	// Constructor for the hyperbolic class
 	//**************************************************************************
-	hyperbolic();
+	hyperbolic(bool = false);
 
 	private:
 	// Order of the approximation

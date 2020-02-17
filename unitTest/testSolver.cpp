@@ -305,9 +305,9 @@ void tankProblem(int myid, matrixExponential *expSolver){
 			//std::cout << abs(x3-sol(2)) << std::endl;
     		//std::cout << " " << std::endl;
 
-			//assert(isApprox(x1, sol(0), 1.e-11, 1.e-11));
-			//assert(isApprox(x2, sol(1), 1.e-11, 1.e-11));
-			//assert(isApprox(x3, sol(2), 1.e-11, 1.e-11));
+			assert(isApprox(x1, sol(0), 1.e-11, 1.e-11));
+			assert(isApprox(x2, sol(1), 1.e-11, 1.e-11));
+			assert(isApprox(x3, sol(2), 1.e-11, 1.e-11));
 		}
 	}
 
@@ -413,9 +413,9 @@ void xenonIodineProblem(int myid, matrixExponential *expSolver){
 		if (myid==0){
 			//std::cout << N_xe << " " << sol(0) << std::endl;
     		//std::cout << N_I << " " << sol(1) << std::endl;
-			std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
-			std::cout << abs(N_I-sol(1))/N_I << std::endl;
-    		std::cout << " " << std::endl;
+			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
+			//std::cout << abs(N_I-sol(1))/N_I << std::endl;
+    		//std::cout << " " << std::endl;
 
 			assert(isApprox(sol(0), N_xe));
 			assert(isApprox(sol(1), N_I));
@@ -426,38 +426,38 @@ void xenonIodineProblem(int myid, matrixExponential *expSolver){
 	// Rerun the problem using the compute method. (Not as accurate)
 	t = 0.0;
 
-	//for (int i = 0; i < steps; i++){
+	for (int i = 0; i < steps; i++){
 
-	//	t = t + dt;
+		t = t + dt;
 
-	//	sol = expSolver->compute(A, t)*N0;
+		sol = expSolver->compute(A, t)*N0;
 
-	//	a = lambda_xe + sigma_a*flux;
-	//	b = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
-	//	d = lambda_I*N_I_0;
-	//	k = N_xe_0 - (d-b)/(a - lambda_I) - 
-	//		(b + gamma_xe*Sigma_f*flux*xenonMM/AvogNum)/a;
+		a = lambda_xe + sigma_a*flux;
+		b = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
+		d = lambda_I*N_I_0;
+		k = N_xe_0 - (d-b)/(a - lambda_I) - 
+			(b + gamma_xe*Sigma_f*flux*xenonMM/AvogNum)/a;
 
-	//	// Xenon solution
-   // 	N_xe = -b/(a-lambda_I)*exp(-lambda_I*t) + b/a +
-	//		d*exp(-lambda_I*t)/(a - lambda_I) + k*exp(-a*t) +
-	//		gamma_xe*Sigma_f*flux*xenonMM/AvogNum/a;
+		// Xenon solution
+    	N_xe = -b/(a-lambda_I)*exp(-lambda_I*t) + b/a +
+			d*exp(-lambda_I*t)/(a - lambda_I) + k*exp(-a*t) +
+			gamma_xe*Sigma_f*flux*xenonMM/AvogNum/a;
 
-	//	// Iodine solution
-   // 	N_I = b/lambda_I*(1. - exp(-lambda_I*t)) + N_I_0*exp(-lambda_I*t);
-	//	
-	//	if (myid==0){
-	//		//std::cout << N_xe << " " << sol(0) << std::endl;
-   // 		//std::cout << N_I << " " << sol(1) << std::endl;
-	//		//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
-	//		//std::cout << abs(N_I-sol(1))/N_xe << std::endl;
-   // 		//std::cout << " " << std::endl;
+		// Iodine solution
+    	N_I = b/lambda_I*(1. - exp(-lambda_I*t)) + N_I_0*exp(-lambda_I*t);
+		
+		if (myid==0){
+			//std::cout << N_xe << " " << sol(0) << std::endl;
+    		//std::cout << N_I << " " << sol(1) << std::endl;
+			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
+			//std::cout << abs(N_I-sol(1))/N_xe << std::endl;
+    		//std::cout << " " << std::endl;
 
-	//		assert(isApprox(sol(0), N_xe));
-	//		assert(isApprox(sol(1), N_I));
-	//		
-	//	}
-	//}
+			assert(isApprox(sol(0), N_xe));
+			assert(isApprox(sol(1), N_I));
+			
+		}
+	}
 }
 void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 //*****************************************************************************

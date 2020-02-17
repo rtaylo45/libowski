@@ -28,11 +28,26 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type){
 		return solver;
 	}
 	else {
-		std::cout << "You fucked up and tried to pick a matrix \n"
-			"exponential solver that Zack has not put in. \n"
-			"Please constact Zack at 1 800 eat shit" << std::endl;
-		exit(1);
+		std::string errorMessage =
+			" You fucked up and tried to pick a matrix \n"
+			" exponential solver that Zack has not put in. \n"
+			" Please constact Zack at 1 800 eat shit";
+		libowskiException::runtimeError(errorMessage);
+		return solver;
 	}
+}
+
+
+//*****************************************************************************
+// Default constructor for matrixExponential class
+//
+// @param KrylovFlag		set to true if you want to use the Krylov subspace 
+//								in the calculation. WARNING THIS CAN ONLY BE USED WITH
+//								THE APPLY FUNCTION
+//*****************************************************************************
+matrixExponential::matrixExponential(bool KrylovFlag){
+
+	useKrylovSubspace = KrylovFlag;
 }
 
 //*****************************************************************************
@@ -162,6 +177,13 @@ void pade::pade13(const SparseMatrixD& A, const SparseMatrixD& A2,
 // @param t		Time step of the solve
 //*****************************************************************************
 VectorD pade::apply(const SparseMatrixD& A, const VectorD& v0, double t){
+	// Generates the krylov subspace if needed
+	if (useKrylovSubspace){
+		MatrixD V;
+		SparseMatrixD H;
+
+		//arnoldi(At, b, subspaceSize, Q, H);
+	}
 	SparseMatrixD matExp = compute(A, t);
 	return matExp*v0;
 }
@@ -175,10 +197,21 @@ VectorD pade::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 SparseMatrixD pade::compute(const SparseMatrixD& A, double t){
 	// The sparse LU solver object
 	Eigen::SparseLU<SparseMatrixD, COLAMDOrdering<int> > solver;
-	SparseMatrixD U, V, At, denominator, numerator, R;
+	SparseMatrixD U, V, H, At, denominator, numerator, R;
+	MatrixD Q;
 	int alpha;
+	int subspaceSize = 5;
+
+	// If the Krylov subspace flag is true kill the program
+	if (useKrylovSubspace){
+		std::string errorMessage = " Krylov subspace method cannot \n"
+			" be used with the compute method\n";
+		libowskiException::runtimeError(errorMessage);
+	}
+
 	// Calculate At matrix
 	At = A*t;
+
 	// Runs the pade algorithm to find matrices U and V
 	run(At, U, V, alpha);	
 	// Builds numerator and denominator
@@ -463,6 +496,13 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 //*****************************************************************************
 SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 
+	// If the Krylov subspace flag is true kill the program
+	if (useKrylovSubspace){
+		std::string errorMessage = " Krylov subspace method cannot \n"
+			" be used with the compute method\n";
+		libowskiException::runtimeError(errorMessage);
+	}
+
 	// MPI stuff
 	const int myid = mpi.rank;
 	const int numprocs = mpi.size;
@@ -516,7 +556,11 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 //*****************************************************************************
 // Initilizer for the CRAM solver
 //*****************************************************************************
-CRAM::CRAM(){
+CRAM::CRAM(bool krylovFlag){
+
+	// Krylov subspace flag 
+	useKrylovSubspace = krylovFlag;
+
 	MatrixCLD thetaCRAM(8,1);
 	MatrixCLD alphaCRAM(8,1);
 
@@ -559,7 +603,10 @@ CRAM::CRAM(){
 //*****************************************************************************
 // Initilizer for the parabolic solver
 //*****************************************************************************
-parabolic::parabolic(){
+parabolic::parabolic(bool krylovFlag){
+	// Krylov subspace flag 
+	useKrylovSubspace = krylovFlag;
+
 	// Gets the coefficients for the contour integral
 	MatrixCLD coeffs = parabolicContourCoeffs(order);
 	theta = coeffs.col(0);
@@ -600,7 +647,10 @@ MatrixCLD parabolic::parabolicContourCoeffs(int N){
 //*****************************************************************************
 // Initilizer for the hyperbolic solver
 //*****************************************************************************
-hyperbolic::hyperbolic(){
+hyperbolic::hyperbolic(bool krylovFlag){
+	// Krylov subspace flag 
+	useKrylovSubspace = krylovFlag;
+
 	// Gets the coefficients for the contour integral
 	MatrixCLD coeffs = hyperbolicContourCoeffs(order);
 	theta = coeffs.col(0);
