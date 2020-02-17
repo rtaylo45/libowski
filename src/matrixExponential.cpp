@@ -44,10 +44,12 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type){
 // @param KrylovFlag		set to true if you want to use the Krylov subspace 
 //								in the calculation. WARNING THIS CAN ONLY BE USED WITH
 //								THE APPLY FUNCTION
+//	@param subspaceDim	The dimension of the krylov subspace
 //*****************************************************************************
-matrixExponential::matrixExponential(bool KrylovFlag){
+matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
 
 	useKrylovSubspace = KrylovFlag;
+	krylovSubspaceDim = subspaceDim;
 }
 
 //*****************************************************************************
@@ -387,7 +389,6 @@ double method2::normest(const SparseMatrixD& A, const int m){
 	SparseMatrixD C = A;
 	double C1norm;
 
-
 	// Rises the matrix to power m
 	for (int i; i<m; i++){
 		C = C*A;
@@ -556,10 +557,11 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 //*****************************************************************************
 // Initilizer for the CRAM solver
 //*****************************************************************************
-CRAM::CRAM(bool krylovFlag){
+CRAM::CRAM(bool krylovFlag, int subspaceDim){
 
 	// Krylov subspace flag 
 	useKrylovSubspace = krylovFlag;
+	krylovSubspaceDim = subspaceDim;
 
 	MatrixCLD thetaCRAM(8,1);
 	MatrixCLD alphaCRAM(8,1);
@@ -603,9 +605,10 @@ CRAM::CRAM(bool krylovFlag){
 //*****************************************************************************
 // Initilizer for the parabolic solver
 //*****************************************************************************
-parabolic::parabolic(bool krylovFlag){
+parabolic::parabolic(bool krylovFlag, int subspaceDim){
 	// Krylov subspace flag 
 	useKrylovSubspace = krylovFlag;
+	krylovSubspaceDim = subspaceDim;
 
 	// Gets the coefficients for the contour integral
 	MatrixCLD coeffs = parabolicContourCoeffs(order);
@@ -647,9 +650,10 @@ MatrixCLD parabolic::parabolicContourCoeffs(int N){
 //*****************************************************************************
 // Initilizer for the hyperbolic solver
 //*****************************************************************************
-hyperbolic::hyperbolic(bool krylovFlag){
+hyperbolic::hyperbolic(bool krylovFlag, int subspaceDim){
 	// Krylov subspace flag 
 	useKrylovSubspace = krylovFlag;
+	krylovSubspaceDim = subspaceDim;
 
 	// Gets the coefficients for the contour integral
 	MatrixCLD coeffs = hyperbolicContourCoeffs(order);

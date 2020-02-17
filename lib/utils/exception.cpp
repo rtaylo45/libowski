@@ -25,7 +25,7 @@ void libowskiException::runtimeErrorOutputButt(){
 //
 // @param errorMessage	The error message shown to the terminal screen
 //*****************************************************************************
-void libowskiException::runtimeError(const std::string errorMessage){
+void libowskiException::runtimeError(const std::string& errorMessage){
 
 	runtimeErrorOutputHeader();
 	std::cout<<errorMessage << std::endl;

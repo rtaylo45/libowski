@@ -26,7 +26,7 @@ class libowskiException{
 	//**************************************************************************
 	// Runtime error 
 	//**************************************************************************
-	static void runtimeError(const std::string);
+	static void runtimeError(const std::string&);
 };
 
 #endif
