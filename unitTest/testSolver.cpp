@@ -71,17 +71,18 @@ SparseMatrixD buildJMatrix(int n){
 	std::vector<T> tripletList;
 	tripletList.reserve(3*n);
    SparseMatrixD A(n,n);
-	tripletList.push_back(T(0,0,-1.0));
+	tripletList.push_back(T(0,0,1.0));
 	tripletList.push_back(T(0,1,-1.0));
 
 	for (int j = 1; j < n-1; j++){
-		tripletList.push_back(T(j,j,1.+-2.0/(pow(n,2.0))));
+		tripletList.push_back(T(j,j,2.+ 1.0/(pow(n,2.0))));
+		//tripletList.push_back(T(j,j,4.0));
 	}
 	for (int j = 1; j < n-1; j++){
-		tripletList.push_back(T(j,j+1,1.0));
+		tripletList.push_back(T(j,j+1,-1.0));
 		tripletList.push_back(T(j,j-1,-1.0));
 	}
-	tripletList.push_back(T(n-1,n-1,-1.0));
+	tripletList.push_back(T(n-1,n-1,1.0));
 	tripletList.push_back(T(n-1,n-2,-1.0));
 
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
@@ -305,9 +306,9 @@ void tankProblem(int myid, matrixExponential *expSolver){
 			//std::cout << abs(x3-sol(2)) << std::endl;
     		//std::cout << " " << std::endl;
 
-			//assert(isApprox(x1, sol(0), 1.e-11, 1.e-11));
-			//assert(isApprox(x2, sol(1), 1.e-11, 1.e-11));
-			//assert(isApprox(x3, sol(2), 1.e-11, 1.e-11));
+			assert(isApprox(x1, sol(0), 1.e-11, 1.e-11));
+			assert(isApprox(x2, sol(1), 1.e-11, 1.e-11));
+			assert(isApprox(x3, sol(2), 1.e-11, 1.e-11));
 		}
 	}
 
@@ -413,9 +414,9 @@ void xenonIodineProblem(int myid, matrixExponential *expSolver){
 		if (myid==0){
 			//std::cout << N_xe << " " << sol(0) << std::endl;
     		//std::cout << N_I << " " << sol(1) << std::endl;
-			std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
-			std::cout << abs(N_I-sol(1))/N_I << std::endl;
-    		std::cout << " " << std::endl;
+			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
+			//std::cout << abs(N_I-sol(1))/N_I << std::endl;
+    		//std::cout << " " << std::endl;
 
 			assert(isApprox(sol(0), N_xe));
 			assert(isApprox(sol(1), N_I));
@@ -426,38 +427,38 @@ void xenonIodineProblem(int myid, matrixExponential *expSolver){
 	// Rerun the problem using the compute method. (Not as accurate)
 	t = 0.0;
 
-	//for (int i = 0; i < steps; i++){
+	for (int i = 0; i < steps; i++){
 
-	//	t = t + dt;
+		t = t + dt;
 
-	//	sol = expSolver->compute(A, t)*N0;
+		sol = expSolver->compute(A, t)*N0;
 
-	//	a = lambda_xe + sigma_a*flux;
-	//	b = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
-	//	d = lambda_I*N_I_0;
-	//	k = N_xe_0 - (d-b)/(a - lambda_I) - 
-	//		(b + gamma_xe*Sigma_f*flux*xenonMM/AvogNum)/a;
+		a = lambda_xe + sigma_a*flux;
+		b = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
+		d = lambda_I*N_I_0;
+		k = N_xe_0 - (d-b)/(a - lambda_I) - 
+			(b + gamma_xe*Sigma_f*flux*xenonMM/AvogNum)/a;
 
-	//	// Xenon solution
-   // 	N_xe = -b/(a-lambda_I)*exp(-lambda_I*t) + b/a +
-	//		d*exp(-lambda_I*t)/(a - lambda_I) + k*exp(-a*t) +
-	//		gamma_xe*Sigma_f*flux*xenonMM/AvogNum/a;
+		// Xenon solution
+    	N_xe = -b/(a-lambda_I)*exp(-lambda_I*t) + b/a +
+			d*exp(-lambda_I*t)/(a - lambda_I) + k*exp(-a*t) +
+			gamma_xe*Sigma_f*flux*xenonMM/AvogNum/a;
 
-	//	// Iodine solution
-   // 	N_I = b/lambda_I*(1. - exp(-lambda_I*t)) + N_I_0*exp(-lambda_I*t);
-	//	
-	//	if (myid==0){
-	//		//std::cout << N_xe << " " << sol(0) << std::endl;
-   // 		//std::cout << N_I << " " << sol(1) << std::endl;
-	//		//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
-	//		//std::cout << abs(N_I-sol(1))/N_xe << std::endl;
-   // 		//std::cout << " " << std::endl;
+		// Iodine solution
+    	N_I = b/lambda_I*(1. - exp(-lambda_I*t)) + N_I_0*exp(-lambda_I*t);
+		
+		if (myid==0){
+			//std::cout << N_xe << " " << sol(0) << std::endl;
+    		//std::cout << N_I << " " << sol(1) << std::endl;
+			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
+			//std::cout << abs(N_I-sol(1))/N_xe << std::endl;
+    		//std::cout << " " << std::endl;
 
-	//		assert(isApprox(sol(0), N_xe));
-	//		assert(isApprox(sol(1), N_I));
-	//		
-	//	}
-	//}
+			assert(isApprox(sol(0), N_xe));
+			assert(isApprox(sol(1), N_I));
+			
+		}
+	}
 }
 void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 //*****************************************************************************
@@ -586,6 +587,48 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 
 }
 
+void testKrylovSubspace(int myid){
+
+	matrixExponential *testExpSolverMethod1;
+	matrixExponential *testExpSolverMethod2;
+	matrixExponential *anaExpSolverMethod1;
+	matrixExponential *anaExpSolverMethod2;
+	// Base solver
+	anaExpSolverMethod1 = matrixExponentialFactory::getExpSolver("pade-method1");
+	anaExpSolverMethod2 = matrixExponentialFactory::getExpSolver("pade-method2");
+	const int m = 100;
+	SparseMatrixD H, A;
+	MatrixD V;
+	VectorD ana1, ana2, approx1, approx2, b;
+	b = VectorD::Ones(m);
+	A = buildJMatrix(m);
+	double t = 1.0;
+	double error1 = 0.0;
+	double error2 = 0.0;
+	// ananlytical solution
+	ana1 = anaExpSolverMethod1->apply(A, b, t);
+	ana2 = anaExpSolverMethod2->apply(A, b, t);
+
+	// Runs through different subspace dimensions
+	for (int i= 1; i <= 100; i++){
+		// Get the solvers
+		testExpSolverMethod1 = matrixExponentialFactory::getExpSolver("pade-method1", true, i);
+		testExpSolverMethod2 = matrixExponentialFactory::getExpSolver("pade-method2", true, i);
+		// Generate soltuion
+		approx1 = testExpSolverMethod1->apply(A, b, t);
+		approx2 = testExpSolverMethod2->apply(A, b, t);
+		// Test against the base solution without the krylov subspace
+		error1 = (ana1 - approx1).norm();
+		error2 = (ana2 - approx2).norm();
+
+		// Do assertions, After subspace dim 49 the minumal error should be reached
+		if (i > 49) {
+			assert(error1 < 1.e-13);
+			assert(error2 < 1.e-13);
+		}
+	}
+}
+
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
@@ -626,6 +669,8 @@ int main(){
 	xenonIodineProblem(myid, expSolver);
 	neutronPrecursorProblem(myid, expSolver);
 
+	// Test the Krylov subspace solver
+	testKrylovSubspace(myid);
 	mpi.finalize();
 }
 
