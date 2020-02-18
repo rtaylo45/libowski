@@ -71,17 +71,18 @@ SparseMatrixD buildJMatrix(int n){
 	std::vector<T> tripletList;
 	tripletList.reserve(3*n);
    SparseMatrixD A(n,n);
-	tripletList.push_back(T(0,0,-1.0));
+	tripletList.push_back(T(0,0,1.0));
 	tripletList.push_back(T(0,1,-1.0));
 
 	for (int j = 1; j < n-1; j++){
-		tripletList.push_back(T(j,j,1.+-2.0/(pow(n,2.0))));
+		tripletList.push_back(T(j,j,2.+ 1.0/(pow(n,2.0))));
+		//tripletList.push_back(T(j,j,4.0));
 	}
 	for (int j = 1; j < n-1; j++){
-		tripletList.push_back(T(j,j+1,1.0));
+		tripletList.push_back(T(j,j+1,-1.0));
 		tripletList.push_back(T(j,j-1,-1.0));
 	}
-	tripletList.push_back(T(n-1,n-1,-1.0));
+	tripletList.push_back(T(n-1,n-1,1.0));
 	tripletList.push_back(T(n-1,n-2,-1.0));
 
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
@@ -586,6 +587,48 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 
 }
 
+void testKrylovSubspace(int myid){
+
+	matrixExponential *testExpSolverMethod1;
+	matrixExponential *testExpSolverMethod2;
+	matrixExponential *anaExpSolverMethod1;
+	matrixExponential *anaExpSolverMethod2;
+	// Base solver
+	anaExpSolverMethod1 = matrixExponentialFactory::getExpSolver("pade-method1");
+	anaExpSolverMethod2 = matrixExponentialFactory::getExpSolver("pade-method2");
+	const int m = 100;
+	SparseMatrixD H, A;
+	MatrixD V;
+	VectorD ana1, ana2, approx1, approx2, b;
+	b = VectorD::Ones(m);
+	A = buildJMatrix(m);
+	double t = 1.0;
+	double error1 = 0.0;
+	double error2 = 0.0;
+	// ananlytical solution
+	ana1 = anaExpSolverMethod1->apply(A, b, t);
+	ana2 = anaExpSolverMethod2->apply(A, b, t);
+
+	// Runs through different subspace dimensions
+	for (int i= 1; i <= 100; i++){
+		// Get the solvers
+		testExpSolverMethod1 = matrixExponentialFactory::getExpSolver("pade-method1", true, i);
+		testExpSolverMethod2 = matrixExponentialFactory::getExpSolver("pade-method2", true, i);
+		// Generate soltuion
+		approx1 = testExpSolverMethod1->apply(A, b, t);
+		approx2 = testExpSolverMethod2->apply(A, b, t);
+		// Test against the base solution without the krylov subspace
+		error1 = (ana1 - approx1).norm();
+		error2 = (ana2 - approx2).norm();
+
+		// Do assertions, After subspace dim 49 the minumal error should be reached
+		if (i > 49) {
+			assert(error1 < 1.e-13);
+			assert(error2 < 1.e-13);
+		}
+	}
+}
+
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
@@ -626,6 +669,8 @@ int main(){
 	xenonIodineProblem(myid, expSolver);
 	neutronPrecursorProblem(myid, expSolver);
 
+	// Test the Krylov subspace solver
+	testKrylovSubspace(myid);
 	mpi.finalize();
 }
 

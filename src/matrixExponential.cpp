@@ -199,7 +199,7 @@ VectorD pade::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 		// Computes matrix exponential of krylov subsapce
 		matExp = compute(H, 1.0);	
 		// Computes the result
-		return beta*(Q*matExp*VectorD::Unit(krylovSubspaceDim,1));
+		return beta*(Q*matExp*VectorD::Unit(krylovSubspaceDim,0));
 	}
 	// Computes it without krylov subspace
 	matExp = compute(A, t);
@@ -218,14 +218,6 @@ SparseMatrixD pade::compute(const SparseMatrixD& A, double t){
 	SparseMatrixD U, V, H, At, denominator, numerator, R;
 	MatrixD Q;
 	int alpha;
-	int subspaceSize = 5;
-
-	// If the Krylov subspace flag is true kill the program
-	if (useKrylovSubspace){
-		std::string errorMessage = " Krylov subspace method cannot \n"
-			" be used with the compute method\n";
-		libowskiException::runtimeError(errorMessage);
-	}
 
 	// Calculate At matrix
 	At = A*t;

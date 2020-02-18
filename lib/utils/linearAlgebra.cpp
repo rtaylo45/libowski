@@ -104,18 +104,19 @@ void arnoldi(const SparseMatrixD& A, const VectorD& b, const int n,
 	MatrixD& V, SparseMatrixD& H){
 	VectorD q, v;
 	double h, normV;
-	const int m = A.cols();
+	const int cols = A.cols();
+	const int rows = A.rows();
 	const double eps = 1.e-12;
 
 	// if the subspace dim is greater than the A matrix dim, kill program
-	if (n > m) {
+	if (n > cols) {
 		std::string errorMessage = " The Krylov subspace dimension is \n"
 			" greater than the input matrix size\n";
 		libowskiException::runtimeError(errorMessage);
 	}
 
 	// Set temp matrices to build the subspace
-	MatrixD Vtemp = MatrixD::Zero(m, n+1);
+	MatrixD Vtemp = MatrixD::Zero(cols, n+1);
 	SparseMatrixD Htemp(n+1, n);
 	// reserve space for the H matrix. This includes the main diagonal 
 	// the sub main diagonal, and all elements above the main diagonal.
@@ -143,12 +144,12 @@ void arnoldi(const SparseMatrixD& A, const VectorD& b, const int n,
 			Vtemp.col(i+1) = q;
 		}
 		else{
-			V = Vtemp.topLeftCorner(n,n);
+			V = Vtemp.topLeftCorner(rows,n);
 			H = Htemp.topLeftCorner(n,n);
 			return;
 		}
 	}
-	V = Vtemp.topLeftCorner(n,n);
+	V = Vtemp.topLeftCorner(rows,n);
 	H = Htemp.topLeftCorner(n,n);
 	return;
 }	
