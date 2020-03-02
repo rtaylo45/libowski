@@ -127,9 +127,17 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 	if (BCType == "dirichlet") {
 		setDirichletBoundaryCondition(locID, specID, bc);
 	}
+	else if (BCType == "newmann"){
+		setNewmannBoundaryCondition(locID, specID, bc);
+	} 
 	else if (BCType == "periodic"){
 		setPeriodicBoundaryCondition(locID);
 	} 
+	else{
+		std::string errorMessage = 
+			" You have selected an invalid boundary condition ";
+		libowskiException::runtimeError(errorMessage);
+	}
 	
 }
 
@@ -141,6 +149,69 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 // @param bc		BC value [lbm/ft^3]
 //*****************************************************************************
 void speciesDriver::setDirichletBoundaryCondition(int locID, int specID, 
+	double bc){
+	int xCellMax = modelPtr->numOfxCells - 1;
+	int xCellMin = 0;
+	int yCellMax = modelPtr->numOfyCells - 1;
+	int yCellMin = 0;
+
+	switch(locID){
+
+		// North location
+		case 0: {
+			for (int i = 0; i < modelPtr->numOfxCells; i++){
+				meshCell* cell = modelPtr->getCellByLoc(i,yCellMax);
+				cell->boundary = true;
+				cell->boundaryLoc = 0;
+   			species* spec = getSpeciesPtr(i, yCellMax, specID);
+				spec->bc = bc;
+			}
+			break;
+		}
+		// South location
+		case 1: {
+			for (int i = 0; i < modelPtr->numOfxCells; i++){
+				meshCell* cell = modelPtr->getCellByLoc(i,yCellMin);
+				cell->boundary = true;
+				cell->boundaryLoc = 1;
+   			species* spec = getSpeciesPtr(i, yCellMin, specID);
+				spec->bc = bc;
+			}
+			break;
+		}
+		// East location
+		case 2: {
+			for (int j = 0; j < modelPtr->numOfyCells; j++){
+				meshCell* cell = modelPtr->getCellByLoc(xCellMax,j);
+				cell->boundary = true;
+				cell->boundaryLoc = 2;
+   			species* spec = getSpeciesPtr(xCellMax, j, specID);
+				spec->bc = bc;
+			}
+			break;
+		}
+		// West location
+		case 3: {
+			for (int j = 0; j < modelPtr->numOfyCells; j++){
+				meshCell* cell = modelPtr->getCellByLoc(xCellMin,j);
+				cell->boundary = true;
+				cell->boundaryLoc = 3;
+   			species* spec = getSpeciesPtr(xCellMin, j, specID);
+				spec->bc = bc;
+			}
+			break;
+		}
+	}
+}
+
+//*****************************************************************************
+// Sets a Newmann boundary condition in a cell
+//
+//	@param LocID	Location ID
+// @param specID  Species ID
+// @param bc		BC value [lbm/ft^3]
+//*****************************************************************************
+void speciesDriver::setNewmannBoundaryCondition(int locID, int specID, 
 	double bc){
 	int xCellMax = modelPtr->numOfxCells - 1;
 	int xCellMin = 0;
@@ -455,6 +526,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				}
 			}
 
+			// Dirichlet boundary condition
 			if (thisCellPtr->boundaryLoc == 0){thisSpecPtr->s += 2.*aN*thisSpecPtr->bc;};
 			if (thisCellPtr->boundaryLoc == 1){thisSpecPtr->s += 2.*aS*thisSpecPtr->bc;};
 			if (thisCellPtr->boundaryLoc == 2){thisSpecPtr->s += 2.*aE*thisSpecPtr->bc;};

@@ -25,6 +25,7 @@
 #include "mpiProcess.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
+#include "exception.h"
 
 class speciesDriver {
 
@@ -93,6 +94,8 @@ class speciesDriver {
 	double calcSpecConvectiveSlope(int, int, int, double);
 	// Sets a Dirichlet boundary condition
 	void setDirichletBoundaryCondition(int, int, double);
+	// Sets a Newmann boundary condition
+	void setNewmannBoundaryCondition(int, int, double);
 	// Sets a periodic boundary condiiton
 	void setPeriodicBoundaryCondition(int);
 };

@@ -337,7 +337,7 @@ void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 
 	// try pade5
 	const SparseMatrixD A4 = A2*A2;
-	d4 = std::pow(A1norm, 1./4.);
+	d4 = std::pow(l1norm(A4), 1./4.);
 	eta2 = std::max(d4, d6);
 	if (eta2 < 2.539398330063230e-001 and ell(A,5) == 0){
 		// Calculate U and V using pade5
