@@ -11,6 +11,7 @@
 speciesDriver::speciesDriver(modelMesh* model){
 	modelPtr = model;
 	expSolver = matrixExponentialFactory::getExpSolver("CRAM");
+	//expSolver = matrixExponentialFactory::getExpSolver("pade-method2",true, 500);
 }
 
 //*****************************************************************************
@@ -249,7 +250,7 @@ void speciesDriver::solve(double solveTime){
 
 	if (not matrixInit){
 		A = buildTransMatrix(augmented, 0.0);
-		//dA = Eigen::MatrixXd(A);
+		//dA = Eigen::MatrixXd(A*solveTime);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
 		//outputFile.open("matrix.out", std::ios_base::app);

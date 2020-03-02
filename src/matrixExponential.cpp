@@ -125,7 +125,7 @@ void pade::pade7(const SparseMatrixD& A, const SparseMatrixD& A2,
 	ident.setIdentity();
 	temp = b[7] * A6 + b[5]*A4 + b[3]*A2 + b[1]*ident;
 	U = A*temp;
-	V = b[4]*A4 + b[2]*A2 + b[0]*ident;
+	V = b[6]*A6 + b[4]*A4 + b[2]*A2 + b[0]*ident;
 	
 }
 

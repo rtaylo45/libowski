@@ -465,7 +465,7 @@ void testDiffusion2D(int myid){
 //*****************************************************************************
 void testNeutronPrecursorsFlow(int myid){
 	double t = 0.0;
-	int steps = 500;
+	int steps = 1;
 	double totalTime = 50.0;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 100;
@@ -484,6 +484,7 @@ void testNeutronPrecursorsFlow(int myid){
 	double a1 = 8.30980E-04, a2 = 4.32710E-03, a3 = 4.19580E-03;
 	double a4 = 1.19610E-02, a5 = 3.47340E-03, a6 = 1.22760E-03;
 	double c1Error, c2Error, c3Error, c4Error, c5Error, c6Error;
+	double c1Errorl1=0.0, c2Errorl1=0.0, c3Errorl1=0.0, c4Errorl1=0.0, c5Errorl1=0.0, c6Errorl1=0.0;
 	double yVelocity = 7.0;
    MatrixD coeff(16,7);
 	std::ofstream outputFile;
@@ -603,7 +604,7 @@ void testNeutronPrecursorsFlow(int myid){
 		//printf (" %4.6f \n", t);
 		// Gets species Concentrations
 	}
-	std::cout.precision(16);
+	//std::cout.precision(16);
 		if (myid==0){
 			for (int i = 0; i < xCells; i++){
 				for (int j = 0; j < yCells; j++){
@@ -633,12 +634,19 @@ void testNeutronPrecursorsFlow(int myid){
 					c5Con = spec.getSpecies(i, j, c5ID);
 					c6Con = spec.getSpecies(i, j, c6ID);
 
-					c1Error = std::abs(c1Con-c1Ana)/c1Ana;
-					c2Error = std::abs(c2Con-c2Ana)/c2Ana;
-					c3Error = std::abs(c3Con-c3Ana)/c3Ana;
-					c4Error = std::abs(c4Con-c4Ana)/c4Ana;
-					c5Error = std::abs(c5Con-c5Ana)/c5Ana;
-					c6Error = std::abs(c6Con-c6Ana)/c6Ana;
+					c1Error = std::abs(c1Con-c1Ana);
+					c2Error = std::abs(c2Con-c2Ana);
+					c3Error = std::abs(c3Con-c3Ana);
+					c4Error = std::abs(c4Con-c4Ana);
+					c5Error = std::abs(c5Con-c5Ana);
+					c6Error = std::abs(c6Con-c6Ana);
+
+					c1Errorl1 = std::max(c1Errorl1, c1Error);
+					c2Errorl1 = std::max(c2Errorl1, c2Error);
+					c3Errorl1 = std::max(c3Errorl1, c3Error);
+					c4Errorl1 = std::max(c4Errorl1, c4Error);
+					c5Errorl1 = std::max(c5Errorl1, c5Error);
+					c6Errorl1 = std::max(c6Errorl1, c6Error);
 
 					//c1Error = 0.0;
 					//c2Error = 0.0;
@@ -647,8 +655,8 @@ void testNeutronPrecursorsFlow(int myid){
 					//c5Error = std::abs(c5Con-c5Ana)/c5Ana;
 					//c6Error = std::abs(c6Con-c6Ana)/c6Ana;
 
-					printf (" %2i %2i %e %e %e %e %e %e \n", i, j, c1Error, c2Error, c3Error, c4Error, c5Error,
-					c6Error);
+					//printf (" %2i %2i %e %e %e %e %e %e \n", i, j, c1Error, c2Error, c3Error, c4Error, c5Error,
+					//c6Error);
 					//	c2Con, c3Con, c4Con, c5Con, c6Con);
 					//outputFile << i << " " << j << " " << c1Con << " " << c2Con << " " 
 					//std::cout << i << " " << j << " " << c1Con << " " << c2Con << " " 
@@ -657,6 +665,12 @@ void testNeutronPrecursorsFlow(int myid){
 				}
 			}
 		}
+		//std::cout << " " << std::endl;
+		//std::cout.precision(16);
+		//printf (" %e %e %e %e %e %e \n", c1Errorl1, c2Errorl1, 
+		//c3Errorl1, c4Errorl1, c5Errorl1, c6Errorl1);
+		//std::cout << c1Errorl1 << " " << c2Errorl1 << " " << c3Errorl1 << " " << 
+		//c4Errorl1 << " " << c5Errorl1 << " " << c6Errorl1 << std::endl;
 		//spec.resetMatrix();
 		//std::cout << " " << std::endl;
 	//}
@@ -937,8 +951,8 @@ int main(){
 	testXenonIodineXFlow(myid);
 	testDiffusion2D(myid);
 	testNeutronPrecursorsFlow(myid);
-	//testNeutronPrecursorsMultiChanFlow(myid);
-	//testBenBenchmark(myid);
+	testNeutronPrecursorsMultiChanFlow(myid);
+	testBenBenchmark(myid);
 
 	mpi.finalize();
 }
