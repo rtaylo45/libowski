@@ -51,8 +51,6 @@ class speciesDriver {
 	public:
 	// Constructor
 	speciesDriver(modelMesh* model);
-	// Exponential solver
-	matrixExponential *expSolver;
 	// Adds a species to the system
 	int addSpecies(double, double, double);
 	// Gets a pointer to the species object
@@ -73,10 +71,14 @@ class speciesDriver {
 	void solveImplicit(double);
 	// Solves the steady state species transport equation
 	void solve();
+	// Gives ability to se the matrix exp solver
+	void setMatrixExpSolver(std::string);
 	// Cleans species
 	void clean();
 
 	private:
+	// Exponential solver
+	matrixExponential *expSolver;
 	// Builds the transition matrix
 	SparseMatrixD buildTransMatrix(bool, double);
 	// Builds the initial condition vector

@@ -245,7 +245,9 @@ SparseMatrixD pade::compute(const SparseMatrixD& A, double t){
 //*****************************************************************************
 // Constructor for method1
 //*****************************************************************************
-method1::method1(bool krylovBool, int krylovDim):pade(krylovBool, krylovDim){};
+method1::method1(bool krylovBool, int krylovDim):pade(krylovBool, krylovDim){
+	name = "pade-method1";
+};
 
 //*****************************************************************************
 // Run method for pade class method1
@@ -301,7 +303,9 @@ void method1::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 //*****************************************************************************
 // Constructor for method2
 //*****************************************************************************
-method2::method2(bool krylovBool, int krylovDim):pade(krylovBool, krylovDim){};
+method2::method2(bool krylovBool, int krylovDim):pade(krylovBool, krylovDim){
+	name = "pade-method2";
+};
 
 //*****************************************************************************
 // Runs the algorithm for method 2
@@ -583,6 +587,7 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 CRAM::CRAM(bool krylovBool, int krylovDim):cauchy(krylovBool, krylovDim
 	){
 
+	name = "CRAM";
 	MatrixCLD thetaCRAM(8,1);
 	MatrixCLD alphaCRAM(8,1);
 
@@ -628,6 +633,7 @@ CRAM::CRAM(bool krylovBool, int krylovDim):cauchy(krylovBool, krylovDim
 parabolic::parabolic(bool krylovBool, int krylovDim):cauchy(krylovBool, 
 	krylovDim){
 
+	name = "parabolic";
 	// Gets the coefficients for the contour integral
 	MatrixCLD coeffs = parabolicContourCoeffs(order);
 	theta = coeffs.col(0);
@@ -671,6 +677,7 @@ MatrixCLD parabolic::parabolicContourCoeffs(int N){
 hyperbolic::hyperbolic(bool krylovBool, int krylovDim):cauchy(krylovBool, 
 	krylovDim){
 
+	name = "hyperbolic";
 	// Gets the coefficients for the contour integral
 	MatrixCLD coeffs = hyperbolicContourCoeffs(order);
 	theta = coeffs.col(0);

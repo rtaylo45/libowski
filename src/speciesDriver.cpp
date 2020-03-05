@@ -11,7 +11,15 @@
 speciesDriver::speciesDriver(modelMesh* model){
 	modelPtr = model;
 	expSolver = matrixExponentialFactory::getExpSolver("CRAM");
-	//expSolver = matrixExponentialFactory::getExpSolver("pade-method2",true, 500);
+}
+
+//*****************************************************************************
+// Sets the matrix exponential solver
+//
+// @param solverName	The name of the materix exponential solver type
+//*****************************************************************************
+void speciesDriver::setMatrixExpSolver(std::string solverName){
+	expSolver = matrixExponentialFactory::getExpSolver(solverName);
 }
 
 //*****************************************************************************
@@ -262,6 +270,7 @@ void speciesDriver::solve(double solveTime){
 		//std::cout << dA.norm() << std::endl;
 		//std::cout << N0  << std::endl;
 		matrixInit = true;
+		//N0 = buildInitialConditionVector(augmented);
 	}
 	N0 = buildInitialConditionVector(augmented);
 
@@ -335,6 +344,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	double rN, rS, rE, rW;
 	double psiN, psiS, psiE, psiW;
 	double aN, aS, aE, aW;
+	double coeff;
 	tripletList.reserve(nonZeros);	
 
 	// if the matrix is not augmented then we no longer need to add a dummy
@@ -434,7 +444,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			double thisCoeff = 0.0;
 			if (thisSpecPtr->coeffs.size()){
 				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
-					double coeff = thisSpecPtr->coeffs[specCounter];
+					coeff = thisSpecPtr->coeffs[specCounter];
 					if (specCounter == specID){
 						thisCoeff += coeff;
 					}
@@ -664,6 +674,9 @@ void speciesDriver::resetMatrix(){
 // Cleans species in the model
 //*****************************************************************************
 void speciesDriver::clean(){
+	numOfSpecs = 0;
+	matrixInit = false;
+	lastSolveTime = 0.0;
    for (int i = 0; i < modelPtr->numOfxCells; i++){
       for (int j = 0; j < modelPtr->numOfyCells; j++){
          meshCell* cell = modelPtr->getCellByLoc(i,j);

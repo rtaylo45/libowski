@@ -39,6 +39,10 @@ class matrixExponential{
 	// Consturcture
 	//**************************************************************************
 	matrixExponential(bool, int);	
+	//**************************************************************************
+	// Solver name
+	//**************************************************************************
+	std::string name = "None";
 	protected:
 	//**************************************************************************
 	// Logic to set if the krylov subspace method should be applied to the 

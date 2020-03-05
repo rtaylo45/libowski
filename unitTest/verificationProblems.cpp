@@ -80,55 +80,78 @@ void testProblem1NoFlow(int myid){
 	double xLength = 1.0, yLength = 1.0;
 	double N1InitCon = 10000.0, N2InitCon = 0.0, N3InitCon = 0.0;
 	double N1MM = 1.0, N2MM = 1.0, N3MM = 1.0;
-	double numOfSteps = 100;
-	double tEnd = 850.0;
-	double t;
-	double dt = tEnd/numOfSteps;
-   double lambda1 = 1.0/1.0e2, lambda2 = 0.5/1.0e2, lambda3 = 1.1/1.0e2;
+	//std::vector<double> steps = {600};
+	std::vector<double> steps = {600, 500, 400, 350, 300,
+		250, 200, 150, 100, 75, 50, 25, 20, 15, 10, 5, 4, 3, 2, 1};
+	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
+		"pade-method1", "pade-method2"};
+	//std::vector<std::string> solvers {"CRAM"};
+	double tEnd = 600.0;
+	double t, dt;
+   double lambda1 = 1.0/1.0e2, lambda2 = 0.5/1.0e2, lambda3 = 3.0/1.0e2;
 	double DN1 = 0.0, DN2 = 0.0, DN3 = 0.0;
 	int N1ID, N2ID, N3ID;
 	double N1Con, N2Con, N3Con;
 	std::vector<double> N1Coeffs = {-lambda1, 0.0, lambda3};
 	std::vector<double> N2Coeffs = {lambda1, -lambda2, 0.0};
 	std::vector<double> N3Coeffs = {0.0, lambda2, -lambda3};
+	std::string outputFileName;
 
 	modelMesh model(xCells, yCells, xLength, yLength);
 	speciesDriver spec = speciesDriver(&model);
-	N1ID = spec.addSpecies(N1MM, N1InitCon, DN1);
-	N2ID = spec.addSpecies(N2MM, N2InitCon, DN2);
-	N3ID = spec.addSpecies(N3MM, N3InitCon, DN3);
 
-	// Set source
-	for (int i = 0; i < xCells; i++){
-		for (int j = 0; j < yCells; j++){
-			spec.setSpeciesSource(i, j, N1ID, N1Coeffs, 0.0);
-			spec.setSpeciesSource(i, j, N2ID, N2Coeffs, 0.0);
-			spec.setSpeciesSource(i, j, N3ID, N3Coeffs, 0.0);
-		}
-	}
-	
-	for (int step = 1; step <= numOfSteps; step++){
-		t = step*dt;
-		// Solve with CRAM
-		spec.solve(t);
-
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
+		// Sets the species matrix exp solver
+		spec.setMatrixExpSolver(solverType);
+		// Sets the ouput file name
 		std::ofstream outputFile;
-		outputFile.open("problem1.out", std::ios_base::app);
-		//outputFile << "Time: "+std::to_string(t)+"\n";
-		//std::cout.precision(16);
+		outputFileName = "problem1"+solverType+".out";
+		outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
+		outputFile << "TotalTime: "+std::to_string(tEnd)+"\n";
 
-		// Gets species Concentrations
-		if (myid==0){
+		// Loops over number of time steps
+		for (double &numOfSteps	: steps){
+			dt = tEnd/numOfSteps;
+			outputFile << "TimeStepSize: "+std::to_string(dt)+"\n";
+
+			// Sets the problem
+			N1ID = spec.addSpecies(N1MM, N1InitCon, DN1);
+			N2ID = spec.addSpecies(N2MM, N2InitCon, DN2);
+			N3ID = spec.addSpecies(N3MM, N3InitCon, DN3);
+
+			// Set source
 			for (int i = 0; i < xCells; i++){
 				for (int j = 0; j < yCells; j++){
-					N1Con = spec.getSpecies(i, j, N1ID);
-					N2Con = spec.getSpecies(i, j, N2ID);
-					N3Con = spec.getSpecies(i, j, N3ID);
-					//std::cout << t << " " << N1Con << std::endl;
-					//outputFile <<  std::setprecision(16) << t << " " << N1Con 
-					//<< " " << N2Con << " " << N3Con <<  std::endl;
+					spec.setSpeciesSource(i, j, N1ID, N1Coeffs, 0.0);
+					spec.setSpeciesSource(i, j, N2ID, N2Coeffs, 0.0);
+					spec.setSpeciesSource(i, j, N3ID, N3Coeffs, 0.0);
 				}
 			}
+			
+			t = 0.0;
+			// Solves the problem for each time step
+			for (int step = 1; step <= numOfSteps; step++){
+				t = step*dt;
+				// Solve with CRAM
+				spec.solve(t);
+
+				// Gets species Concentrations
+				if (myid==0){
+					for (int i = 0; i < xCells; i++){
+						for (int j = 0; j < yCells; j++){
+							N1Con = spec.getSpecies(i, j, N1ID);
+							N2Con = spec.getSpecies(i, j, N2ID);
+							N3Con = spec.getSpecies(i, j, N3ID);
+							//std::cout << t << " " << N1Con //<< std::endl;
+							outputFile <<  std::setprecision(16) << t << " " << N1Con 
+							<< " " << N2Con << " " << N3Con <<  std::endl;
+						}
+					}
+				}
+			}
+			// Clean species
+			spec.clean();
 		}
 	}
 	
@@ -422,7 +445,7 @@ void testDiffusion2D(int myid){
 		spec.solve(t);
 
 		std::ofstream outputFile;
-		outputFile.open("Diffusion2D.out", std::ios_base::app);
+		outputFile.open("Diffusion2D.out", std::ios::out | std::ios::trunc);
 		outputFile << "Time: "+std::to_string(t)+"\n";
 
 		// Gets species Concentrations
@@ -599,7 +622,7 @@ void testNeutronPrecursorsFlow(int myid){
 		//spec.solveImplicit(t);
 		//spec.solve();
 
-		outputFile.open("precursorsSingleChan.out", std::ios_base::app);
+		outputFile.open("precursorsSingleChan.out", std::ios::out | std::ios::trunc);
 		outputFile << "Time: "+std::to_string(t)+"\n";
 		//printf (" %4.6f \n", t);
 		// Gets species Concentrations
@@ -826,7 +849,7 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 		spec.solve(t);
 		//spec.solve();
 
-		//outputFile.open("precursorsMultiChan.out", std::ios_base::app);
+		//outputFile.open("precursorsMultiChan.out", std::ios::out | std::ios::trunc);
 		//outputFile << "Time: "+std::to_string(t)+"\n";
 		printf (" %4.6f \n", t);
 	}
