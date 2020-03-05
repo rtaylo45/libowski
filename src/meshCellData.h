@@ -10,6 +10,7 @@
 #include "species.h"
 #include <vector>
 #include <assert.h>
+#include <string>
 
 class meshCell {
 
@@ -36,6 +37,8 @@ class meshCell {
 	//							 2 = East
 	//							 3 = West
 	int boundaryLoc = -1;
+	// Boundary condition type
+	std::string boundaryType = "None";
 	// Vector of the species in the cell
 	std::vector<species> speciesVector;
 
