@@ -472,17 +472,41 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			}
 
 			// Added sthe Dirichlet boundary condition to the sourse term
-			if (thisCellPtr->boundaryLoc == 0){thisSpecPtr->s += 2.*aN*thisSpecPtr->bc;};
-			if (thisCellPtr->boundaryLoc == 1){thisSpecPtr->s += 2.*aS*thisSpecPtr->bc;};
-			if (thisCellPtr->boundaryLoc == 2){thisSpecPtr->s += 2.*aE*thisSpecPtr->bc;};
-			if (thisCellPtr->boundaryLoc == 3){thisSpecPtr->s += 2.*aW*thisSpecPtr->bc;};
+			if (thisCellPtr->boundaryType == "dirichlet"){
+				if (thisCellPtr->boundaryLoc == 0){thisSpecPtr->s += 2.*aN*thisSpecPtr->bc;};
+				if (thisCellPtr->boundaryLoc == 1){thisSpecPtr->s += 2.*aS*thisSpecPtr->bc;};
+				if (thisCellPtr->boundaryLoc == 2){thisSpecPtr->s += 2.*aE*thisSpecPtr->bc;};
+				if (thisCellPtr->boundaryLoc == 3){thisSpecPtr->s += 2.*aW*thisSpecPtr->bc;};
 
-			// Sets the boundary coefficients which are used to modifiy the ap 
-			// coefficient
-			if (thisCellPtr->boundaryLoc == 0){aNb = aN;};
-			if (thisCellPtr->boundaryLoc == 1){aSb = aS;};
-			if (thisCellPtr->boundaryLoc == 2){aEb = aE;};
-			if (thisCellPtr->boundaryLoc == 3){aWb = aW;};
+				// Sets the boundary coefficients which are used to modifiy the ap 
+				// coefficient
+				if (thisCellPtr->boundaryLoc == 0){aNb = -aN;};
+				if (thisCellPtr->boundaryLoc == 1){aSb = -aS;};
+				if (thisCellPtr->boundaryLoc == 2){aEb = -aE;};
+				if (thisCellPtr->boundaryLoc == 3){aWb = -aW;};
+			}
+			// Added sthe Newmann boundary condition to the sourse term
+			else if (thisCellPtr->boundaryType == "newmann"){
+				if (thisCellPtr->boundaryLoc == 0){
+					thisSpecPtr->s -= aN*thisSpecPtr->bc*thisCellPtr->dy;
+				}
+				if (thisCellPtr->boundaryLoc == 1){
+					thisSpecPtr->s -= aS*thisSpecPtr->bc*thisCellPtr->dy;
+				}
+				if (thisCellPtr->boundaryLoc == 2){
+					thisSpecPtr->s -= aE*thisSpecPtr->bc*thisCellPtr->dx;
+				}
+				if (thisCellPtr->boundaryLoc == 3){
+					thisSpecPtr->s -= aW*thisSpecPtr->bc*thisCellPtr->dx;
+				}
+
+				// Sets the boundary coefficients which are used to modifiy the ap 
+				// coefficient
+				if (thisCellPtr->boundaryLoc == 0){aNb = aN;};
+				if (thisCellPtr->boundaryLoc == 1){aSb = aS;};
+				if (thisCellPtr->boundaryLoc == 2){aEb = aE;};
+				if (thisCellPtr->boundaryLoc == 3){aWb = aW;};
+			}
 
 			// Calculates the x portion for the cell coefficient
 			aPx = -std::max(eTran,0.0) - std::max(-eTran,0.0) +
@@ -501,7 +525,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			// Steady state or matrix exp solve
 			if (dt == 0.0){thisCoeff += aPx + aPy;};
 			// Adds the coefficents if the cell in a boundary
-			thisCoeff -= (aSb + aNb + aWb + aEb);
+			thisCoeff += (aSb + aNb + aWb + aEb);
 			tripletList.push_back(T(i, i, thisCoeff));
 
 			// Sets the constant source terms
