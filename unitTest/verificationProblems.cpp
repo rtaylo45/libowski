@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include <cmath>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
@@ -157,6 +158,131 @@ void testProblem1NoFlow(int myid){
 	
 	model.clean();
 	spec.clean();
+}
+//*****************************************************************************
+// 2 species 1D diffusion problem, taken from the following paper
+// NUMERICAL METHODS FOR STIFF REACTION-DIFFUSION SYSTEMS
+//	By: Chou, Zhang, Zhao, and Nie
+//
+//	Diff eqs:
+//		dU/dt = d*Uxx - a*U + V
+//		dV/dt = d*Vxx - b*V
+//
+//	Solution:
+//		U(x,t) = (e^(-(a+d)*t) + e^(-(b+d)*t))*cos(x).
+//		U(x,t) = (a-b)*e^(-(b+d)*t)*cos(x).
+//
+// They don't explicitly give the initial condiiton in the paper, but if you
+// plug in zero to the solution you can get it for U and V.
+//
+//	BC's:
+//		Ux(0,t) = 0, Uv(0.t) = 0, U(pi/2,t) = 0, V(pi/2,t) = 0
+//*****************************************************************************
+void testProblem2(int myid){
+	//int xCells = 10, 
+	int yCells = 1;
+	std::vector<int> numOfxCells{10, 25, 50, 75, 100, 
+		150, 200, 250, 300, 350, 400, 450, 500, 1000, 
+		1250, 1500, 1750, 2000, 5000, 6000, 7000, 
+		8000, 9000, 10000, 50000, 100000};
+	double xLength = M_PI/2., yLength = 0.0;
+	double numOfSteps = 1;
+	double tEnd = 1.0;
+	double dt = tEnd/numOfSteps, t = 0;
+	double a = 0.1, b = 0.01, d = 1.0;
+	double UCon, VCon, USol, VSol;
+	int UID, VID;
+	double x1, x2, xc, initCon, x, dx;
+	double linfErrorU, linfErrorV;
+	meshCell* cell = nullptr;
+	std::vector<double> Ucoeffs = {-a, 1.0};
+	std::vector<double> Vcoeffs = {0.0, -b};
+	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
+		"pade-method1", "pade-method2"};
+
+	// Loops over number of cells
+	for (int &xCells : numOfxCells){
+		std::cout << xCells << std::endl;
+		
+		// Build the Mesh
+		modelMesh model(xCells, yCells, xLength, yLength);
+		// Build species driver
+		speciesDriver spec = speciesDriver(&model);
+
+		// Loops over different solvers
+		for (std::string &solverType : solvers){
+
+			// Add species. I will add the initial condition later
+			UID = spec.addSpecies(1.0, 0.0, d);
+			VID = spec.addSpecies(1.0, 0.0, d);
+			// Sets the species matrix exp solver
+			spec.setMatrixExpSolver(solverType);
+
+			// Add BCs
+			spec.setBoundaryCondition("newmann","west", UID, 0.0);
+			spec.setBoundaryCondition("dirichlet","east", UID, 0.0);
+			spec.setBoundaryCondition("newmann","west", VID, 0.0);
+			spec.setBoundaryCondition("dirichlet","east", VID, 0.0);
+
+			// Sets the intial condition
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j);	
+
+					// Calculates the x positions as the cell faces
+					dx = cell->dx;
+					xc = cell->x;
+					x2 = xc + dx/2;
+					x1 = xc - dx/2;
+
+					// Calculates the initial concentration from MVT. 
+					initCon = (1./dx)*(sin(x2) - sin(x1));		
+
+					spec.setSpeciesCon(i,j,UID, 2*initCon);
+					spec.setSpeciesCon(i,j,VID, (a-b)*initCon);
+
+					// Sets the sourses
+					spec.setSpeciesSource(i, j, UID, Ucoeffs, 0.0);
+					spec.setSpeciesSource(i, j, VID, Vcoeffs, 0.0);
+				}
+			}
+
+			for (int step = 1; step <= numOfSteps; step++){
+				t = step*dt;
+				// Solve with CRAM
+				spec.solve(t);
+
+				linfErrorU = 0.0;
+				linfErrorV = 0.0;
+				// Gets species Concentrations
+				if (myid==0){
+					for (int i = 0; i < xCells; i++){
+						for (int j = 0; j < yCells; j++){
+							cell = model.getCellByLoc(i,j);	
+
+							// Caclulate analytical solution
+							x = cell->x;
+							USol = (exp(-(a+d)*t) + exp(-(b+d)*t))*cos(x);
+							VSol = (a-b)*exp(-(b+d)*t)*cos(x);
+							// Get libowski solution
+							UCon = spec.getSpecies(i, j, UID);
+							VCon = spec.getSpecies(i, j, VID);
+
+							linfErrorU = std::max(linfErrorU, std::abs(USol-UCon));
+							linfErrorV = std::max(linfErrorV, std::abs(VSol-VCon));
+
+						}
+					}
+				}
+				std::cout << solverType << " " << dx << " " << linfErrorU << " " << linfErrorV << std::endl;
+
+			}
+			spec.clean();
+		}
+		model.clean();
+		spec.clean();
+	}
+
 }
 //*****************************************************************************
 // Test that the species driver sets up the problem right and solves the 
@@ -968,14 +1094,15 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	testXenonIodineNoFlow(myid);
-	testProblem1NoFlow(myid);
-	testXenonIodineYFlow(myid);
-	testXenonIodineXFlow(myid);
-	testDiffusion2D(myid);
-	testNeutronPrecursorsFlow(myid);
-	testNeutronPrecursorsMultiChanFlow(myid);
-	testBenBenchmark(myid);
+	//testXenonIodineNoFlow(myid);
+	//testProblem1NoFlow(myid);
+	testProblem2(myid);
+	//testXenonIodineYFlow(myid);
+	//testXenonIodineXFlow(myid);
+	//testDiffusion2D(myid);
+	//testNeutronPrecursorsFlow(myid);
+	//testNeutronPrecursorsMultiChanFlow(myid);
+	//testBenBenchmark(myid);
 
 	mpi.finalize();
 }

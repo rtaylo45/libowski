@@ -360,7 +360,8 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	double coeff;
 	double nTran, sTran, eTran, wTran;
 	double dN, dS, dW, dE;
-	double aPx, aPy;
+	double aP;
+	double dx, dy;
 	tripletList.reserve(nonZeros);	
 
 	// if the matrix is not augmented then we no longer need to add a dummy
@@ -374,8 +375,14 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 		dummySpec);
 	// Loop over cells
 	for (int cellID = 0; cellID < totalCells; cellID++){
+		// Set coefficients to zero
+		dN = 0.0, dS = 0.0, dW = 0.0, dE = 0.0;
+		nTran = 0.0, sTran = 0.0, eTran = 0.0, wTran = 0.0;
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
+		// gets dx and dy. If either of these are zero then the problem is 1D
+		dx = thisCellPtr->dx;
+		dy = thisCellPtr->dy;
 
 		// Gets pointer to connecting cells
 		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
@@ -390,16 +397,16 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 		meshCellFace* thisCellWestFacePtr = thisCellPtr->westFacePtr;
 
 		// Gets the transition coefficient for species convective flux
-		nTran = thisCellNorthFacePtr->yVl/thisCellPtr->dy;
-		sTran = thisCellSouthFacePtr->yVl/thisCellPtr->dy;
-		eTran = thisCellEastFacePtr->xVl/thisCellPtr->dx;
-		wTran = thisCellWestFacePtr->xVl/thisCellPtr->dx;
+		if (dy){nTran = thisCellNorthFacePtr->yVl/dy;};
+		if (dy){sTran = thisCellSouthFacePtr->yVl/dy;};
+		if (dx){eTran = thisCellEastFacePtr->xVl/dx;};
+		if (dx){wTran = thisCellWestFacePtr->xVl/dx;};
 
 		// Calculates the diffusion transition
-		dN = 1./(thisCellPtr->dy*thisCellPtr->dy); 
-		dS = 1./(thisCellPtr->dy*thisCellPtr->dy);
-		dW = 1./(thisCellPtr->dx*thisCellPtr->dx);
-		dE = 1./(thisCellPtr->dx*thisCellPtr->dx);
+		if (dy){dN = 1./(dy*dy);};
+		if (dy){dS = 1./(dy*dy);};
+		if (dx){dW = 1./(dx*dx);};
+		if (dx){dE = 1./(dx*dx);};
 
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
@@ -423,14 +430,10 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			psiW = fluxLim.getPsi(rW);
 
 			// Matrix Coefficient
-			aN = std::max(-nTran,0.0) + psiN/2.*(-std::max(nTran,0.0) -
-				std::max(-nTran,0.0)) + diffusionCoeff*dN;
-			aS = std::max(sTran,0.0) + psiS/2.*(std::max(-sTran,0.0) -
-				std::max(sTran, 0.0)) + diffusionCoeff*dS;
-			aE = std::max(-eTran,0.0) + psiE/2.*(-std::max(-eTran,0.0) -
-				std::max(eTran, 0.0)) + diffusionCoeff*dE;
-			aW = std::max(wTran, 0.0) + psiW/2.*(std::max(-wTran, 0.0) -
-				std::max(wTran,0.0)) + diffusionCoeff*dW;
+			aN = std::max(-nTran,0.0) + diffusionCoeff*dN;
+			aS = std::max(sTran,0.0) + diffusionCoeff*dS;
+			aE = std::max(-eTran,0.0) + diffusionCoeff*dE;
+			aW = std::max(wTran, 0.0) + diffusionCoeff*dW;
 
 			// Sets the north flow coefficient 
 			if (thisCellNorthCellPtr){
@@ -442,19 +445,19 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			if (thisCellSouthCellPtr){
 				j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				tripletList.push_back(T(i, j, std::max(aS,0.0)));
+				tripletList.push_back(T(i, j, aS));
 			}
 			// Sets the east flow coefficient
 			if(thisCellEastCellPtr){
 				j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				tripletList.push_back(T(i, j, std::max(aE,0.0)));
+				tripletList.push_back(T(i, j, aE));
 			}
 			// Sets the west flow coefficient
 			if(thisCellWestCellPtr){
 				j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				tripletList.push_back(T(i, j, std::max(aW,0.0)));
+				tripletList.push_back(T(i, j, aW));
 			}
 			// Sets the coefficients for non-constant source terms
 			double thisCoeff = 0.0;
@@ -488,16 +491,16 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			// Added sthe Newmann boundary condition to the sourse term
 			else if (thisCellPtr->boundaryType == "newmann"){
 				if (thisCellPtr->boundaryLoc == 0){
-					thisSpecPtr->s -= aN*thisSpecPtr->bc*thisCellPtr->dy;
+					thisSpecPtr->s -= aN*thisSpecPtr->bc*dy;
 				}
 				if (thisCellPtr->boundaryLoc == 1){
-					thisSpecPtr->s -= aS*thisSpecPtr->bc*thisCellPtr->dy;
+					thisSpecPtr->s -= aS*thisSpecPtr->bc*dy;
 				}
 				if (thisCellPtr->boundaryLoc == 2){
-					thisSpecPtr->s -= aE*thisSpecPtr->bc*thisCellPtr->dx;
+					thisSpecPtr->s -= aE*thisSpecPtr->bc*dx;
 				}
 				if (thisCellPtr->boundaryLoc == 3){
-					thisSpecPtr->s -= aW*thisSpecPtr->bc*thisCellPtr->dx;
+					thisSpecPtr->s -= aW*thisSpecPtr->bc*dx;
 				}
 
 				// Sets the boundary coefficients which are used to modifiy the ap 
@@ -508,22 +511,13 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				if (thisCellPtr->boundaryLoc == 3){aWb = aW;};
 			}
 
-			// Calculates the x portion for the cell coefficient
-			aPx = -std::max(eTran,0.0) - std::max(-eTran,0.0) +
-				psiE/2.*(std::max(eTran,0.0) + std::max(-eTran,0.0)) +
-				psiW/2.*(std::max(wTran,0.0) + std::max(-wTran,0.0)) -
-				diffusionCoeff*dE - diffusionCoeff*dW;
-
-			// Calculates the y portion for the cell coefficient
-			aPy = -std::max(nTran,0.0) - std::max(-sTran,0.0) + 
-				psiN/2.*(std::max(nTran,0.0) + std::max(-nTran,0.0)) +
-				psiS/2.*(std::max(sTran,0.0) + std::max(-sTran,0.0)) - 
-				diffusionCoeff*dS - diffusionCoeff*dN;
+			// aP coefficient
+			aP = -(aE + aS + aW + aN);
 
 			// Adds the coeff for this species implicit solve
-			if (dt != 0.0){thisCoeff += aPx + aPy - 1./dt;};
+			if (dt != 0.0){thisCoeff += aP - 1./dt;};
 			// Steady state or matrix exp solve
-			if (dt == 0.0){thisCoeff += aPx + aPy;};
+			if (dt == 0.0){thisCoeff += aP;};
 			// Adds the coefficents if the cell in a boundary
 			thisCoeff += (aSb + aNb + aWb + aEb);
 			tripletList.push_back(T(i, i, thisCoeff));
