@@ -587,6 +587,9 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 
 }
 
+//*****************************************************************************
+// Test the krylov subspace approx for both of the Pade methods
+//*****************************************************************************
 void testKrylovSubspace(int myid){
 
 	matrixExponential *testExpSolverMethod1;

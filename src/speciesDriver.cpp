@@ -123,25 +123,33 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 	if (loc == "west") {locID = 3;};
 	assert(locID != -1);
 
-
 	if (BCType == "dirichlet") {
-		setDirichletBoundaryCondition(locID, specID, bc);
+		setGeneralBoundaryCondition(BCType, locID, specID, bc);
 	}
+	else if (BCType == "newmann"){
+		setGeneralBoundaryCondition(BCType, locID, specID, bc);
+	} 
 	else if (BCType == "periodic"){
 		setPeriodicBoundaryCondition(locID);
 	} 
+	else{
+		std::string errorMessage = 
+			" You have selected an invalid boundary condition ";
+		libowskiException::runtimeError(errorMessage);
+	}
 	
 }
 
 //*****************************************************************************
-// Sets a dirichlet boundary condition in a cell
+// Sets a dirichlet or Newmann boundary condition in a cell
 //
+// @param type		BC type
 //	@param LocID	Location ID
 // @param specID  Species ID
 // @param bc		BC value [lbm/ft^3]
 //*****************************************************************************
-void speciesDriver::setDirichletBoundaryCondition(int locID, int specID, 
-	double bc){
+void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID, 
+	int specID, double bc){
 	int xCellMax = modelPtr->numOfxCells - 1;
 	int xCellMin = 0;
 	int yCellMax = modelPtr->numOfyCells - 1;
@@ -155,6 +163,7 @@ void speciesDriver::setDirichletBoundaryCondition(int locID, int specID,
 				meshCell* cell = modelPtr->getCellByLoc(i,yCellMax);
 				cell->boundary = true;
 				cell->boundaryLoc = 0;
+				cell->boundaryType = type;
    			species* spec = getSpeciesPtr(i, yCellMax, specID);
 				spec->bc = bc;
 			}
@@ -166,6 +175,7 @@ void speciesDriver::setDirichletBoundaryCondition(int locID, int specID,
 				meshCell* cell = modelPtr->getCellByLoc(i,yCellMin);
 				cell->boundary = true;
 				cell->boundaryLoc = 1;
+				cell->boundaryType = type;
    			species* spec = getSpeciesPtr(i, yCellMin, specID);
 				spec->bc = bc;
 			}
@@ -177,6 +187,7 @@ void speciesDriver::setDirichletBoundaryCondition(int locID, int specID,
 				meshCell* cell = modelPtr->getCellByLoc(xCellMax,j);
 				cell->boundary = true;
 				cell->boundaryLoc = 2;
+				cell->boundaryType = type;
    			species* spec = getSpeciesPtr(xCellMax, j, specID);
 				spec->bc = bc;
 			}
@@ -188,6 +199,7 @@ void speciesDriver::setDirichletBoundaryCondition(int locID, int specID,
 				meshCell* cell = modelPtr->getCellByLoc(xCellMin,j);
 				cell->boundary = true;
 				cell->boundaryLoc = 3;
+				cell->boundaryType = type;
    			species* spec = getSpeciesPtr(xCellMin, j, specID);
 				spec->bc = bc;
 			}
@@ -195,6 +207,7 @@ void speciesDriver::setDirichletBoundaryCondition(int locID, int specID,
 		}
 	}
 }
+
 
 //*****************************************************************************
 // Sets a periodic boundary condition in a cell
@@ -345,6 +358,10 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	double psiN, psiS, psiE, psiW;
 	double aN, aS, aE, aW;
 	double coeff;
+	double nTran, sTran, eTran, wTran;
+	double dN, dS, dW, dE;
+	double aP;
+	double dx, dy;
 	tripletList.reserve(nonZeros);	
 
 	// if the matrix is not augmented then we no longer need to add a dummy
@@ -358,8 +375,14 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 		dummySpec);
 	// Loop over cells
 	for (int cellID = 0; cellID < totalCells; cellID++){
+		// Set coefficients to zero
+		dN = 0.0, dS = 0.0, dW = 0.0, dE = 0.0;
+		nTran = 0.0, sTran = 0.0, eTran = 0.0, wTran = 0.0;
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
+		// gets dx and dy. If either of these are zero then the problem is 1D
+		dx = thisCellPtr->dx;
+		dy = thisCellPtr->dy;
 
 		// Gets pointer to connecting cells
 		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
@@ -374,16 +397,16 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 		meshCellFace* thisCellWestFacePtr = thisCellPtr->westFacePtr;
 
 		// Gets the transition coefficient for species convective flux
-		double nTran = thisCellNorthFacePtr->yVl/thisCellPtr->dy;
-		double sTran = thisCellSouthFacePtr->yVl/thisCellPtr->dy;
-		double eTran = thisCellEastFacePtr->xVl/thisCellPtr->dx;
-		double wTran = thisCellWestFacePtr->xVl/thisCellPtr->dx;
+		if (dy){nTran = thisCellNorthFacePtr->yVl/dy;};
+		if (dy){sTran = thisCellSouthFacePtr->yVl/dy;};
+		if (dx){eTran = thisCellEastFacePtr->xVl/dx;};
+		if (dx){wTran = thisCellWestFacePtr->xVl/dx;};
 
 		// Calculates the diffusion transition
-		double dN = 1./(thisCellPtr->dy*thisCellPtr->dy); 
-		double dS = 1./(thisCellPtr->dy*thisCellPtr->dy);
-		double dW = 1./(thisCellPtr->dx*thisCellPtr->dx);
-		double dE = 1./(thisCellPtr->dx*thisCellPtr->dx);
+		if (dy){dN = 1./(dy*dy);};
+		if (dy){dS = 1./(dy*dy);};
+		if (dx){dW = 1./(dx*dx);};
+		if (dx){dE = 1./(dx*dx);};
 
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
@@ -407,14 +430,10 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			psiW = fluxLim.getPsi(rW);
 
 			// Matrix Coefficient
-			aN = std::max(-nTran,0.0) + psiN/2.*(-std::max(nTran,0.0) -
-				std::max(-nTran,0.0)) + diffusionCoeff*dN;
-			aS = std::max(sTran,0.0) + psiS/2.*(std::max(-sTran,0.0) -
-				std::max(sTran, 0.0)) + diffusionCoeff*dS;
-			aE = std::max(-eTran,0.0) + psiE/2.*(-std::max(-eTran,0.0) -
-				std::max(eTran, 0.0)) + diffusionCoeff*dE;
-			aW = std::max(wTran, 0.0) + psiW/2.*(std::max(-wTran, 0.0) -
-				std::max(wTran,0.0)) + diffusionCoeff*dW;
+			aN = std::max(-nTran,0.0) + diffusionCoeff*dN;
+			aS = std::max(sTran,0.0) + diffusionCoeff*dS;
+			aE = std::max(-eTran,0.0) + diffusionCoeff*dE;
+			aW = std::max(wTran, 0.0) + diffusionCoeff*dW;
 
 			// Sets the north flow coefficient 
 			if (thisCellNorthCellPtr){
@@ -426,19 +445,19 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			if (thisCellSouthCellPtr){
 				j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				tripletList.push_back(T(i, j, std::max(aS,0.0)));
+				tripletList.push_back(T(i, j, aS));
 			}
 			// Sets the east flow coefficient
 			if(thisCellEastCellPtr){
 				j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				tripletList.push_back(T(i, j, std::max(aE,0.0)));
+				tripletList.push_back(T(i, j, aE));
 			}
 			// Sets the west flow coefficient
 			if(thisCellWestCellPtr){
 				j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
 					totalSpecs);
-				tripletList.push_back(T(i, j, std::max(aW,0.0)));
+				tripletList.push_back(T(i, j, aW));
 			}
 			// Sets the coefficients for non-constant source terms
 			double thisCoeff = 0.0;
@@ -455,34 +474,52 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				}
 			}
 
-			if (thisCellPtr->boundaryLoc == 0){thisSpecPtr->s += 2.*aN*thisSpecPtr->bc;};
-			if (thisCellPtr->boundaryLoc == 1){thisSpecPtr->s += 2.*aS*thisSpecPtr->bc;};
-			if (thisCellPtr->boundaryLoc == 2){thisSpecPtr->s += 2.*aE*thisSpecPtr->bc;};
-			if (thisCellPtr->boundaryLoc == 3){thisSpecPtr->s += 2.*aW*thisSpecPtr->bc;};
+			// Added sthe Dirichlet boundary condition to the sourse term
+			if (thisCellPtr->boundaryType == "dirichlet"){
+				if (thisCellPtr->boundaryLoc == 0){thisSpecPtr->s += 2.*aN*thisSpecPtr->bc;};
+				if (thisCellPtr->boundaryLoc == 1){thisSpecPtr->s += 2.*aS*thisSpecPtr->bc;};
+				if (thisCellPtr->boundaryLoc == 2){thisSpecPtr->s += 2.*aE*thisSpecPtr->bc;};
+				if (thisCellPtr->boundaryLoc == 3){thisSpecPtr->s += 2.*aW*thisSpecPtr->bc;};
 
-			if (thisCellPtr->boundaryLoc == 0){aNb = aN;};
-			if (thisCellPtr->boundaryLoc == 1){aSb = aS;};
-			if (thisCellPtr->boundaryLoc == 2){aEb = aE;};
-			if (thisCellPtr->boundaryLoc == 3){aWb = aW;};
+				// Sets the boundary coefficients which are used to modifiy the ap 
+				// coefficient
+				if (thisCellPtr->boundaryLoc == 0){aNb = -aN;};
+				if (thisCellPtr->boundaryLoc == 1){aSb = -aS;};
+				if (thisCellPtr->boundaryLoc == 2){aEb = -aE;};
+				if (thisCellPtr->boundaryLoc == 3){aWb = -aW;};
+			}
+			// Added sthe Newmann boundary condition to the sourse term
+			else if (thisCellPtr->boundaryType == "newmann"){
+				if (thisCellPtr->boundaryLoc == 0){
+					thisSpecPtr->s -= aN*thisSpecPtr->bc*dy;
+				}
+				if (thisCellPtr->boundaryLoc == 1){
+					thisSpecPtr->s -= aS*thisSpecPtr->bc*dy;
+				}
+				if (thisCellPtr->boundaryLoc == 2){
+					thisSpecPtr->s -= aE*thisSpecPtr->bc*dx;
+				}
+				if (thisCellPtr->boundaryLoc == 3){
+					thisSpecPtr->s -= aW*thisSpecPtr->bc*dx;
+				}
 
-			// Calculates the x portion for the cell coefficient
-			double aPx = -std::max(eTran,0.0) - std::max(-eTran,0.0) +
-				psiE/2.*(std::max(eTran,0.0) + std::max(-eTran,0.0)) +
-				psiW/2.*(std::max(wTran,0.0) + std::max(-wTran,0.0)) -
-				diffusionCoeff*dE - diffusionCoeff*dW;
+				// Sets the boundary coefficients which are used to modifiy the ap 
+				// coefficient
+				if (thisCellPtr->boundaryLoc == 0){aNb = aN;};
+				if (thisCellPtr->boundaryLoc == 1){aSb = aS;};
+				if (thisCellPtr->boundaryLoc == 2){aEb = aE;};
+				if (thisCellPtr->boundaryLoc == 3){aWb = aW;};
+			}
 
-			// Calculates the y portion for the cell coefficient
-			double aPy = -std::max(nTran,0.0) - std::max(-sTran,0.0) + 
-				psiN/2.*(std::max(nTran,0.0) + std::max(-nTran,0.0)) +
-				psiS/2.*(std::max(sTran,0.0) + std::max(-sTran,0.0)) - 
-				diffusionCoeff*dS - diffusionCoeff*dN;
+			// aP coefficient
+			aP = -(aE + aS + aW + aN);
 
 			// Adds the coeff for this species implicit solve
-			if (dt != 0.0){thisCoeff += aPx + aPy - 1./dt;};
+			if (dt != 0.0){thisCoeff += aP - 1./dt;};
 			// Steady state or matrix exp solve
-			if (dt == 0.0){thisCoeff += aPx + aPy;};
+			if (dt == 0.0){thisCoeff += aP;};
 			// Adds the coefficents if the cell in a boundary
-			thisCoeff -= (aSb + aNb + aWb + aEb);
+			thisCoeff += (aSb + aNb + aWb + aEb);
 			tripletList.push_back(T(i, i, thisCoeff));
 
 			// Sets the constant source terms

@@ -41,6 +41,7 @@ fluxLimiter::fluxLimiter(int limitType){
 //*****************************************************************************
 double fluxLimiter::getPsi(double r){
 	double psi = (this->*fluxLimiterPtr)(r);
+	psi = 0.0;
 	return psi;
 }
 
