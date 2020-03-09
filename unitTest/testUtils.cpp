@@ -8,6 +8,7 @@
 #include "mpiProcess.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
+#include "utilBase.h"
 
 //*****************************************************************************
 // Builds a nonsymmetric square matrix sparse
