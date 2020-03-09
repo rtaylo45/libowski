@@ -12,7 +12,7 @@
 #include "mpiProcess.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
-#include "assertions.h"
+#include "utilBase.h"
 
 using namespace std::chrono;
 

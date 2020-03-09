@@ -1,18 +1,19 @@
 //*****************************************************************************
 // Author: Zack Taylor
 //
-// Functions used for assertions in libowski
+// Base utility functions that are used in libowski. These are general math
+// and helper functions.
 //*****************************************************************************
-#ifndef UTILASSERTIONS_H
-#define UTILASSERTIONS_H
+#ifndef UTILBASE_H
+#define UTILBASE_H
+#include <cmath>
 #include "matrixTypes.h"
 #include "vectorTypes.h"
 
 using namespace Eigen;
 
-
 //*****************************************************************************
-// Pseudo inverse linearly independent columns for sparse matrix
+// Is approx function to test if two numbers are close to one another
 //*****************************************************************************
 template <typename derived>
 bool isApprox(derived, derived, derived = 1e-5, derived = 1e-8);

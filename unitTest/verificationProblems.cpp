@@ -18,7 +18,7 @@
 #include "speciesDriver.h"
 #include "meshCellData.h"
 #include "species.h"
-#include "assertions.h"
+#include "utilBase.h"
 
 using namespace Eigen;
 

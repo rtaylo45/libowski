@@ -1,9 +1,11 @@
 //*****************************************************************************
 // Author: Zack Taylor
 //
-// Functions used for assertions in libowski
+// Base utility functions that are used in libowski. These are general math
+// and helper functions.
 //*****************************************************************************
-#include "assertions.h"
+#include <cmath>
+#include "utilBase.h"
 
 //*****************************************************************************
 // Test if two number are approx equal
@@ -26,6 +28,10 @@ bool isApprox(derived goalVal, derived testVal, derived rtol, derived atol){
 	return retBool;
 }
 
+
+
+
 // Data types that can use the template functions
 template bool isApprox(double goalVal, double testVal, double rtol, double atol);
 template bool isApprox(float goalVal, float testVal, float rtol, float atol);
+
