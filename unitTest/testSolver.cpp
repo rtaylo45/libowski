@@ -12,32 +12,10 @@
 #include "mpiProcess.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
+#include "utilBase.h"
 
 using namespace std::chrono;
 
-//*****************************************************************************
-// Functions used in unit testing
-//*****************************************************************************
-//
-//*****************************************************************************
-// Test if two number are approx equal
-//
-// @param goalVal		The real solution value
-// @param testVal		Test value
-// @param rtol			Relative tolerance
-// @param atol			Absolution tolerance
-//
-// Values for rtol and atol were taken from the default values for numpys 
-// isApprox function.
-//*****************************************************************************
-bool isApprox(double goalVal, double testVal, double rtol = 1e-5, double atol = 1e-8){
-	bool retBool = false;
-
-	double diff = abs(goalVal - testVal);
-	if (diff < rtol) { retBool = true; }
-	if (diff/goalVal < atol) { retBool = true; }
-	return retBool;
-}
 //*****************************************************************************
 // Builds a nonsymmetric square matrix 
 //
