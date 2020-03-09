@@ -11,6 +11,15 @@
 #include "utilBase.h"
 
 //*****************************************************************************
+// Prints vector
+//*****************************************************************************
+void print(std::vector <int> const &a) {
+
+   for(int i=0; i < a.size(); i++)
+      std::cout << a.at(i) << ' ';
+}
+
+//*****************************************************************************
 // Builds a nonsymmetric square matrix sparse
 //
 // @param n		Matrix size
@@ -271,6 +280,29 @@ void testArnoldi(int myid){
 	
 }
 
+//*****************************************************************************
+// Test the linspace function 
+//*****************************************************************************
+void testlineSpace(int myid){
+
+	std::vector<int> testVect1, testVect2, testVect3;
+	std::vector<int> goalVect1, goalVect2, goalVect3;
+	goalVect1 = {1, 2, 3, 4, 5};
+	goalVect2 = {2, 4, 6, 8, 10};
+	goalVect3 = {20, 40, 60, 80, 100};
+
+	testVect1 = lineSpace(1, 5, 5);
+	testVect2 = lineSpace(2, 10, 5);
+	testVect3 = lineSpace(20, 100, 5);
+
+	for (int i = 0; i < 5; i++){
+		assert(testVect1[i] == goalVect1[i]);
+		assert(testVect2[i] == goalVect2[i]);
+		assert(testVect3[i] == goalVect3[i]);
+	}
+
+}
+
 
 int main(){
 	int myid = mpi.rank;
@@ -280,6 +312,7 @@ int main(){
 	testFactorial(myid);
 	testBinomialCoeff(myid);
 	testArnoldi(myid);
+	testlineSpace(myid);
 
 	mpi.finalize();
 }

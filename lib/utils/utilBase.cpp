@@ -65,8 +65,24 @@ int factorial(int n)
 		return 1;
 	}		
 }
+//*****************************************************************************
+// Creates a linear line space 
+//
+// @param a		Starting point
+// @param b		Ending point
+// @param N		Number of points
+//*****************************************************************************
+std::vector<int> lineSpace(int start, int end, std::size_t N){
+	int h = (end - start) / static_cast<int>(N-1);
+   std::vector<int> xs(N);
+   std::vector<int>::iterator x;
+   int val;
+   for (x = xs.begin(), val = start; x != xs.end(); ++x, val += h) {
+       *x = val;
+   }
+   return xs;
+}
 
 // Data types that can use the template functions
 template bool isApprox(double goalVal, double testVal, double rtol, double atol);
 template bool isApprox(float goalVal, float testVal, float rtol, float atol);
-
