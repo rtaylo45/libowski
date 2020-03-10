@@ -73,7 +73,7 @@ class speciesDriver {
 	// Solves the steady state species transport equation
 	void solve();
 	// Gives ability to se the matrix exp solver
-	void setMatrixExpSolver(std::string);
+	void setMatrixExpSolver(std::string, bool = false, int = 10);
 	// Cleans species
 	void clean();
 
