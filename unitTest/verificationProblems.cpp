@@ -412,6 +412,95 @@ void testProblem2Krylov(int myid){
 	}
 	model.clean();
 }
+
+//*****************************************************************************
+// Single species decay, 1D 
+//
+// Diff eqs:
+//		dC/dt = -v*dC/dx - lambda*C
+//
+//	Boundary Conditions:
+//		Periodic
+//
+//	Initial Conditions:
+//		C = 10*x
+//
+//	Solution:
+//		C(x,t) = 10(x - v*t)e^(-lambda*t),			x >= vt
+//				 = 10(x + 100 - v*t)e^(-lambda*t),  x < vt	
+//*****************************************************************************
+void testProblem3(int myid){
+	int xCells = 1, yCells = 500;
+	double xLength = 0.0, yLength = 1.0;
+	double lambda = 1.0;
+	double v = 2.0;
+	double tEnd = 1.0;
+	double cCon, cSol, initCon;
+	double x, xc, dx, x1, x2;
+	double clInfError = 0.0;
+	int CID;
+	std::vector<double> Ccoeffs = {-lambda};
+	meshCell* cell = nullptr;
+	
+	// Build the Mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+	// Sets the y velocity
+	model.setConstantYVelocity(v);
+	// Build species driver
+	speciesDriver spec = speciesDriver(&model);
+	// Add species
+	CID = spec.addSpecies(1.0, 0.0, 0.0);
+	// Set periodic BCs
+	spec.setBoundaryCondition("periodic","north", CID);
+	spec.setBoundaryCondition("periodic","south", CID);
+	// Sets the solver
+	//spec.setMatrixExpSolver("CRAM");
+	//spec.setMatrixExpSolver("pade-method2");
+	//spec.setMatrixExpSolver("hyperbolic");
+	//spec.setMatrixExpSolver("parabolic");
+	spec.setMatrixExpSolver("pade-method1");
+
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			cell = model.getCellByLoc(i,j);	
+
+			// Calculates the x positions as the cell faces
+			dx = cell->dy;
+			xc = cell->y;
+			x2 = xc + dx/2;
+			x1 = xc - dx/2;
+
+			// Calculates the initial concentration from MVT. 
+			initCon = (5./dx)*(x2*x2 - x1*x1);		
+
+			spec.setSpeciesCon(i,j,CID, initCon);
+
+			// Sets the sourses
+			spec.setSpeciesSource(i, j, CID, Ccoeffs, 0.0);
+		}
+	}
+	// Solve
+	spec.solve(tEnd);
+
+	// Get the solution
+	clInfError = 0.0;
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			cell = model.getCellByLoc(i,j);
+			x = cell->y;
+			cCon = spec.getSpecies(i, j, CID);
+			if (x > v*tEnd){
+				cSol = 10.*(x - (v)*tEnd)*exp(-lambda*tEnd);
+			}
+			if (x < v*tEnd){
+				cSol = 10.*(x + 100. - (v)*tEnd)*exp(-lambda*tEnd);
+			}
+			clInfError = std::max(clInfError, std::abs(cSol - cCon));
+			std::cout << cCon << std::endl;
+		}
+	}
+	//std::cout << yCells << " " << clInfError << std::endl;
+}
 //*****************************************************************************
 // Test that the species driver sets up the problem right and solves the 
 // system right. 
@@ -1221,15 +1310,16 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	testXenonIodineNoFlow(myid);
-	testProblem1(myid);
-	testProblem2(myid);
-	testProblem2Krylov(myid);
-	testXenonIodineYFlow(myid);
-	testXenonIodineXFlow(myid);
-	testDiffusion2D(myid);
-	testNeutronPrecursorsFlow(myid);
-	testNeutronPrecursorsMultiChanFlow(myid);
+	//testXenonIodineNoFlow(myid);
+	//testProblem1(myid);
+	//testProblem2(myid);
+	//testProblem2Krylov(myid);
+	testProblem3(myid);
+	//testXenonIodineYFlow(myid);
+	//testXenonIodineXFlow(myid);
+	//testDiffusion2D(myid);
+	//testNeutronPrecursorsFlow(myid);
+	//testNeutronPrecursorsMultiChanFlow(myid);
 	//testBenBenchmark(myid);
 
 	mpi.finalize();
