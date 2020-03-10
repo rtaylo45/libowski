@@ -18,8 +18,10 @@ speciesDriver::speciesDriver(modelMesh* model){
 //
 // @param solverName	The name of the materix exponential solver type
 //*****************************************************************************
-void speciesDriver::setMatrixExpSolver(std::string solverName){
-	expSolver = matrixExponentialFactory::getExpSolver(solverName);
+void speciesDriver::setMatrixExpSolver(std::string solverName, bool krylovFlag,
+	int krylovDim){
+	expSolver = matrixExponentialFactory::getExpSolver(solverName, krylovFlag,
+		krylovDim);
 }
 
 //*****************************************************************************

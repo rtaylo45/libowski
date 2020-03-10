@@ -5,6 +5,7 @@
 // and helper functions.
 //*****************************************************************************
 #include "utilBase.h"
+#include <iostream>
 
 //*****************************************************************************
 // Test if two number are approx equal
@@ -20,10 +21,13 @@
 template <typename derived>
 bool isApprox(derived goalVal, derived testVal, derived rtol, derived atol){
 	bool retBool = false;
+	bool rtolBool = false;
+	bool atolBool = false;
 
 	double diff = abs(goalVal - testVal);
-	if (diff < rtol) { retBool = true; }
-	if (diff/goalVal < atol) { retBool = true; }
+	if (diff < rtol) { rtolBool = true; }
+	if (diff/goalVal < atol) { atolBool = true; }
+	if (rtolBool and atolBool) { retBool = true; }
 	return retBool;
 }
 
