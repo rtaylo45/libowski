@@ -494,7 +494,7 @@ void testXenonIodineNoFlow(int myid){
 //*****************************************************************************
 void testXenonIodineYFlow(int myid){
 	int xCells = 1, yCells = 500;
-	double xLength = 1.0, yLength = 10.0;
+	double xLength = 0.0, yLength = 10.0;
 	double yVelocity = 8.0;
 	double xenonInitCon = 5e-6, iodineInitCon = 5e-6;
 	double xenonMM = 135.0, iodineMM = 135.0;
@@ -556,8 +556,9 @@ void testXenonIodineYFlow(int myid){
 
 				//std::cout << xenonCon << " " << iodineCon << " " << N_I << std::endl;
 				//error = std::max(std::abs(iodineCon - N_I)/N_I, error);
-				//std::cout << y << " " << error << std::endl;
-				assert(isApprox(iodineCon, N_I));
+				error = std::abs(iodineCon - N_I)/N_I;
+				std::cout << y << " " << error << std::endl;
+				//assert(isApprox(iodineCon, N_I));
 			}
 		}
 	}
@@ -1220,16 +1221,16 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	testXenonIodineNoFlow(myid);
-	testProblem1(myid);
-	testProblem2(myid);
-	testProblem2Krylov(myid);
+	//testXenonIodineNoFlow(myid);
+	//testProblem1(myid);
+	//testProblem2(myid);
+	//testProblem2Krylov(myid);
 	testXenonIodineYFlow(myid);
-	testXenonIodineXFlow(myid);
-	testDiffusion2D(myid);
-	testNeutronPrecursorsFlow(myid);
+	//testXenonIodineXFlow(myid);
+	//testDiffusion2D(myid);
+	//testNeutronPrecursorsFlow(myid);
 	//testNeutronPrecursorsMultiChanFlow(myid);
-	testBenBenchmark(myid);
+	//testBenBenchmark(myid);
 
 	mpi.finalize();
 }
