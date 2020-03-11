@@ -33,9 +33,10 @@
 //*****************************************************************************
 #ifndef NUMERICALINTEGRATOR_H 
 #define NUMERICALINTEGRATOR_H
+#include <string>
 #include "vectorTypes.h"
 #include "matrixTypes.h"
-#include <string>
+#include "exception.h"
 
 //*****************************************************************************
 // Abstract base class for numerical integrator
@@ -49,7 +50,7 @@ class integrator{
 	//**************************************************************************
 	// Constructor 
 	//**************************************************************************
-	numericalIntegrator(std::string, ArrayD, ArrayD);
+	integrator(std::string, ArrayD, ArrayD);
 	//**************************************************************************
 	// Solver name
 	//**************************************************************************
@@ -58,7 +59,7 @@ class integrator{
 	//**************************************************************************
 	// The order of the method
 	//**************************************************************************
-	int order;
+	int order = -1;
 	//**************************************************************************
 	// Holds the a coefficients for k functions
 	//**************************************************************************
@@ -89,4 +90,11 @@ class explicitIntegrator : public integrator{
 	VectorD kn(int, const SparseMatrixD&, const VectorD&, double); 
 };
 
+//*****************************************************************************
+// Numerical integrator factory class
+//*****************************************************************************
+class integratorFactory{
+	public:
+	static integrator *getIntegrator(std::string);
+};
 #endif
