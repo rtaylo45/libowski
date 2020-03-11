@@ -27,6 +27,9 @@
 //		 .  |    .        .            .
 //		 .  |    .        .            .
 //		c_s | a_{s,1)  a_(2,s) ...  a_(s,s)
+//
+//	The "c" part of the Butcher tableau is used for the time dependencs on f
+//	so we don't need it.
 //*****************************************************************************
 #ifndef NUMERICALINTEGRATOR_H 
 #define NUMERICALINTEGRATOR_H
@@ -46,11 +49,11 @@ class integrator{
 	//**************************************************************************
 	// Constructor 
 	//**************************************************************************
-	numericalIntegrator(std::string);
+	numericalIntegrator(std::string, ArrayD, ArrayD);
 	//**************************************************************************
 	// Solver name
 	//**************************************************************************
-	std::sring name = "None";
+	std::string name = "None";
 	protected:
 	//**************************************************************************
 	// The order of the method
@@ -69,31 +72,21 @@ class integrator{
 //*****************************************************************************
 // Explitict integrator class. Performs explicit Runge-Kutta methods
 //*****************************************************************************
-class integrator : public explicitIntegrator{
+class explicitIntegrator : public integrator{
+	public:
 	//**************************************************************************
 	// Preforms an integration over a time step
 	//**************************************************************************
 	VectorD integrate(const SparseMatrixD&, const VectorD&, double);
+	//**************************************************************************
+	// Constructor
+	//**************************************************************************
+	explicitIntegrator(std::string, ArrayD, ArrayD);
 	private:
 	//**************************************************************************
 	// The general K_i function that calculates K_i of any order 
 	//**************************************************************************
-	double kn(int, const SparseMatrixD&, const VectorD&, double); 
-	//**************************************************************************
-	// Computes k of order 1
-	//**************************************************************************
-	double k1(const SparseMatrixD&, const VectorD&);
-	//**************************************************************************
-	// Computes k of order 2
-	//**************************************************************************
-	double k2(const SparseMatrixD&, const VectorD&, double);
-	//**************************************************************************
-	// Computes k of order 3
-	//**************************************************************************
-	double k3(const SparseMatrixD&, const VectorD&, double);
-	//**************************************************************************
-	// Computes k of order 4
-	//**************************************************************************
-	double k4(const SparseMatrixD&, const VectorD&, double);
+	VectorD kn(int, const SparseMatrixD&, const VectorD&, double); 
 };
+
 #endif
