@@ -11,7 +11,7 @@
 //*****************************************************************************
 integrator::integrator(std::string solverName, ArrayD aCoeffs, ArrayD bCoeffs){
 	name = solverName;
-	order = a.cols();
+	order = aCoeffs.cols();
 	a = aCoeffs;
 	b = bCoeffs;
 }
@@ -65,12 +65,11 @@ VectorD explicitIntegrator::kn(int order, const SparseMatrixD& A, const
 //*****************************************************************************
 integrator *integratorFactory::getIntegrator(std::string type){
 	integrator *solver = nullptr;
-	ArrayD a, b;
 
 	if (type == "forward euler"){
 		// first order method
-		a (1,1); 
-		b (1,1);
+		ArrayD a(1,1); 
+		ArrayD b(1,1);
 		// Sets the coefficients
 		a << 0.;
 		b << 1.;
@@ -79,8 +78,8 @@ integrator *integratorFactory::getIntegrator(std::string type){
 	}
 	else if (type == "explicit midpoint"){
 		// second order method
-		a(2,2);
-		b(1,2);
+		ArrayD a(2,2);
+		ArrayD b(1,2);
 		// Sets the coefficients
 		a << 0.0, 0.0,
 			  0.5, 0.0;
@@ -90,8 +89,8 @@ integrator *integratorFactory::getIntegrator(std::string type){
 	}
 	else if (type == "heun second-order"){
 		// second order method
-		a(2,2);
-		b(1,2);
+		ArrayD a(2,2);
+		ArrayD b(1,2);
 		// Sets the coefficients
 		a << 0.0, 0.0,
 			  1.0, 0.0;
@@ -99,87 +98,86 @@ integrator *integratorFactory::getIntegrator(std::string type){
 		solver = new explicitIntegrator(type, a, b);
 		return solver;
 	}
-	else if (type == "ralston"){
+	else if (type == "ralston second-order"){
 		// second order method
-		a(2,2);
-		b(1,2);
+		ArrayD a(2,2);
+		ArrayD b(1,2);
 		// Sets the coefficients
 		a << 0.0, 0.0,
-			  2/3, 0.0;
-		b << 1/4, 3/4;
+			  2./3., 0.0;
+		b << 1./4., 3./4.;
 		solver = new explicitIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "kutta third-order"){
 		// third order method
-		a(3,3);
-		b(1,3);
+		ArrayD a(3,3);
+		ArrayD b(1,3);
 		// Sets the coefficients
 		a << 0.0, 0.0, 0.0,
 			  0.5, 0.0, 0.0,
 			  -1., 2.0, 0.0;
-		b << 1/6, 2/3, 1/6;
+		b << 1./6., 2./3., 1./6.;
 		solver = new explicitIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "heun third-order"){
 		// third order method
-		a(3,3);
-		b(1,3);
+		ArrayD a(3,3);
+		ArrayD b(1,3);
 		// Sets the coefficients
 		a << 0.0, 0.0, 0.0,
-			  1/3, 0.0, 0.0,
-			  0.0, 2/3, 0.0;
-		b << 1/4, 0.0, 3/4;
+			  1./3., 0.0, 0.0,
+			  0.0, 2./3., 0.0;
+		b << 1./4., 0.0, 3./4.;
 		solver = new explicitIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "ralston third-order"){
 		// third order method
-		a(3,3);
-		b(1,3);
+		ArrayD a(3,3);
+		ArrayD b(1,3);
 		// Sets the coefficients
 		a << 0.0, 0.0, 0.0,
 			  0.5, 0.0, 0.0,
-			  0.0, 3/4, 0.0;
-		b << 2/9, 1/3, 4/9;
+			  0.0, 3./4., 0.0;
+		b << 2./9., 1./3., 4./9.;
 		solver = new explicitIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "SSPRK3"){
 		// third order method
-		a(3,3);
-		b(1,3);
+		ArrayD a(3,3);
+		ArrayD b(1,3);
 		// Sets the coefficients
 		a << 0.0, 0.0, 0.0,
 			  1.0, 0.0, 0.0,
-			  1/4, 1/4, 0.0;
-		b << 1/6, 1/6, 2/3;
+			  1./4., 1./4., 0.0;
+		b << 1./6., 1./6., 2./3.;
 		solver = new explicitIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "classic fourth-order"){
 		// fourth order method
-		a(4,4);
-		b(1,4);
+		ArrayD a(4,4);
+		ArrayD b(1,4);
 		// Sets the coefficients
 		a << 0.0, 0.0, 0.0, 0.0,
-			  1/2, 0.0, 0.0, 0.0,
-			  0.0, 1/2, 0.0, 0.0,
+			  1./2., 0.0, 0.0, 0.0,
+			  0.0, 1./2., 0.0, 0.0,
 			  0.0, 0.0, 1.0, 0.0,
-		b << 1/6, 1/3, 1/3, 1/6;
+		b << 1./6., 1./3., 1./3., 1./6.;
 		solver = new explicitIntegrator(type, a, b);
 		return solver;
 	}
 	else {
 		std::string errorMessage = 
 			" You have selected a solver that is not\n"
-			" in libowski. Avaliable solvers are:\n"
-			" " 
+			" in libowski. Avaliable solvers are:\n\n"
 			" forward euler\n"
 			" explicit midpoint\n"
 			" heun second-order\n"
-			" ralston\n"
+			" ralston second-order\n"
 			" kutta third-order\n"
 			" heun third-order\n"
 			" ralston third-order\n"
