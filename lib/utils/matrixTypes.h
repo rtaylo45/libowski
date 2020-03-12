@@ -25,6 +25,8 @@ typedef Matrix<long double, Dynamic, Dynamic> MatrixLD;
 typedef Array<long double, Dynamic, Dynamic> ArrayXLD;
 // Complex long double dynamic array
 typedef Array<std::complex<long double>, Dynamic, Dynamic> ArrayXCLD;
+// Double dynamic array
+typedef Array<double, Dynamic, Dynamic> ArrayD;
 
 // Useful type definitions for sparce matrix
 // Complex long double dynamic matrix

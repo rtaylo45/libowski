@@ -330,7 +330,7 @@ void speciesDriver::solve(){
 	b = buildbVector();
 
 	LinearSolver.compute(A);
-	sol = LinearSolver.solve(-b);
+	sol = LinearSolver.solve(b);
 	if (mpi.rank == 0){unpackSolution(sol);};
 }
 
