@@ -177,6 +177,7 @@ integrator *integratorFactory::getIntegrator(std::string type){
 			" in libowski. Avaliable solvers are:\n"
 			" " 
 			" forward euler\n"
+			" explicit midpoint\n"
 			" heun second-order\n"
 			" ralston\n"
 			" kutta third-order\n"
