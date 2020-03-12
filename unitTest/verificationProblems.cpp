@@ -1221,15 +1221,15 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	//testXenonIodineNoFlow(myid);
-	//testProblem1(myid);
-	//testProblem2(myid);
-	//testProblem2Krylov(myid);
+	testXenonIodineNoFlow(myid);
+	testProblem1(myid);
+	testProblem2(myid);
+	testProblem2Krylov(myid);
 	testXenonIodineYFlow(myid);
-	//testXenonIodineXFlow(myid);
-	//testDiffusion2D(myid);
-	//testNeutronPrecursorsFlow(myid);
-	//testNeutronPrecursorsMultiChanFlow(myid);
+	testXenonIodineXFlow(myid);
+	testDiffusion2D(myid);
+	testNeutronPrecursorsFlow(myid);
+	testNeutronPrecursorsMultiChanFlow(myid);
 	//testBenBenchmark(myid);
 
 	mpi.finalize();
