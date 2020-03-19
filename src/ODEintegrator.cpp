@@ -4,23 +4,25 @@
 // Classical numerical integrator class that implements Runge-Kutta
 // methods. These methods solve the general form,
 //*****************************************************************************
-#include "numericalIntegrator.h"
+#include "ODEintegrator.h"
 
 //*****************************************************************************
-// Default constructor for numerical integrator class
+// Default constructor for ode integrator class
 //*****************************************************************************
-integrator::integrator(std::string solverName, ArrayD aCoeffs, ArrayD bCoeffs){
+ODEintegrator::ODEintegrator(std::string solverName){
 	name = solverName;
-	order = aCoeffs.cols();
-	a = aCoeffs;
-	b = bCoeffs;
+	isInit = true;
 }
 
 //*****************************************************************************
 // Constructor for explicit integrator class
 //*****************************************************************************
-explicitIntegrator::explicitIntegrator(std::string solverName, ArrayD aCoeffs,
-	ArrayD bCoeffs):integrator(solverName, aCoeffs, bCoeffs){};
+rungeKuttaIntegrator::rungeKuttaIntegrator(std::string solverName, ArrayD aCoeffs,
+	ArrayD bCoeffs):ODEintegrator(solverName){
+	order = aCoeffs.cols();
+	a = aCoeffs;
+	b = bCoeffs;
+}
 //*****************************************************************************
 // Methods for the explicit integrator
 //
@@ -28,7 +30,7 @@ explicitIntegrator::explicitIntegrator(std::string solverName, ArrayD aCoeffs,
 // @param yn	Current species vector solution
 // @param dt	Time step to integrate over
 //*****************************************************************************
-VectorD explicitIntegrator::integrate(const SparseMatrixD& A, const VectorD& yn,
+VectorD rungeKuttaIntegrator::integrate(const SparseMatrixD& A, const VectorD& yn,
 	double dt){
 	VectorD ynPlus1 = 0*yn, ySum = 0*yn;
 
@@ -48,7 +50,7 @@ VectorD explicitIntegrator::integrate(const SparseMatrixD& A, const VectorD& yn,
 // @param yn		Current species vector solution
 // @param dt		Time step to integrate over
 //*****************************************************************************
-VectorD explicitIntegrator::kn(int order, const SparseMatrixD& A, const
+VectorD rungeKuttaIntegrator::kn(int order, const SparseMatrixD& A, const
 	VectorD& yn, double dt){
 	VectorD sum = 0*yn, tempy = 0*yn;
 
@@ -63,8 +65,8 @@ VectorD explicitIntegrator::kn(int order, const SparseMatrixD& A, const
 //*****************************************************************************
 // Method for integrator factor class
 //*****************************************************************************
-integrator *integratorFactory::getIntegrator(std::string type){
-	integrator *solver = nullptr;
+ODEintegrator *integratorFactory::getIntegrator(std::string type){
+	ODEintegrator *solver = nullptr;
 
 	if (type == "forward euler"){
 		// first order method
@@ -73,7 +75,7 @@ integrator *integratorFactory::getIntegrator(std::string type){
 		// Sets the coefficients
 		a << 0.;
 		b << 1.;
-		solver = new explicitIntegrator(type, a, b);
+		solver = new rungeKuttaIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "explicit midpoint"){
@@ -84,7 +86,7 @@ integrator *integratorFactory::getIntegrator(std::string type){
 		a << 0.0, 0.0,
 			  0.5, 0.0;
 		b << 0, 1.;
-		solver = new explicitIntegrator(type, a, b);
+		solver = new rungeKuttaIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "heun second-order"){
@@ -95,7 +97,7 @@ integrator *integratorFactory::getIntegrator(std::string type){
 		a << 0.0, 0.0,
 			  1.0, 0.0;
 		b << 0.5, 0.5;
-		solver = new explicitIntegrator(type, a, b);
+		solver = new rungeKuttaIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "ralston second-order"){
@@ -106,7 +108,7 @@ integrator *integratorFactory::getIntegrator(std::string type){
 		a << 0.0, 0.0,
 			  2./3., 0.0;
 		b << 1./4., 3./4.;
-		solver = new explicitIntegrator(type, a, b);
+		solver = new rungeKuttaIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "kutta third-order"){
@@ -118,7 +120,7 @@ integrator *integratorFactory::getIntegrator(std::string type){
 			  0.5, 0.0, 0.0,
 			  -1., 2.0, 0.0;
 		b << 1./6., 2./3., 1./6.;
-		solver = new explicitIntegrator(type, a, b);
+		solver = new rungeKuttaIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "heun third-order"){
@@ -130,7 +132,7 @@ integrator *integratorFactory::getIntegrator(std::string type){
 			  1./3., 0.0, 0.0,
 			  0.0, 2./3., 0.0;
 		b << 1./4., 0.0, 3./4.;
-		solver = new explicitIntegrator(type, a, b);
+		solver = new rungeKuttaIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "ralston third-order"){
@@ -142,7 +144,7 @@ integrator *integratorFactory::getIntegrator(std::string type){
 			  0.5, 0.0, 0.0,
 			  0.0, 3./4., 0.0;
 		b << 2./9., 1./3., 4./9.;
-		solver = new explicitIntegrator(type, a, b);
+		solver = new rungeKuttaIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "SSPRK3"){
@@ -154,7 +156,7 @@ integrator *integratorFactory::getIntegrator(std::string type){
 			  1.0, 0.0, 0.0,
 			  1./4., 1./4., 0.0;
 		b << 1./6., 1./6., 2./3.;
-		solver = new explicitIntegrator(type, a, b);
+		solver = new rungeKuttaIntegrator(type, a, b);
 		return solver;
 	}
 	else if (type == "classic fourth-order"){
@@ -167,7 +169,7 @@ integrator *integratorFactory::getIntegrator(std::string type){
 			  0.0, 1./2., 0.0, 0.0,
 			  0.0, 0.0, 1.0, 0.0,
 		b << 1./6., 1./3., 1./3., 1./6.;
-		solver = new explicitIntegrator(type, a, b);
+		solver = new rungeKuttaIntegrator(type, a, b);
 		return solver;
 	}
 	else {

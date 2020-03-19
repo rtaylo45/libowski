@@ -31,17 +31,17 @@
 //	The "c" part of the Butcher tableau is used for the time dependencs on f
 //	so we don't need it.
 //*****************************************************************************
-#ifndef NUMERICALINTEGRATOR_H 
-#define NUMERICALINTEGRATOR_H
+#ifndef ODEINTEGRATOR_H 
+#define ODEINTEGRATOR_H
 #include <string>
 #include "vectorTypes.h"
 #include "matrixTypes.h"
 #include "exception.h"
 
 //*****************************************************************************
-// Abstract base class for numerical integrator
+// Abstract base class for ode integrator
 //*****************************************************************************
-class integrator{
+class ODEintegrator{
 	public:
 	//**************************************************************************
 	// Integrates over a single time step
@@ -50,7 +50,7 @@ class integrator{
 	//**************************************************************************
 	// Constructor 
 	//**************************************************************************
-	integrator(std::string, ArrayD, ArrayD);
+	ODEintegrator(std::string);
 	//**************************************************************************
 	// Solver name
 	//**************************************************************************
@@ -60,6 +60,30 @@ class integrator{
 	// The order of the method
 	//**************************************************************************
 	int order = -1;
+	//**************************************************************************
+	// flag for if the solver is initilized
+	//**************************************************************************
+	bool isInit = false;
+};
+
+//*****************************************************************************
+// Explitict integrator class. Performs explicit Runge-Kutta methods
+//*****************************************************************************
+class rungeKuttaIntegrator : public ODEintegrator{
+	public:
+	//**************************************************************************
+	// Preforms an integration over a time step
+	//**************************************************************************
+	VectorD integrate(const SparseMatrixD&, const VectorD&, double);
+	//**************************************************************************
+	// Constructor
+	//**************************************************************************
+	rungeKuttaIntegrator(std::string, ArrayD, ArrayD);
+	private:
+	//**************************************************************************
+	// The general K_i function that calculates K_i of any order 
+	//**************************************************************************
+	VectorD kn(int, const SparseMatrixD&, const VectorD&, double); 
 	//**************************************************************************
 	// Holds the a coefficients for k functions
 	//**************************************************************************
@@ -71,30 +95,10 @@ class integrator{
 };
 
 //*****************************************************************************
-// Explitict integrator class. Performs explicit Runge-Kutta methods
-//*****************************************************************************
-class explicitIntegrator : public integrator{
-	public:
-	//**************************************************************************
-	// Preforms an integration over a time step
-	//**************************************************************************
-	VectorD integrate(const SparseMatrixD&, const VectorD&, double);
-	//**************************************************************************
-	// Constructor
-	//**************************************************************************
-	explicitIntegrator(std::string, ArrayD, ArrayD);
-	private:
-	//**************************************************************************
-	// The general K_i function that calculates K_i of any order 
-	//**************************************************************************
-	VectorD kn(int, const SparseMatrixD&, const VectorD&, double); 
-};
-
-//*****************************************************************************
 // Numerical integrator factory class
 //*****************************************************************************
 class integratorFactory{
 	public:
-	static integrator *getIntegrator(std::string);
+	static ODEintegrator *getIntegrator(std::string);
 };
 #endif

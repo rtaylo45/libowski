@@ -4,13 +4,13 @@
 #include <string>
 #include <math.h>
 
-#include "numericalIntegrator.h"
+#include "ODEintegrator.h"
 #include "mpiProcess.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
 #include "utilBase.h"
 
-void tankProblem(int myid, integrator *intSolver){
+void tankProblem(int myid, ODEintegrator *intSolver){
 //*****************************************************************************
 //	Problem statement:
 //		Let brine tanks 1, 2, 3 be given of volumes 20, 40, 60, It is supposed 
@@ -79,7 +79,7 @@ void tankProblem(int myid, integrator *intSolver){
 	std::cout << "Tank problem " << maxRelativeError << std::endl;
 }
 
-void xenonIodineProblem(int myid, integrator *intSolver){
+void xenonIodineProblem(int myid, ODEintegrator *intSolver){
 //*****************************************************************************
 //	Problem statement:
 //		dN_xe/dt = gamma_xe*Sigma_f*flux - sigma_a*flux*N_xe + lamba_I*N_I 
@@ -169,7 +169,7 @@ void xenonIodineProblem(int myid, integrator *intSolver){
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
-	integrator *intSolver;
+	ODEintegrator *intSolver;
 	std::vector<std::string> solvers {"forward euler", "explicit midpoint", "heun second-order",
 		"ralston second-order", "kutta third-order", "heun third-order", "ralston third-order",
 		"SSPRK3", "classic fourth-order"};
