@@ -76,17 +76,21 @@ int factorial(int n)
 // @param b		Ending point
 // @param N		Number of points
 //*****************************************************************************
-std::vector<int> lineSpace(int start, int end, std::size_t N){
-	int h = (end - start) / static_cast<int>(N-1);
-   std::vector<int> xs(N);
-   std::vector<int>::iterator x;
-   int val;
+template <typename T>
+std::vector<T> lineSpace(T start, T end, std::size_t N){
+	T h = (end - start) / static_cast<T>(N-1);
+   std::vector<T> xs(N);
+   typename std::vector<T>::iterator x;
+   T val;
    for (x = xs.begin(), val = start; x != xs.end(); ++x, val += h) {
        *x = val;
    }
    return xs;
 }
 
+
 // Data types that can use the template functions
 template bool isApprox(double goalVal, double testVal, double rtol, double atol);
 template bool isApprox(float goalVal, float testVal, float rtol, float atol);
+template std::vector<double> lineSpace(double start, double end, std::size_t N);
+template std::vector<int> lineSpace(int start, int end, std::size_t N);

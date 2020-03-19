@@ -26,6 +26,7 @@
 #include "matrixTypes.h"
 #include "vectorTypes.h"
 #include "exception.h"
+#include "numericalIntegrator.h"
 
 class speciesDriver {
 

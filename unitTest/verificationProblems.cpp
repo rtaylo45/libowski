@@ -264,7 +264,7 @@ void testProblem2(int myid){
 						}
 					}
 				}
-				outputFile << " " << dx << " " << linfErrorU << " " 
+				outputFile << std::setprecision(16) << " " << dx << " " << linfErrorU << " " 
 				//std::cout << " " << dx << " " << linfErrorU << " " 
 					<< linfErrorV << " " << duration.count()/1.e6 << std::endl;
 
@@ -402,7 +402,7 @@ void testProblem2Krylov(int myid){
 						}
 					}
 				}
-				outputFile << " " << krylovDim << " " << linfErrorU << " " 
+				outputFile << std::setprecision(16) << " " << krylovDim << " " << linfErrorU << " " 
 				//std::cout << " " << krylovDim << " " << linfErrorU << " " 
 					<< linfErrorV << " " << duration.count()/1.e6 << std::endl;
 
@@ -417,7 +417,9 @@ void testProblem2Krylov(int myid){
 // Single species decay, 1D 
 //
 // Diff eqs:
-//		dC/dt = -v*dC/dx - lambda*C
+//		dC_k/dt = -v*dC_k/dx - lambda*C_k + source
+//
+//		k = 1, 2, 3, 4, 5, 6
 //
 //	Boundary Conditions:
 //		Periodic
@@ -426,21 +428,36 @@ void testProblem2Krylov(int myid){
 //		C = 10*x
 //
 //	Solution:
-//		C(x,t) = 10(x - v*t)e^(-lambda*t),			x >= vt
-//				 = 10(x + 100 - v*t)e^(-lambda*t),  x < vt	
+//			Fuck all... lol
 //*****************************************************************************
 void testProblem3(int myid){
-	int xCells = 1, yCells = 500;
+	int xCells = 1, yCells = 50;
 	double xLength = 0.0, yLength = 1.0;
-	double lambda = 1.0;
-	double v = 2.0;
+	double v = 2.;
+	//std::vector<double> steps = lineSpace(1.,50.,50);
+	std::vector<double> steps = {1};
 	double tEnd = 1.0;
-	double cCon, cSol, initCon;
-	double x, xc, dx, x1, x2;
-	double clInfError = 0.0;
-	int CID;
-	std::vector<double> Ccoeffs = {-lambda};
+	double t;
+	double dt;
+	double cCon1, cCon2, initCon;
+	double x, xc, dx, x1, x2, s;
+	int c1ID, c2ID, c3ID, c4ID, c5ID, c6ID;
+	double c1Con, c2Con, c3Con, c4Con, c5Con, c6Con;
+	double a1 = 8.30980E-04, a2 = 4.32710E-03, a3 = 4.19580E-03;
+	double a4 = 1.19610E-02, a5 = 3.47340E-03, a6 = 1.22760E-03;
+   double lambdaC1 = 0.0125, lambdaC2 = 0.0318, lambdaC3 = 0.109;
+	double lambdaC4 = 0.3170, lambdaC5 = 1.3500, lambdaC6 = 8.640;
+	std::vector<double> c1Coeffs = {-lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0};
+	std::vector<double> c2Coeffs = {0.0, -lambdaC2, 0.0, 0.0, 0.0, 0.0};
+	std::vector<double> c3Coeffs = {0.0, 0.0, -lambdaC3, 0.0, 0.0, 0.0};
+	std::vector<double> c4Coeffs = {0.0, 0.0, 0.0, -lambdaC4, 0.0, 0.0};
+	std::vector<double> c5Coeffs = {0.0, 0.0, 0.0, 0.0, -lambdaC5, 0.0};
+	std::vector<double> c6Coeffs = {0.0, 0.0, 0.0, 0.0, 0.0, -lambdaC6};
+	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic"};
+	//std::vector<std::string> solvers {"pade-method1", "pade-method2"};
+	std::vector<std::string> solvers {"CRAM"};
 	meshCell* cell = nullptr;
+	std::string outputFileName;
 	
 	// Build the Mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -448,58 +465,113 @@ void testProblem3(int myid){
 	model.setConstantYVelocity(v);
 	// Build species driver
 	speciesDriver spec = speciesDriver(&model);
-	// Add species
-	CID = spec.addSpecies(1.0, 0.0, 0.0);
-	// Set periodic BCs
-	spec.setBoundaryCondition("periodic","north", CID);
-	spec.setBoundaryCondition("periodic","south", CID);
-	// Sets the solver
-	//spec.setMatrixExpSolver("CRAM");
-	//spec.setMatrixExpSolver("pade-method2");
-	//spec.setMatrixExpSolver("hyperbolic");
-	//spec.setMatrixExpSolver("parabolic");
-	spec.setMatrixExpSolver("pade-method1");
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
 
-	for (int i = 0; i < xCells; i++){
-		for (int j = 0; j < yCells; j++){
-			cell = model.getCellByLoc(i,j);	
+		std::ofstream outputFile;
+		outputFileName = "problem3"+solverType+".out";
+		outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 
-			// Calculates the x positions as the cell faces
-			dx = cell->dy;
-			xc = cell->y;
-			x2 = xc + dx/2;
-			x1 = xc - dx/2;
+		// Loops over number of time steps
+		for (double &numOfSteps	: steps){
+			dt = tEnd/numOfSteps;
+			outputFile << "TimeStepSize: "+std::to_string(dt)+"\n";
 
-			// Calculates the initial concentration from MVT. 
-			initCon = (5./dx)*(x2*x2 - x1*x1);		
+			// sets the solver
+			spec.setMatrixExpSolver(solverType);
+			// Add species
+			c1ID = spec.addSpecies(1.0, 0.0, 0.0);
+			c2ID = spec.addSpecies(1.0, 0.0, 0.0);
+			c3ID = spec.addSpecies(1.0, 0.0, 0.0);
+			c4ID = spec.addSpecies(1.0, 0.0, 0.0);
+			c5ID = spec.addSpecies(1.0, 0.0, 0.0);
+			c6ID = spec.addSpecies(1.0, 0.0, 0.0);
 
-			spec.setSpeciesCon(i,j,CID, initCon);
+			// Set periodic BCs
+			spec.setBoundaryCondition("periodic","north", c1ID);
+			spec.setBoundaryCondition("periodic","south", c1ID);
 
-			// Sets the sourses
-			spec.setSpeciesSource(i, j, CID, Ccoeffs, 0.0);
-		}
-	}
-	// Solve
-	spec.solve(tEnd);
+			spec.setBoundaryCondition("periodic","north", c2ID);
+			spec.setBoundaryCondition("periodic","south", c2ID);
 
-	// Get the solution
-	clInfError = 0.0;
-	for (int i = 0; i < xCells; i++){
-		for (int j = 0; j < yCells; j++){
-			cell = model.getCellByLoc(i,j);
-			x = cell->y;
-			cCon = spec.getSpecies(i, j, CID);
-			if (x > v*tEnd){
-				cSol = 10.*(x - (v)*tEnd)*exp(-lambda*tEnd);
+			spec.setBoundaryCondition("periodic","north", c3ID);
+			spec.setBoundaryCondition("periodic","south", c3ID);
+
+			spec.setBoundaryCondition("periodic","north", c4ID);
+			spec.setBoundaryCondition("periodic","south", c4ID);
+
+			spec.setBoundaryCondition("periodic","north", c5ID);
+			spec.setBoundaryCondition("periodic","south", c5ID);
+
+			spec.setBoundaryCondition("periodic","north", c6ID);
+			spec.setBoundaryCondition("periodic","south", c6ID);
+
+			// Set periodic BCs
+			//spec.setBoundaryCondition("dirichlet","south", c1ID);
+			//spec.setBoundaryCondition("dirichlet","south", c2ID);
+			//spec.setBoundaryCondition("dirichlet","south", c3ID);
+			//spec.setBoundaryCondition("dirichlet","south", c4ID);
+			//spec.setBoundaryCondition("dirichlet","south", c5ID);
+			//spec.setBoundaryCondition("dirichlet","south", c6ID);
+
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j);	
+
+					// Calculates the x positions as the cell faces
+					dx = cell->dy;
+					xc = cell->y;
+					x2 = xc + dx/2;
+					x1 = xc - dx/2;
+
+					// Calculates the initial concentration from MVT. 
+					//initCon = 0.01*(5./dx)*(x2*x2 - x1*x1);		
+					initCon = 0.0;
+					s = (1./dx)*(yLength/M_PI)*(cos(M_PI*x1/yLength) - 
+						cos(M_PI*x2/yLength));
+
+					spec.setSpeciesCon(i,j,c1ID, initCon);
+					spec.setSpeciesCon(i,j,c2ID, initCon);
+					spec.setSpeciesCon(i,j,c3ID, initCon);
+					spec.setSpeciesCon(i,j,c4ID, initCon);
+					spec.setSpeciesCon(i,j,c5ID, initCon);
+					spec.setSpeciesCon(i,j,c6ID, initCon);
+
+					// Sets the sourses
+					spec.setSpeciesSource(i, j, c1ID, c1Coeffs, 62.427961*s*a1);
+					spec.setSpeciesSource(i, j, c2ID, c2Coeffs, 62.427961*s*a2);
+					spec.setSpeciesSource(i, j, c3ID, c3Coeffs, 62.427961*s*a3);
+					spec.setSpeciesSource(i, j, c4ID, c4Coeffs, 62.427961*s*a4);
+					spec.setSpeciesSource(i, j, c5ID, c5Coeffs, 62.427961*s*a5);
+					spec.setSpeciesSource(i, j, c6ID, c6Coeffs, 62.427961*s*a6);
+				}
 			}
-			if (x < v*tEnd){
-				cSol = 10.*(x + 100. - (v)*tEnd)*exp(-lambda*tEnd);
+			for (int step = 1; step <= numOfSteps; step++){
+				t = step*dt;
+				// Solve with CRAM
+				//spec.solveImplicit(t);
+				spec.solve(t);
 			}
-			clInfError = std::max(clInfError, std::abs(cSol - cCon));
-			std::cout << cCon << std::endl;
+			// Get the solution
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j);
+					x = cell->y;
+					c1Con = spec.getSpecies(i, j, c1ID);
+					c2Con = spec.getSpecies(i, j, c2ID);
+					c3Con = spec.getSpecies(i, j, c3ID);
+					c4Con = spec.getSpecies(i, j, c4ID);
+					c5Con = spec.getSpecies(i, j, c5ID);
+					c6Con = spec.getSpecies(i, j, c6ID);
+					//outputFile << std::setprecision(16) << c1Con << " " << c2Con << " " << c3Con 
+					std::cout << c1Con << " " << c2Con << " " << c3Con
+					<< " " << c4Con << " " << c5Con << " " << c6Con << std::endl;
+				}
+			}
+		spec.clean();
 		}
+	spec.clean();
 	}
-	//std::cout << yCells << " " << clInfError << std::endl;
 }
 //*****************************************************************************
 // Test that the species driver sets up the problem right and solves the 
