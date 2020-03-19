@@ -31,5 +31,7 @@ int factorial(int);
 //*****************************************************************************
 // Creates a linear line space 
 //*****************************************************************************
-std::vector<int> lineSpace(int, int, std::size_t);
+template <typename T>
+std::vector<T> lineSpace(T, T, std::size_t);
+
 #endif

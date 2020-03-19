@@ -26,6 +26,7 @@
 #include "matrixTypes.h"
 #include "vectorTypes.h"
 #include "exception.h"
+#include "numericalIntegrator.h"
 
 class speciesDriver {
 
@@ -63,7 +64,7 @@ class speciesDriver {
 	// Sets the species source terms
 	void setSpeciesSource(int, int, int, std::vector<double>, double);
 	// Sets a boundary condition in a cell
-	void setBoundaryCondition(std::string, std::string, int, double);
+	void setBoundaryCondition(std::string, std::string, int, double = 0);
 	// Call to make solver rebuild the A matrix before the next solve
 	void resetMatrix();
 	// Solves the transient species transport equation with matrix exp

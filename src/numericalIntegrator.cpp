@@ -1,7 +1,7 @@
 //*****************************************************************************
 // Author: Zack Taylor
 // 
-// Classical numerical integrator class that implements explicit Runge-Kutta
+// Classical numerical integrator class that implements Runge-Kutta
 // methods. These methods solve the general form,
 //*****************************************************************************
 #include "numericalIntegrator.h"
