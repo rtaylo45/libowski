@@ -173,15 +173,18 @@ int main(){
 	std::vector<std::string> solvers {"forward euler", "explicit midpoint", "heun second-order",
 		"ralston second-order", "kutta third-order", "heun third-order", "ralston third-order",
 		"SSPRK3", "classic fourth-order"};
+	std::vector<std::string> methods {"explicit"};
 
-	// Loops over different solvers
-	for (std::string &solverType : solvers){
-		std::cout << solverType << std::endl;
-		intSolver = integratorFactory::getIntegrator(solverType);
-		tankProblem(myid, intSolver);
-		xenonIodineProblem(myid, intSolver);
-		std::cout << " " << std::endl;
+	// Loop over methods
+	for (std::string &method : methods){
+		// Loops over different solvers
+		for (std::string &solverType : solvers){
+			std::cout << solverType << std::endl;
+			intSolver = integratorFactory::getIntegrator(method, solverType);
+			tankProblem(myid, intSolver);
+			xenonIodineProblem(myid, intSolver);
+			std::cout << " " << std::endl;
+		}
 	}
-
 	mpi.finalize();
 }

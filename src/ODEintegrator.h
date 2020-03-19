@@ -34,6 +34,7 @@
 #ifndef ODEINTEGRATOR_H 
 #define ODEINTEGRATOR_H
 #include <string>
+#include <assert.h>
 #include "vectorTypes.h"
 #include "matrixTypes.h"
 #include "exception.h"
@@ -67,23 +68,19 @@ class ODEintegrator{
 };
 
 //*****************************************************************************
-// Explitict integrator class. Performs explicit Runge-Kutta methods
+// Performs Runge-Kutta methods
 //*****************************************************************************
 class rungeKuttaIntegrator : public ODEintegrator{
 	public:
 	//**************************************************************************
 	// Preforms an integration over a time step
 	//**************************************************************************
-	VectorD integrate(const SparseMatrixD&, const VectorD&, double);
+	VectorD integrate(const SparseMatrixD&, const VectorD&, double) = 0;
 	//**************************************************************************
 	// Constructor
 	//**************************************************************************
 	rungeKuttaIntegrator(std::string, ArrayD, ArrayD);
-	private:
-	//**************************************************************************
-	// The general K_i function that calculates K_i of any order 
-	//**************************************************************************
-	VectorD kn(int, const SparseMatrixD&, const VectorD&, double); 
+	protected:
 	//**************************************************************************
 	// Holds the a coefficients for k functions
 	//**************************************************************************
@@ -95,10 +92,37 @@ class rungeKuttaIntegrator : public ODEintegrator{
 };
 
 //*****************************************************************************
+// Performs explicit Runge-Kutta methods
+//*****************************************************************************
+class explicitRKIntegrator : public rungeKuttaIntegrator{
+	public:
+	//**************************************************************************
+	// Preforms an integration over a time step
+	//**************************************************************************
+	VectorD integrate(const SparseMatrixD&, const VectorD&, double);
+	//**************************************************************************
+	// Constructor
+	//**************************************************************************
+	explicitRKIntegrator(std::string, ArrayD, ArrayD);
+	private:
+	//**************************************************************************
+	// The general K_i function that calculates K_i of any order 
+	//**************************************************************************
+	VectorD kn(int, const SparseMatrixD&, const VectorD&, double); 
+};
+//*****************************************************************************
 // Numerical integrator factory class
 //*****************************************************************************
 class integratorFactory{
 	public:
-	static ODEintegrator *getIntegrator(std::string);
+	//**************************************************************************
+	// Gets the ode integrator object
+	//**************************************************************************
+	static ODEintegrator *getIntegrator(std::string, std::string);
+	private:
+	//**************************************************************************
+	// Gets an explicit runge integrator object
+	//**************************************************************************
+	static ODEintegrator *getExplicitRKIntegrator(std::string);
 };
 #endif
