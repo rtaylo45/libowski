@@ -8,6 +8,8 @@
 
 //*****************************************************************************
 // Default constructor for ode integrator class
+//
+// @param solverName		Name of the solver
 //*****************************************************************************
 ODEintegrator::ODEintegrator(std::string solverName){
 	name = solverName;
@@ -16,6 +18,10 @@ ODEintegrator::ODEintegrator(std::string solverName){
 
 //*****************************************************************************
 // Constructor for Runge-Kutta integrator class
+//
+// @param solverName		Name of the solver
+// @param aCoeffs			a coefficients for Runge-Kutta
+// @param bCoeffs			b coefficients for Runge-Kutta
 //*****************************************************************************
 rungeKuttaIntegrator::rungeKuttaIntegrator(std::string solverName, ArrayD aCoeffs,
 	ArrayD bCoeffs):ODEintegrator(solverName){
@@ -25,9 +31,14 @@ rungeKuttaIntegrator::rungeKuttaIntegrator(std::string solverName, ArrayD aCoeff
 }
 //*****************************************************************************
 // Constructor for explicit Runge-Kutta integrator class
+//
+// @param solverName		Name of the solver
+// @param aCoeffs			a coefficients for Runge-Kutta
+// @param bCoeffs			b coefficients for Runge-Kutta
 //*****************************************************************************
 explicitRKIntegrator::explicitRKIntegrator(std::string solverName, ArrayD aCoeffs,
 	ArrayD bCoeffs):rungeKuttaIntegrator(solverName, aCoeffs, bCoeffs){};
+
 //*****************************************************************************
 // Methods for the explicit integrator
 //
@@ -69,6 +80,50 @@ VectorD explicitRKIntegrator::kn(int order, const SparseMatrixD& A, const
 }
 
 //*****************************************************************************
+// Constructor for BDF integrator
+//
+// @param solverName		Name of the solver
+// @param aCoeffs			a coefficients for BDF
+// @param bCoeff			b coefficient for BDF
+//*****************************************************************************
+BDFIntegrator::BDFIntegrator(std::string solverName, ArrayD aCoeffs, double b):
+	ODEintegrator(solverName){
+	order = aCoeffs.cols();
+}
+
+//*****************************************************************************
+// Computees the integral over a step
+//
+// @param A		ODE matrix L that is used in the function
+// @param yn	Current species vector solution
+// @param dt	Time step to integrate over
+//*****************************************************************************
+VectorD BDFIntegrator::integrate(const SparseMatrixD& A, const VectorD& yn, 
+	double dt){
+	VectorD ynNext = 0*yn;
+	assert(order > 0);
+
+	return ynNext;
+}
+
+//*****************************************************************************
+// Computes the first step of a BDF integrator
+//
+// @param y0	The initial condition
+//*****************************************************************************
+void BDFIntegrator::computeFirstStep(VectorD y0){
+	initFirstStep = true;	
+}
+//*****************************************************************************
+// Builds the summation that is used as the right hand side of a linear solve
+//
+//*****************************************************************************
+VectorD BDFIntegrator::buildRHS(){
+	VectorD rhs;
+
+	return rhs;
+}
+//*****************************************************************************
 // Method for integrator factor class
 //
 // @param method	explicit or implicit
@@ -81,6 +136,8 @@ ODEintegrator *integratorFactory::getIntegrator(std::string method,
 
 	if (method == "explicit"){
 		solver = getExplicitRKIntegrator(name);
+	}
+	else if (method == "implicit"){
 	}
 	return solver;
 }

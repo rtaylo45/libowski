@@ -1,8 +1,9 @@
 //*****************************************************************************
 // Author: Zack Taylor
 // 
-// Classical numerical integrator class that implements explicit Runge-Kutta
-// methods. These methods solve the general form,
+// Provies a class of numerical ode integrators 
+// Classical numerical integrator class that implements ode integrator methods
+// These methods solve the general form,
 //
 //		dy/dt = f(t,y).
 //
@@ -12,24 +13,6 @@
 //
 //	If f(t,y) = Ly then the function is not dependent on t and 
 //	f(t,y) = f(y). 
-//
-//	Each Runge-Kutta method follows the same general formula,
-//
-//		y_(n+1) = y_n + h*Sum (b_i * k_i)	from i-1 to s
-//
-//		k_i = f[y_n + h*Sum (a_(i,j)*k_j)]	from j=1 to i-1
-//
-//	The coefficients take the form of the Butcher tableau
-//
-//		c_1 | a_(1,1)	a_(1,2) ...  a_(1,s)
-//		c_2 | a_(2,1)	a_(2,2) ...	 a_(2,s)
-//		 .  |    .        .            .
-//		 .  |    .        .            .
-//		 .  |    .        .            .
-//		c_s | a_{s,1)  a_(2,s) ...  a_(s,s)
-//
-//	The "c" part of the Butcher tableau is used for the time dependencs on f
-//	so we don't need it.
 //*****************************************************************************
 #ifndef ODEINTEGRATOR_H 
 #define ODEINTEGRATOR_H
@@ -69,6 +52,24 @@ class ODEintegrator{
 
 //*****************************************************************************
 // Performs Runge-Kutta methods
+//
+//	Each Runge-Kutta method follows the same general formula,
+//
+//		y_(n+1) = y_n + h*Sum (b_i * k_i)	from i-1 to s
+//
+//		k_i = f[y_n + h*Sum (a_(i,j)*k_j)]	from j=1 to i-1
+//
+//	The coefficients take the form of the Butcher tableau
+//
+//		c_1 | a_(1,1)	a_(1,2) ...  a_(1,s)
+//		c_2 | a_(2,1)	a_(2,2) ...	 a_(2,s)
+//		 .  |    .        .            .
+//		 .  |    .        .            .
+//		 .  |    .        .            .
+//		c_s | a_{s,1)  a_(2,s) ...  a_(s,s)
+//
+//	The "c" part of the Butcher tableau is used for the time dependencs on f
+//	so we don't need it.
 //*****************************************************************************
 class rungeKuttaIntegrator : public ODEintegrator{
 	public:
@@ -110,6 +111,48 @@ class explicitRKIntegrator : public rungeKuttaIntegrator{
 	//**************************************************************************
 	VectorD kn(int, const SparseMatrixD&, const VectorD&, double); 
 };
+
+//*****************************************************************************
+// Preforms backward differentiation method. This is a class of implicit 
+// solvers
+//
+// The general formula ofr a BDF can be written as
+//
+//		Sum a_k*y_(n+k) = h*b*L*y_(n+s)	from k = 0 to k = s
+//
+// where s is the order of the method. Solving for y_(n+s)
+//
+//		y_(n+s) = (I - b*h*L)^(-1) * (Sum a_k*y_(n+k))  from k = 0 to k = s - 1
+//*****************************************************************************
+class BDFIntegrator : public ODEintegrator{
+	//**************************************************************************
+	// Preforms an integration over a time step
+	//**************************************************************************
+	VectorD integrate(const SparseMatrixD&, const VectorD&, double);
+	//**************************************************************************
+	// Constructor
+	//**************************************************************************
+	BDFIntegrator(std::string, ArrayD, double);
+	private:
+	//**************************************************************************
+	// computes the first step
+	//**************************************************************************
+	void computeFirstStep(VectorD);
+	//**************************************************************************
+	// Builds the rhs vector for the linear implicit solve
+	//**************************************************************************
+	VectorD buildRHS();
+	//**************************************************************************
+	// logical stating if the first step has been computed or not
+	//**************************************************************************
+	bool initFirstStep = false;
+	//**************************************************************************
+	// Matrix containing previous solutions
+	//**************************************************************************
+	MatrixD previousSteps;
+
+};
+
 //*****************************************************************************
 // Numerical integrator factory class
 //*****************************************************************************
