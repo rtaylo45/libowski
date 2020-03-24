@@ -18,6 +18,7 @@
 #define ODEINTEGRATOR_H
 #include <string>
 #include <assert.h>
+#include <math.h>
 #include "vectorTypes.h"
 #include "matrixTypes.h"
 #include "exception.h"
@@ -35,6 +36,10 @@ class ODEintegrator{
 	// Constructor 
 	//**************************************************************************
 	ODEintegrator(std::string);
+	//**************************************************************************
+	// Cleans the solver
+	//**************************************************************************
+	virtual void clean()=0;
 	//**************************************************************************
 	// Solver name
 	//**************************************************************************
@@ -81,6 +86,10 @@ class rungeKuttaIntegrator : public ODEintegrator{
 	// Constructor
 	//**************************************************************************
 	rungeKuttaIntegrator(std::string, ArrayD, ArrayD);
+	//**************************************************************************
+	// Cleans the solver
+	//**************************************************************************
+	void clean()=0;
 	protected:
 	//**************************************************************************
 	// Holds the a coefficients for k functions
@@ -105,6 +114,10 @@ class explicitRKIntegrator : public rungeKuttaIntegrator{
 	// Constructor
 	//**************************************************************************
 	explicitRKIntegrator(std::string, ArrayD, ArrayD);
+	//**************************************************************************
+	// Cleans the solver
+	//**************************************************************************
+	void clean();
 	private:
 	//**************************************************************************
 	// The general K_i function that calculates K_i of any order 
@@ -125,6 +138,7 @@ class explicitRKIntegrator : public rungeKuttaIntegrator{
 //		y_(n+s) = (I - b*h*L)^(-1) * (Sum a_k*y_(n+k))  from k = 0 to k = s - 1
 //*****************************************************************************
 class BDFIntegrator : public ODEintegrator{
+	public:
 	//**************************************************************************
 	// Preforms an integration over a time step
 	//**************************************************************************
@@ -132,16 +146,29 @@ class BDFIntegrator : public ODEintegrator{
 	//**************************************************************************
 	// Constructor
 	//**************************************************************************
-	BDFIntegrator(std::string, ArrayD, double);
+	BDFIntegrator(std::string, int);
+	//**************************************************************************
+	// Cleans the solver
+	//**************************************************************************
+	void clean();
 	private:
+	//**************************************************************************
+	// Solves the BDF equation
+	//**************************************************************************
+	VectorD solve(const SparseMatrixD&, double, MatrixD, int);
+	//**************************************************************************
+	// Addes a solution vector to the first column of the pervious soluitons
+	// and moves the rest back
+	//**************************************************************************
+	void shuffle(const VectorD&, MatrixD&);
 	//**************************************************************************
 	// computes the first step
 	//**************************************************************************
-	void computeFirstStep(VectorD);
+	void computeFirstStep(SparseMatrixD, VectorD, double);
 	//**************************************************************************
 	// Builds the rhs vector for the linear implicit solve
 	//**************************************************************************
-	VectorD buildRHS();
+	VectorD buildRHS(MatrixD, int);
 	//**************************************************************************
 	// logical stating if the first step has been computed or not
 	//**************************************************************************
@@ -150,7 +177,21 @@ class BDFIntegrator : public ODEintegrator{
 	// Matrix containing previous solutions
 	//**************************************************************************
 	MatrixD previousSteps;
+	//**************************************************************************
+	// a coefficients for BDF. Each order is house in a row of the array, with
+	// the oppisite sign
+	//**************************************************************************
+	MatrixD a;
 
+	//**************************************************************************
+	// b coefficients for BDF.
+	//**************************************************************************
+	VectorD b;
+	//**************************************************************************
+	// Sparse LU Linear Solver
+	//**************************************************************************
+	Eigen::SparseLU<SparseMatrixD, COLAMDOrdering<int> > solver;
+	
 };
 
 //*****************************************************************************
@@ -164,8 +205,12 @@ class integratorFactory{
 	static ODEintegrator *getIntegrator(std::string, std::string);
 	private:
 	//**************************************************************************
-	// Gets an explicit runge integrator object
+	// Gets an explicit runge kutta integrator object
 	//**************************************************************************
 	static ODEintegrator *getExplicitRKIntegrator(std::string);
+	//**************************************************************************
+	// Gets a BDF integrator object
+	//**************************************************************************
+	static ODEintegrator *getBDFIntegrator(std::string);
 };
 #endif

@@ -31,8 +31,10 @@ void tankProblem(int myid, ODEintegrator *intSolver){
    double x1_0 = 1000.0, x2_0 = 0.0, x3_0 = 0.0;
    double t = 0.0; 
 	double x1, x2, x3;
-	int steps = 2000;
-	double totalTime = 20.0;
+	//int steps = 2000;
+	//double totalTime = 20.0;
+	int steps = 5;
+	double totalTime = 2.0;
 	double maxRelativeError = 0.0;
 	double dt = totalTime/steps;
    SparseMatrixD A(3,3);
@@ -77,6 +79,7 @@ void tankProblem(int myid, ODEintegrator *intSolver){
 		}
 	}
 	std::cout << "Tank problem " << maxRelativeError << std::endl;
+	intSolver->clean();
 }
 
 void xenonIodineProblem(int myid, ODEintegrator *intSolver){
@@ -164,16 +167,19 @@ void xenonIodineProblem(int myid, ODEintegrator *intSolver){
 		}
 	}
 	std::cout << "Xenon problem " << maxRelativeError << std::endl;
+	intSolver->clean();
 }
 
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 	ODEintegrator *intSolver;
-	std::vector<std::string> solvers {"forward euler", "explicit midpoint", "heun second-order",
-		"ralston second-order", "kutta third-order", "heun third-order", "ralston third-order",
-		"SSPRK3", "classic fourth-order"};
-	std::vector<std::string> methods {"explicit"};
+	//std::vector<std::string> solvers {"forward euler", "explicit midpoint", "heun second-order",
+	//	"ralston second-order", "kutta third-order", "heun third-order", "ralston third-order",
+	//	"SSPRK3", "classic fourth-order"};
+	//std::vector<std::string> methods {"explicit"};
+	std::vector<std::string> solvers {"BDF2"};
+	std::vector<std::string> methods {"implicit"};
 
 	// Loop over methods
 	for (std::string &method : methods){
@@ -182,7 +188,7 @@ int main(){
 			std::cout << solverType << std::endl;
 			intSolver = integratorFactory::getIntegrator(method, solverType);
 			tankProblem(myid, intSolver);
-			xenonIodineProblem(myid, intSolver);
+			//xenonIodineProblem(myid, intSolver);
 			std::cout << " " << std::endl;
 		}
 	}
