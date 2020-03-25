@@ -33,7 +33,7 @@ void tankProblem(int myid, ODEintegrator *intSolver){
 	double x1, x2, x3;
 	//int steps = 2000;
 	//double totalTime = 20.0;
-	int steps = 5;
+	int steps = 2;
 	double totalTime = 2.0;
 	double maxRelativeError = 0.0;
 	double dt = totalTime/steps;
@@ -178,7 +178,7 @@ int main(){
 	//	"ralston second-order", "kutta third-order", "heun third-order", "ralston third-order",
 	//	"SSPRK3", "classic fourth-order"};
 	//std::vector<std::string> methods {"explicit"};
-	std::vector<std::string> solvers {"BDF2"};
+	std::vector<std::string> solvers {"BDF1", "BDF2"};
 	std::vector<std::string> methods {"implicit"};
 
 	// Loop over methods

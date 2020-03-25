@@ -171,19 +171,16 @@ void BDFIntegrator::computeFirstStep(const SparseMatrixD A, VectorD y0,
 	double dt){
 	int N = 10, nTemp, tempOrder;
 	double m = 1./(double)N, dtTemp;
-	MatrixD tempHist; 
-	VectorD sol = 0.*y0, yn = 0.*y0;
+	MatrixD tempHistThisOrder, tempHistNextOrder; 
+	VectorD sol = 0.*y0;
 
 	// Sets that the first step is already calculated
 	initFirstStep = true;
 
-	// sets size of the previous steps matrix
-	// needs to be the same number of rows as the initial condition and 
-	// need to save order previous solutions. 
-	previousSteps = MatrixD::Zero(y0.rows(), order);
-
-	// Adds itinial condition to the history
-	shuffle(y0, previousSteps);
+	// Inits the history container for the first order BDF method
+	tempHistThisOrder = MatrixD::Zero(y0.rows(), 1);
+	shuffle(y0, tempHistThisOrder);
+	std::cout << dt << std::endl;
 
 	// This loops over lower order BDFs 
 	for (int i=1; i<order; i++){
@@ -193,26 +190,40 @@ void BDFIntegrator::computeFirstStep(const SparseMatrixD A, VectorD y0,
 		nTemp = N-i+1;
 		// Time step of the lower order BDF solver
 		dtTemp = dt*std::pow(m, order-i);
+		std::cout << dtTemp << std::endl;
+		// temperary history array to hold previous solutions for the next
+		// order solver. 
+		tempHistNextOrder = MatrixD::Zero(y0.rows(), tempOrder+1);
+		// Adds initial condition to temp histroy
+		shuffle(y0, tempHistNextOrder);
 		// Loops over the number of times this solver needs to be called.
 		// Each one of these iterations will build one of the previousSteps
 		// columns. 
 		std::cout << "lower bdf order " << i << std::endl;
-		for (int j=0; j<=i; j++){
-			// temperary history array to hold previous solutions
-			tempHist = MatrixD::Zero(y0.rows(), tempOrder);
+		for (int j=0; j<i; j++){
 			std::cout << "index of presolve sol " << j << std::endl;
 			// Loops over the number of steps for this order solver to take
 			for (int step=0; step<nTemp; step++){
 				// Solves over this time step
 				std::cout << "index of substep " << step << std::endl;
-				sol = solve(A, dtTemp, tempHist, tempOrder);
+				sol = solve(A, dtTemp, tempHistThisOrder, tempOrder);
 				// Adds the soluiton to temp history 
-				shuffle(sol, tempHist);
+				shuffle(sol, tempHistThisOrder);
 			}
 			nTemp = 10;
-			// Adds the solution to the solvers history
-			shuffle(sol, previousSteps);
+			// Adds the solution for the next BDF order to use
+			shuffle(sol, tempHistNextOrder);
 		}
+		// After the lower order bdf method builds the history for the 
+		// higher order method, the history for the next bdf method is set
+		tempHistThisOrder = tempHistNextOrder;
+	}
+	// Sets the solution history for the class bdf solver 
+	if (order > 1){
+		previousSteps = tempHistNextOrder;
+	}
+	else{
+		previousSteps = tempHistThisOrder;
 	}
 }
 
@@ -246,7 +257,7 @@ VectorD BDFIntegrator::buildRHS(MatrixD hist, int order){
 	// Loops over previous solutions to build the new right hand side
 	for (int i=0; i < order; i++){
 		rhs += aCoeff(i)*hist.col(i);
-		std::cout << i << " " << aCoeff(i) << " " << hist.col(i) << std::endl;
+		//std::cout << i << " " << aCoeff(i) << " " << hist.col(i) << std::endl;
 	}
 
 	return rhs;
