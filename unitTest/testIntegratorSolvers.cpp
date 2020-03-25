@@ -4,6 +4,7 @@
 #include <string>
 #include <math.h>
 #include <iomanip>
+#include <cmath>
 
 #include "ODEintegrator.h"
 #include "mpiProcess.h"
@@ -60,17 +61,17 @@ void tankProblem(int myid, ODEintegrator *intSolver){
 
 		b = sol;	
 		if (myid==0){
-			std::cout << std::setprecision(16) << x1 << " " << sol(0) << std::endl;
-    		std::cout << std::setprecision(16) << x2 << " " << sol(1) << std::endl;
-    		std::cout << std::setprecision(16) << x3 << " " << sol(2) << std::endl;
-    		std::cout << " " << std::endl;
+			//std::cout << std::setprecision(16) << x1 << " " << sol(0) << std::endl;
+    		//std::cout << std::setprecision(16) << x2 << " " << sol(1) << std::endl;
+    		//std::cout << std::setprecision(16) << x3 << " " << sol(2) << std::endl;
+    		//std::cout << " " << std::endl;
 			//std::cout << std::setprecision(16) << abs(x1-sol(0)) << std::endl;
 			//std::cout << std::setprecision(16) << abs(x2-sol(1)) << std::endl;
 			//std::cout << std::setprecision(16) << abs(x3-sol(2)) << std::endl;
     		//std::cout << " " << std::endl;
-			maxRelativeError = std::max(abs(x1-sol(0))/x1, maxRelativeError);
-			maxRelativeError = std::max(abs(x2-sol(1))/x2, maxRelativeError);
-			maxRelativeError = std::max(abs(x3-sol(2))/x3, maxRelativeError);
+			maxRelativeError = std::max(std::abs(x1-sol(0))/x1, maxRelativeError);
+			maxRelativeError = std::max(std::abs(x2-sol(1))/x2, maxRelativeError);
+			maxRelativeError = std::max(std::abs(x3-sol(2))/x3, maxRelativeError);
     		//std::cout << " " << std::endl;
 
 			//assert(isApprox(x1, sol(0), 1.e-10, 1.e-11));
@@ -161,8 +162,8 @@ void xenonIodineProblem(int myid, ODEintegrator *intSolver){
 			//std::cout << abs(N_xe-sol(0))/N_xe << std::endl;
 			//std::cout << abs(N_I-sol(1))/N_I << std::endl;
     		//std::cout << " " << std::endl;
-			maxRelativeError = std::max(abs(N_xe-sol(0))/N_xe, maxRelativeError);
-			maxRelativeError = std::max(abs(N_I-sol(1))/N_I, maxRelativeError);
+			maxRelativeError = std::max(std::abs(N_xe-sol(0))/N_xe, maxRelativeError);
+			maxRelativeError = std::max(std::abs(N_I-sol(1))/N_I, maxRelativeError);
 
 		}
 	}
@@ -170,25 +171,35 @@ void xenonIodineProblem(int myid, ODEintegrator *intSolver){
 	intSolver->clean();
 }
 
+std::vector<std::string> getSolvers(std::string method){
+	std::vector<std::string> explicitSolvers {"forward euler", "explicit midpoint", "heun second-order",
+		"ralston second-order", "kutta third-order", "heun third-order", "ralston third-order",
+		"SSPRK3", "classic fourth-order"};
+	std::vector<std::string> implicitSolvers {"BDF1", "BDF2", "BDF3", "BDF4", "BDF5", "BDF6"};
+	if (method == "explicit"){
+		return explicitSolvers;
+	}
+	else{
+		return implicitSolvers;
+	}
+}
+
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 	ODEintegrator *intSolver;
-	//std::vector<std::string> solvers {"forward euler", "explicit midpoint", "heun second-order",
-	//	"ralston second-order", "kutta third-order", "heun third-order", "ralston third-order",
-	//	"SSPRK3", "classic fourth-order"};
-	//std::vector<std::string> methods {"explicit"};
-	std::vector<std::string> solvers {"BDF1", "BDF2", "BDF3", "BDF4", "BDF5", "BDF6"};
-	std::vector<std::string> methods {"implicit"};
+	std::vector<std::string> methods {"explicit", "implicit"};
+	std::vector<std::string> solvers;
 
 	// Loop over methods
 	for (std::string &method : methods){
+		solvers = getSolvers(method);
 		// Loops over different solvers
 		for (std::string &solverType : solvers){
 			std::cout << solverType << std::endl;
 			intSolver = integratorFactory::getIntegrator(method, solverType);
 			tankProblem(myid, intSolver);
-			//xenonIodineProblem(myid, intSolver);
+			xenonIodineProblem(myid, intSolver);
 			std::cout << " " << std::endl;
 		}
 	}
