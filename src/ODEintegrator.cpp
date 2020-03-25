@@ -121,11 +121,25 @@ VectorD BDFIntegrator::integrate(const SparseMatrixD& A, const VectorD& yn,
 	// Computes the first step
 	if (not initFirstStep){ computeFirstStep(A, yn, dt);};
 
-	// Solves the BDF equation
-	ynNext = solve(A, dt, previousSteps, order);
+	// If the current step solution was calculated in the compute first step
+	// function then the solver returns the step that was calculated
+	if (previousStepCount < order-1){
+		ynNext =  previousSteps.col(order-(previousStepCount+2));
+		previousStepCount += 1;
+	}
+	else{
+		// Solves the BDF equation
+		ynNext = solve(A, dt, previousSteps, order);
+		// Shuffle the next solution into the history and removes the last
+		shuffle(ynNext, previousSteps);
+		// Adds to the number of steps previously done
+		previousStepCount += 1;
+	}
+		
+	//std::cout << ynNext << std::endl;
+	//std::cout << " " << std::endl;
 
-	// Shuffle the next solution into the history and removes the last
-	shuffle(ynNext, previousSteps);
+
 
 	return ynNext;
 }
@@ -147,7 +161,7 @@ VectorD BDFIntegrator::solve(const SparseMatrixD& A, double dt, MatrixD hist,
 	rhs = buildRHS(hist, BDForder);
 
 	// Temp vector to be inverted
-	temp = ident - b(order-1)*dt*A;
+	temp = ident - b(BDForder-1)*dt*A;
 
 	// analyze sparsisty pattern
 	solver.analyzePattern(temp);
@@ -180,7 +194,6 @@ void BDFIntegrator::computeFirstStep(const SparseMatrixD A, VectorD y0,
 	// Inits the history container for the first order BDF method
 	tempHistThisOrder = MatrixD::Zero(y0.rows(), 1);
 	shuffle(y0, tempHistThisOrder);
-	std::cout << dt << std::endl;
 
 	// This loops over lower order BDFs 
 	for (int i=1; i<order; i++){
@@ -190,7 +203,6 @@ void BDFIntegrator::computeFirstStep(const SparseMatrixD A, VectorD y0,
 		nTemp = N-i+1;
 		// Time step of the lower order BDF solver
 		dtTemp = dt*std::pow(m, order-i);
-		std::cout << dtTemp << std::endl;
 		// temperary history array to hold previous solutions for the next
 		// order solver. 
 		tempHistNextOrder = MatrixD::Zero(y0.rows(), tempOrder+1);
@@ -199,13 +211,10 @@ void BDFIntegrator::computeFirstStep(const SparseMatrixD A, VectorD y0,
 		// Loops over the number of times this solver needs to be called.
 		// Each one of these iterations will build one of the previousSteps
 		// columns. 
-		std::cout << "lower bdf order " << i << std::endl;
 		for (int j=0; j<i; j++){
-			std::cout << "index of presolve sol " << j << std::endl;
 			// Loops over the number of steps for this order solver to take
 			for (int step=0; step<nTemp; step++){
 				// Solves over this time step
-				std::cout << "index of substep " << step << std::endl;
 				sol = solve(A, dtTemp, tempHistThisOrder, tempOrder);
 				// Adds the soluiton to temp history 
 				shuffle(sol, tempHistThisOrder);
@@ -248,16 +257,15 @@ void BDFIntegrator::shuffle(const VectorD& sol, MatrixD& hist){
 //*****************************************************************************
 // Builds the summation that is used as the right hand side of a linear solve
 //
-// @param hist		Matrix of previous solutions
-// @param order	Order of the BDF solver
+// @param hist			Matrix of previous solutions
+// @param BDForder	Order of the BDF solver
 //*****************************************************************************
-VectorD BDFIntegrator::buildRHS(MatrixD hist, int order){
+VectorD BDFIntegrator::buildRHS(MatrixD hist, int BDForder){
 	VectorD rhs = VectorD::Zero(hist.rows());
-	VectorD aCoeff = a.row(order-1).head(order);
+	VectorD aCoeff = a.row(BDForder-1).head(BDForder);
 	// Loops over previous solutions to build the new right hand side
-	for (int i=0; i < order; i++){
+	for (int i=0; i < BDForder; i++){
 		rhs += aCoeff(i)*hist.col(i);
-		//std::cout << i << " " << aCoeff(i) << " " << hist.col(i) << std::endl;
 	}
 
 	return rhs;
@@ -268,6 +276,7 @@ VectorD BDFIntegrator::buildRHS(MatrixD hist, int order){
 //*****************************************************************************
 void BDFIntegrator::clean(){
 	initFirstStep = false;
+	previousStepCount = 0;
 }
 //*****************************************************************************
 // Method for integrator factor class

@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <math.h>
+#include <iomanip>
 
 #include "ODEintegrator.h"
 #include "mpiProcess.h"
@@ -31,10 +32,8 @@ void tankProblem(int myid, ODEintegrator *intSolver){
    double x1_0 = 1000.0, x2_0 = 0.0, x3_0 = 0.0;
    double t = 0.0; 
 	double x1, x2, x3;
-	//int steps = 2000;
-	//double totalTime = 20.0;
-	int steps = 2;
-	double totalTime = 2.0;
+	int steps = 2000;
+	double totalTime = 20.0;
 	double maxRelativeError = 0.0;
 	double dt = totalTime/steps;
    SparseMatrixD A(3,3);
@@ -61,13 +60,14 @@ void tankProblem(int myid, ODEintegrator *intSolver){
 
 		b = sol;	
 		if (myid==0){
-			//std::cout << x1 << " " << sol(0) << std::endl;
-    		//std::cout << x2 << " " << sol(1) << std::endl;
-    		//std::cout << x3 << " " << sol(2) << std::endl;
+			std::cout << std::setprecision(16) << x1 << " " << sol(0) << std::endl;
+    		std::cout << std::setprecision(16) << x2 << " " << sol(1) << std::endl;
+    		std::cout << std::setprecision(16) << x3 << " " << sol(2) << std::endl;
+    		std::cout << " " << std::endl;
+			//std::cout << std::setprecision(16) << abs(x1-sol(0)) << std::endl;
+			//std::cout << std::setprecision(16) << abs(x2-sol(1)) << std::endl;
+			//std::cout << std::setprecision(16) << abs(x3-sol(2)) << std::endl;
     		//std::cout << " " << std::endl;
-			//std::cout << abs(x1-sol(0))/x1 << std::endl;
-			//std::cout << abs(x2-sol(1))/x2 << std::endl;
-			//std::cout << abs(x3-sol(2))/x3 << std::endl;
 			maxRelativeError = std::max(abs(x1-sol(0))/x1, maxRelativeError);
 			maxRelativeError = std::max(abs(x2-sol(1))/x2, maxRelativeError);
 			maxRelativeError = std::max(abs(x3-sol(2))/x3, maxRelativeError);
@@ -78,7 +78,7 @@ void tankProblem(int myid, ODEintegrator *intSolver){
 			//assert(isApprox(x3, sol(2), 1.e-10, 1.e-11));
 		}
 	}
-	std::cout << "Tank problem " << maxRelativeError << std::endl;
+	std::cout << std::setprecision(16) << "Tank problem " << maxRelativeError << std::endl;
 	intSolver->clean();
 }
 
@@ -178,7 +178,7 @@ int main(){
 	//	"ralston second-order", "kutta third-order", "heun third-order", "ralston third-order",
 	//	"SSPRK3", "classic fourth-order"};
 	//std::vector<std::string> methods {"explicit"};
-	std::vector<std::string> solvers {"BDF1", "BDF2"};
+	std::vector<std::string> solvers {"BDF1", "BDF2", "BDF3", "BDF4", "BDF5", "BDF6"};
 	std::vector<std::string> methods {"implicit"};
 
 	// Loop over methods
