@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string>
 #include <fstream>
+#include <iomanip>
 
 #include "mpiProcess.h"
 #include "modelMesh.h"
@@ -1382,16 +1383,16 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	//testXenonIodineNoFlow(myid);
-	//testProblem1(myid);
-	//testProblem2(myid);
-	//testProblem2Krylov(myid);
+	testXenonIodineNoFlow(myid);
+	testProblem1(myid);
+	testProblem2(myid);
+	testProblem2Krylov(myid);
 	testProblem3(myid);
-	//testXenonIodineYFlow(myid);
-	//testXenonIodineXFlow(myid);
-	//testDiffusion2D(myid);
-	//testNeutronPrecursorsFlow(myid);
-	//testNeutronPrecursorsMultiChanFlow(myid);
+	testXenonIodineYFlow(myid);
+	testXenonIodineXFlow(myid);
+	testDiffusion2D(myid);
+	testNeutronPrecursorsFlow(myid);
+	testNeutronPrecursorsMultiChanFlow(myid);
 	//testBenBenchmark(myid);
 
 	mpi.finalize();
