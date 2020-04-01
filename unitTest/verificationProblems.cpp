@@ -62,12 +62,11 @@ void testProblem1(int myid){
 	double xLength = 1.0, yLength = 1.0;
 	double N1InitCon = 10000.0, N2InitCon = 0.0, N3InitCon = 0.0;
 	double N1MM = 1.0, N2MM = 1.0, N3MM = 1.0;
-	//std::vector<double> steps = {600};
 	std::vector<double> steps = {600, 500, 400, 350, 300,
 		250, 200, 150, 100, 75, 50, 25, 20, 15, 10, 5, 4, 3, 2, 1};
 	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
 		"pade-method1", "pade-method2"};
-	//std::vector<std::string> solvers {"CRAM"};
+	//std::vector<std::string> solvers {"BDF1", "BDF2", "BDF3", "BDF4", "BDF5", "BDF6"};
 	double tEnd = 600.0;
 	double t, dt;
    double lambda1 = 1.0/1.0e2, lambda2 = 0.5/1.0e2, lambda3 = 3.0/1.0e2;
@@ -116,7 +115,8 @@ void testProblem1(int myid){
 			for (int step = 1; step <= numOfSteps; step++){
 				t = step*dt;
 				// Solve with CRAM
-				spec.solve(t);
+				//spec.solve(t);
+				spec.solveImplicit(t);
 
 				// Gets species Concentrations
 				if (myid==0){
@@ -415,6 +415,141 @@ void testProblem2Krylov(int myid){
 }
 
 //*****************************************************************************
+// 2 species 1D diffusion problem, taken from the following paper
+// NUMERICAL METHODS FOR STIFF REACTION-DIFFUSION SYSTEMS
+//	By: Chou, Zhang, Zhao, and Nie
+//
+//	Diff eqs:
+//		dU/dt = d*Uxx - a*U + V
+//		dV/dt = d*Vxx - b*V
+//
+//	Solution:
+//		U(x,t) = (e^(-(a+d)*t) + e^(-(b+d)*t))*cos(x).
+//		U(x,t) = (a-b)*e^(-(b+d)*t)*cos(x).
+//
+// They don't explicitly give the initial condiiton in the paper, but if you
+// plug in zero to the solution you can get it for U and V.
+//
+//	BC's:
+//		Ux(0,t) = 0, Uv(0.t) = 0, U(pi/2,t) = 0, V(pi/2,t) = 0
+//*****************************************************************************
+void testProblem2IntegratorMethods(int myid){
+	int yCells = 1;
+	int xCells = 500;
+	std::vector<double> steps = lineSpace(200.,300.,100);
+	double xLength = M_PI/2., yLength = 0.0;
+	double tEnd = 1.0;
+	double dt, t = 0;
+	double a = 0.1, b = 0.01, d = 1.0;	// Problem 2a
+	//double a = 2.0, b = 1.0, d = 0.001;		// Problem 2b
+	//double a = 100.0, b = 1.0, d = 0.001;		// Problem 2c
+	double UCon, VCon, USol, VSol;
+	int UID, VID;
+	double x1, x2, xc, initCon, x, dx;
+	double linfErrorU, linfErrorV;
+	meshCell* cell = nullptr;
+	std::string outputFileName;
+	std::vector<double> Ucoeffs = {-a, 1.0};
+	std::vector<double> Vcoeffs = {0.0, -b};
+	std::vector<std::string> solvers {"BDF4", "BDF5", "BDF6"};
+
+	// Build the Mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+	// Build species driver
+	speciesDriver spec = speciesDriver(&model);
+
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
+
+		std::ofstream outputFile;
+		outputFileName = "problem2"+solverType+".out";
+		outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
+
+		
+		// Loops over number of time steps
+		for (double &numOfSteps	: steps){
+			dt = tEnd/numOfSteps;
+
+			// sets the solver
+			spec.setIntegratorSolver("implicit", solverType);
+
+			// Add species. I will add the initial condition later
+			UID = spec.addSpecies(1.0, 0.0, d);
+			VID = spec.addSpecies(1.0, 0.0, d);
+
+			// Add BCs
+			spec.setBoundaryCondition("newmann","west", UID, 0.0);
+			spec.setBoundaryCondition("dirichlet","east", UID, 0.0);
+			spec.setBoundaryCondition("newmann","west", VID, 0.0);
+			spec.setBoundaryCondition("dirichlet","east", VID, 0.0);
+
+			// Sets the intial condition
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j);	
+
+					// Calculates the x positions as the cell faces
+					dx = cell->dx;
+					xc = cell->x;
+					x2 = xc + dx/2;
+					x1 = xc - dx/2;
+
+					// Calculates the initial concentration from MVT. 
+					initCon = (1./dx)*(sin(x2) - sin(x1));		
+
+					spec.setSpeciesCon(i,j,UID, 2*initCon);
+					spec.setSpeciesCon(i,j,VID, (a-b)*initCon);
+
+					// Sets the sourses
+					spec.setSpeciesSource(i, j, UID, Ucoeffs, 0.0);
+					spec.setSpeciesSource(i, j, VID, Vcoeffs, 0.0);
+				}
+			}
+
+			auto start = std::chrono::high_resolution_clock::now();
+			for (int step = 1; step <= numOfSteps; step++){
+				t = step*dt;
+				spec.solveImplicit(t);
+
+			}
+			auto end = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+				end - start);
+
+			linfErrorU = 0.0;
+			linfErrorV = 0.0;
+			// Gets species Concentrations
+			if (myid==0){
+				for (int i = 0; i < xCells; i++){
+					for (int j = 0; j < yCells; j++){
+						cell = model.getCellByLoc(i,j);	
+
+						// Caclulate analytical solution
+						x = cell->x;
+						USol = (exp(-(a+d)*t) + exp(-(b+d)*t))*cos(x);
+						VSol = (a-b)*exp(-(b+d)*t)*cos(x);
+						// Get libowski solution
+						UCon = spec.getSpecies(i, j, UID);
+						VCon = spec.getSpecies(i, j, VID);
+
+						assert(isApprox(USol, UCon, 1e-5, 1e-4));
+						assert(isApprox(VSol, VCon, 1e-5, 1e-4));
+						linfErrorU = std::max(linfErrorU, std::abs(USol-UCon));
+						linfErrorV = std::max(linfErrorV, std::abs(VSol-VCon));
+					}
+				}
+			}
+			outputFile << std::setprecision(16) << " " << dt << " " << linfErrorU << " " 
+			//std::cout << " " << dx << " " << linfErrorU << " " 
+				<< linfErrorV << " " << duration.count()/1.e6 << std::endl;
+
+			spec.clean();
+		}
+		spec.clean();
+	}
+}
+
+//*****************************************************************************
 // Single species decay, 1D 
 //
 // Diff eqs:
@@ -426,21 +561,22 @@ void testProblem2Krylov(int myid){
 //		Periodic
 //
 //	Initial Conditions:
-//		C = 10*x
+//		C = 0
 //
 //	Solution:
-//			Fuck all... lol
 //*****************************************************************************
 void testProblem3(int myid){
 	int xCells = 1, yCells = 50;
 	double xLength = 0.0, yLength = 1.0;
-	double v = 2.;
-	//std::vector<double> steps = lineSpace(1.,50.,50);
+	double v = 0.;
+	//std::vector<double> steps = lineSpace(1.,300.,300);
 	std::vector<double> steps = {1};
 	double tEnd = 1.0;
 	double t;
 	double dt;
 	double cCon1, cCon2, initCon;
+	// need to convert g/s/cm^3 to lbm/s/ft^3 by 62.427961
+	double conversion = 62.427861;
 	double x, xc, dx, x1, x2, s;
 	int c1ID, c2ID, c3ID, c4ID, c5ID, c6ID;
 	double c1Con, c2Con, c3Con, c4Con, c5Con, c6Con;
@@ -457,6 +593,7 @@ void testProblem3(int myid){
 	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic"};
 	//std::vector<std::string> solvers {"pade-method1", "pade-method2"};
 	std::vector<std::string> solvers {"CRAM"};
+	//std::vector<std::string> solvers {"BDF1", "BDF2", "BDF3", "BDF4", "BDF5", "BDF6"};
 	meshCell* cell = nullptr;
 	std::string outputFileName;
 	
@@ -480,6 +617,7 @@ void testProblem3(int myid){
 
 			// sets the solver
 			spec.setMatrixExpSolver(solverType);
+			//spec.setIntegratorSolver("implicit", solverType);
 			// Add species
 			c1ID = spec.addSpecies(1.0, 0.0, 0.0);
 			c2ID = spec.addSpecies(1.0, 0.0, 0.0);
@@ -507,14 +645,6 @@ void testProblem3(int myid){
 			spec.setBoundaryCondition("periodic","north", c6ID);
 			spec.setBoundaryCondition("periodic","south", c6ID);
 
-			// Set periodic BCs
-			//spec.setBoundaryCondition("dirichlet","south", c1ID);
-			//spec.setBoundaryCondition("dirichlet","south", c2ID);
-			//spec.setBoundaryCondition("dirichlet","south", c3ID);
-			//spec.setBoundaryCondition("dirichlet","south", c4ID);
-			//spec.setBoundaryCondition("dirichlet","south", c5ID);
-			//spec.setBoundaryCondition("dirichlet","south", c6ID);
-
 			for (int i = 0; i < xCells; i++){
 				for (int j = 0; j < yCells; j++){
 					cell = model.getCellByLoc(i,j);	
@@ -526,7 +656,7 @@ void testProblem3(int myid){
 					x1 = xc - dx/2;
 
 					// Calculates the initial concentration from MVT. 
-					//initCon = 0.01*(5./dx)*(x2*x2 - x1*x1);		
+					//initCon = (5./dx)*(x2*x2 - x1*x1);		
 					initCon = 0.0;
 					s = (1./dx)*(yLength/M_PI)*(cos(M_PI*x1/yLength) - 
 						cos(M_PI*x2/yLength));
@@ -539,12 +669,13 @@ void testProblem3(int myid){
 					spec.setSpeciesCon(i,j,c6ID, initCon);
 
 					// Sets the sourses
-					spec.setSpeciesSource(i, j, c1ID, c1Coeffs, 62.427961*s*a1);
-					spec.setSpeciesSource(i, j, c2ID, c2Coeffs, 62.427961*s*a2);
-					spec.setSpeciesSource(i, j, c3ID, c3Coeffs, 62.427961*s*a3);
-					spec.setSpeciesSource(i, j, c4ID, c4Coeffs, 62.427961*s*a4);
-					spec.setSpeciesSource(i, j, c5ID, c5Coeffs, 62.427961*s*a5);
-					spec.setSpeciesSource(i, j, c6ID, c6Coeffs, 62.427961*s*a6);
+					// need to convert g/s/cm^3 to lbm/s/ft^3 by 62.427961
+					spec.setSpeciesSource(i, j, c1ID, c1Coeffs, s*a1*conversion);
+					spec.setSpeciesSource(i, j, c2ID, c2Coeffs, s*a2*conversion);
+					spec.setSpeciesSource(i, j, c3ID, c3Coeffs, s*a3*conversion);
+					spec.setSpeciesSource(i, j, c4ID, c4Coeffs, s*a4*conversion);
+					spec.setSpeciesSource(i, j, c5ID, c5Coeffs, s*a5*conversion);
+					spec.setSpeciesSource(i, j, c6ID, c6Coeffs, s*a6*conversion);
 				}
 			}
 			for (int step = 1; step <= numOfSteps; step++){
@@ -564,8 +695,8 @@ void testProblem3(int myid){
 					c4Con = spec.getSpecies(i, j, c4ID);
 					c5Con = spec.getSpecies(i, j, c5ID);
 					c6Con = spec.getSpecies(i, j, c6ID);
-					//outputFile << std::setprecision(16) << c1Con << " " << c2Con << " " << c3Con 
-					std::cout << c1Con << " " << c2Con << " " << c3Con
+					outputFile << std::setprecision(16) << c1Con << " " << c2Con << " " << c3Con 
+					//std::cout << i << " " << j << " " << c1Con << " " << c2Con << " " << c3Con
 					<< " " << c4Con << " " << c5Con << " " << c6Con << std::endl;
 				}
 			}
@@ -583,7 +714,7 @@ void testXenonIodineNoFlow(int myid){
 	double xLength = 1.0, yLength = 1.0;
 	double xenonInitCon = 0.0, iodineInitCon = 0.0;
 	double xenonMM = 135.0, iodineMM = 135.0;
-	double numOfSteps = 10.;
+	double numOfSteps = 4.;
 	double tEnd = 1000.0;
 	double t;
 	double dt = tEnd/numOfSteps;
@@ -605,8 +736,10 @@ void testXenonIodineNoFlow(int myid){
 
 	modelMesh model(xCells, yCells, xLength, yLength);
 	speciesDriver spec = speciesDriver(&model);
+
 	xenonID = spec.addSpecies(xenonMM, N_xe_0, D_xe);
 	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
+	//spec.setIntegratorSolver("explicit", "classic fourth-order");
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -643,6 +776,8 @@ void testXenonIodineNoFlow(int myid){
 					iodineCon = spec.getSpecies(i, j, iodineID);
 					assert(isApprox(xenonCon, N_xe, 1.e5, 1.e-11));
 					assert(isApprox(iodineCon, N_I, 1.e5, 1.e-11));
+					//std::cout << xenonCon << std::endl; 
+					//std::cout << iodineCon << std::endl; 
 				}
 			}
 		}
@@ -719,8 +854,7 @@ void testXenonIodineYFlow(int myid){
 				//std::cout << xenonCon << " " << iodineCon << " " << N_I << std::endl;
 				//error = std::max(std::abs(iodineCon - N_I)/N_I, error);
 				error = std::abs(iodineCon - N_I)/N_I;
-				std::cout << y << " " << error << std::endl;
-				//assert(isApprox(iodineCon, N_I));
+				assert(isApprox(iodineCon, N_I));
 			}
 		}
 	}
@@ -1383,17 +1517,18 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	testXenonIodineNoFlow(myid);
 	testProblem1(myid);
 	testProblem2(myid);
+	testProblem2IntegratorMethods(myid);
 	testProblem2Krylov(myid);
 	testProblem3(myid);
+	testXenonIodineNoFlow(myid);
 	testXenonIodineYFlow(myid);
 	testXenonIodineXFlow(myid);
 	testDiffusion2D(myid);
 	testNeutronPrecursorsFlow(myid);
-	testNeutronPrecursorsMultiChanFlow(myid);
-	//testBenBenchmark(myid);
+	//testNeutronPrecursorsMultiChanFlow(myid);
+	testBenBenchmark(myid);
 
 	mpi.finalize();
 }
