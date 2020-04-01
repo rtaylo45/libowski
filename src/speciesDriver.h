@@ -73,14 +73,18 @@ class speciesDriver {
 	void solveImplicit(double);
 	// Solves the steady state species transport equation
 	void solve();
-	// Gives ability to se the matrix exp solver
+	// Gives ability to set the matrix exp solver
 	void setMatrixExpSolver(std::string, bool = false, int = 10);
+	// Gives ability to set the integrator solver
+	void setIntegratorSolver(std::string, std::string);
 	// Cleans species
 	void clean();
 
 	private:
 	// Exponential solver
 	matrixExponential *expSolver;
+	// Integrator solver
+	ODEintegrator *intSolver;
 	// Builds the transition matrix
 	SparseMatrixD buildTransMatrix(bool, double);
 	// Builds the initial condition vector

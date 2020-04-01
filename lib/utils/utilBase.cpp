@@ -24,7 +24,7 @@ bool isApprox(derived goalVal, derived testVal, derived rtol, derived atol){
 	bool rtolBool = false;
 	bool atolBool = false;
 
-	double diff = abs(goalVal - testVal);
+	double diff = std::abs(goalVal - testVal);
 	if (diff < rtol) { rtolBool = true; }
 	if (diff/goalVal < atol) { atolBool = true; }
 	if (rtolBool and atolBool) { retBool = true; }

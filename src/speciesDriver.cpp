@@ -11,6 +11,7 @@
 speciesDriver::speciesDriver(modelMesh* model){
 	modelPtr = model;
 	expSolver = matrixExponentialFactory::getExpSolver("CRAM");
+	intSolver = integratorFactory::getIntegrator("implicit", "BDF4");
 }
 
 //*****************************************************************************
@@ -22,6 +23,17 @@ void speciesDriver::setMatrixExpSolver(std::string solverName, bool krylovFlag,
 	int krylovDim){
 	expSolver = matrixExponentialFactory::getExpSolver(solverName, krylovFlag,
 		krylovDim);
+}
+
+//*****************************************************************************
+// Sets the integrator solver
+//
+// @param method		The method of the solver
+// @param solverName	The name of the materix exponential solver type
+//*****************************************************************************
+void speciesDriver::setIntegratorSolver(std::string method, std::string 
+	solverName){
+	intSolver = integratorFactory::getIntegrator(method, solverName);
 }
 
 //*****************************************************************************
@@ -300,18 +312,24 @@ void speciesDriver::solve(double solveTime){
 void speciesDriver::solveImplicit(double solveTime){
 	VectorD b;
 	VectorD sol;
-	VectorD cOld;
-	MatrixD dA;
-	bool augmented = false;
+	VectorD solOld;
+	bool augmented = true;
+	//bool augmented = false;
 	SparseLU<SparseMatrixD, COLAMDOrdering<int> > LinearSolver;
 	double timeStep = solveTime - lastSolveTime;
 
-	cOld = buildInitialConditionVector(augmented);
-	A = buildTransMatrix(augmented, timeStep);
-	b = -cOld/timeStep + buildbVector();
+	solOld = buildInitialConditionVector(augmented);
+	//A = buildTransMatrix(augmented, timeStep);
+	//b = -solOld/timeStep + buildbVector();
+	if (not matrixInit){
+		A = buildTransMatrix(augmented, 0.0);
+		matrixInit = true;
+	}
+	//LinearSolver.compute(A);
+	//sol = LinearSolver.solve(b);
 
-	LinearSolver.compute(A);
-	sol = LinearSolver.solve(b);
+	sol = intSolver->integrate(A, solOld, timeStep);
+	
 	if (mpi.rank == 0){unpackSolution(sol);};
 	lastSolveTime = solveTime;
 }
@@ -716,6 +734,7 @@ void speciesDriver::clean(){
 	numOfSpecs = 0;
 	matrixInit = false;
 	lastSolveTime = 0.0;
+	intSolver->clean();
    for (int i = 0; i < modelPtr->numOfxCells; i++){
       for (int j = 0; j < modelPtr->numOfyCells; j++){
          meshCell* cell = modelPtr->getCellByLoc(i,j);
