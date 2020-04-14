@@ -85,6 +85,8 @@ void modelMesh::createCellFaces(){
 // Connects the nodes
 //*****************************************************************************
 void modelMesh::connectCells(){
+	int kEast, kWest, kSouth, kNorth;
+
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
@@ -96,10 +98,10 @@ void modelMesh::connectCells(){
 			cell->eastCellPtr = getCellByLoc(i+1,j);
 
 			// Gets the absolute indices for the cell faces
-			int kEast = i*(2*numOfyCells+1) + j;
-			int kWest = (i+1)*(2*numOfyCells+1) + j;
-			int kSouth = numOfyCells*(2*i+1) + i + j;
-			int kNorth = numOfyCells*(2*i+1) + i + j + 1;
+			kEast = i*(2*numOfyCells+1) + j;
+			kWest = (i+1)*(2*numOfyCells+1) + j;
+			kSouth = numOfyCells*(2*i+1) + i + j;
+			kNorth = numOfyCells*(2*i+1) + i + j + 1;
 	
 			// Sets the pointers for cell faces	
 			cell->eastFacePtr = &meshCellFaces[kEast];
@@ -225,6 +227,58 @@ void modelMesh::setConstantYVelocity(double velocity, int column){
 		cell->northFacePtr->yVl = velocity;
 		cell->southFacePtr->yVl = velocity;
 	}
+}
+
+//*****************************************************************************
+// Sets the temperature in the whole problem
+//
+// @param temp		Temperature in kelvin
+//*****************************************************************************
+void modelMesh::setSystemTemperature(double temp){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setTemperature(temp);
+		}
+	}
+}
+
+//*****************************************************************************
+// Sets the pressure in the whole problem
+//
+// @param pressure		Pressure in lbf/in^2
+//*****************************************************************************
+void modelMesh::setSystemPressure(double pressure){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setPressure(pressure);
+		}
+	}
+}
+
+//*****************************************************************************
+// Set cell temperature
+//
+// @param i			x cell index
+// @param j			y cell index
+// @param temp		Temperature in kelvin
+//*****************************************************************************
+void modelMesh::setCellTemperature(int i, int j, double temp){
+	meshCell* cell = getCellByLoc(i,j);
+	cell->setTemperature(temp);
+}
+
+//*****************************************************************************
+// Set cell pressure
+//
+// @param i				x cell index
+// @param j				y cell index
+// @param Pressure	Pressure in lbf/in^2
+//*****************************************************************************
+void modelMesh::setCellPressure(int i, int j, double pressure){
+	meshCell* cell = getCellByLoc(i,j);
+	cell->setPressure(pressure);
 }
 
 //*****************************************************************************

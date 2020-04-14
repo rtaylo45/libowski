@@ -48,7 +48,6 @@ species* meshCell::getSpecies(int specID){
 	// Checks to make sure the specID is not out of range
 	assert(specID <= speciesVector.size() and specID>= 0);
 	return &speciesVector[specID];
-
 }
 //*****************************************************************************
 // Gets species concentration
@@ -68,7 +67,6 @@ double meshCell::getSpecCon(int specID){
 void meshCell::setSpeciesConcentration(double con, int specID){
 	species spec = speciesVector[specID];
 	spec.c = con;
-
 }
 
 //*****************************************************************************

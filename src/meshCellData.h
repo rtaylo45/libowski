@@ -77,9 +77,12 @@ class meshCell {
 	double getSpecCon(int);
 	// Sets species concentration
 	void setSpeciesConcentration(double, int);
+	// Sets the cells temperature
+	void setTemperature(double);
+	// Sets the cells pressure
+	void setPressure(double);
 	// Clean species
 	void cleanSpecies();
-
 
 };
 #endif
