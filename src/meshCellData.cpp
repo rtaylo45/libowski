@@ -60,7 +60,7 @@ double meshCell::getSpecCon(int specID){
 }
 
 //*****************************************************************************
-// Gets a pointer to the species object in the cell
+// Sets the species concentration
 //
 // @param con		Concentration [lbm/ft^3]
 // @param specID	ID of the species
@@ -69,6 +69,24 @@ void meshCell::setSpeciesConcentration(double con, int specID){
 	species spec = speciesVector[specID];
 	spec.c = con;
 
+}
+
+//*****************************************************************************
+// Sets the cells pressure
+//
+// @param pressure	Pressure in lbf/in^2
+//*****************************************************************************
+void meshCell::setPressure(double pressure){
+	P = pressure;
+}
+
+//*****************************************************************************
+// Sets the cells temperature
+//
+// @param temp		Temperature in kelvin
+//*****************************************************************************
+void meshCell::setTemperature(double temp){
+	T = temp;
 }
 
 //*****************************************************************************
