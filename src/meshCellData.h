@@ -17,19 +17,23 @@ class meshCell {
 	// Class attributes
 	public:
 	// Cell index in the x direction
-	int i;
+	int i = -1;
 	// Cell index in the y direction
-	int j;
+	int j = -1;
 	// Absolut index
-	int absIndex;
+	int absIndex = -1;
 	// X position defined at the center of the cell
-	double x;
+	double x = -1.;
 	// Y position defined at the cent of the cell
-	double y;
+	double y = -1. ;
 	// dx of cell
-	double dx;
+	double dx = -1.;
 	// dy of cell
-	double dy;
+	double dy = -1.;
+	// Temperature of cell in kelvin
+	double T = -1.;
+	// Presure in lbf/in^2
+	double P = -1.;
 	// Denote if a cell is at a  boundary
 	bool boundary = false;
 	// Boundary location: 0 = North
@@ -73,9 +77,12 @@ class meshCell {
 	double getSpecCon(int);
 	// Sets species concentration
 	void setSpeciesConcentration(double, int);
+	// Sets the cells temperature
+	void setTemperature(double);
+	// Sets the cells pressure
+	void setPressure(double);
 	// Clean species
 	void cleanSpecies();
-
 
 };
 #endif

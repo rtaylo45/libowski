@@ -49,6 +49,14 @@ class modelMesh {
 	void setConstantYVelocity(double);
 	// Sets a constant y velocity across a row of cells
 	void setConstantYVelocity(double, int);
+	// Sets a temperature in the whole system
+	void setSystemTemperature(double);
+	// Sets a pressure in the whole system
+	void setSystemPressure(double);
+	// Set temperature in a cell
+	void setCellTemperature(int, int, double);
+	// Set pressure in a cell
+	void setCellPressure(int, int, double);
 	// Cleans the model
 	void clean();
 

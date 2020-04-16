@@ -1,14 +1,7 @@
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <unsupported/Eigen/CXX11/Tensor>
 #include <assert.h>
 #include <iostream>
-#include <vector>
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <string>
-#include <fstream>
+#include <vector>
 
 #include "mpiProcess.h"
 #include "modelMesh.h"
@@ -17,25 +10,6 @@
 #include "species.h"
 
 using namespace Eigen;
-//*****************************************************************************
-// Test if two number are approx equal
-//
-// @param goalVal		The real solution value
-// @param testVal		Test value
-// @param rtol			Relative tolerance
-// @param atol			Absolution tolerance
-//
-// Values for rtol and atol were taken from the default values for numpys 
-// isApprox function.
-//*****************************************************************************
-bool isApprox(double goalVal, double testVal, double rtol = 1e-5, double atol = 1e-8){
-	bool retBool = false;
-
-	double diff = abs(goalVal - testVal);
-	if (diff < rtol) { retBool = true; }
-	if (diff/goalVal < atol) { retBool = true; }
-	return retBool;
-}
 //*****************************************************************************
 // test the init of the mesh class. For now i kinda just test to make sure
 // the function run.
