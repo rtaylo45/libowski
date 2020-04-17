@@ -436,6 +436,18 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
 
+			// loop over cell connections
+			for (int conCount = 0; conCount < connections.size(); conCount ++){
+				connection* connections[conCount];
+				// need to fix the conCount var in the future for this 
+				// function
+				rCon = calcSpecConvectionSlope(cellID, specID, conCount, tran);
+				// flux limiter
+				psi = fluxLim.getPsi(rCon);
+				// matrix coefficient
+				a = std::max(direction*tran, 0.0) + diffusionCoeff;
+			}
+
 
 			// Conecntration slopes
 			rN = calcSpecConvectiveSlope(cellID, specID, 0, nTran);

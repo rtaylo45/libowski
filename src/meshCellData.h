@@ -6,11 +6,15 @@
 //*****************************************************************************
 #ifndef MESHCELLDATA_H
 #define MESHCELLDATA_H
+#include "cellConnection.h"
 #include "meshCellFace.h"
 #include "species.h"
 #include <vector>
 #include <assert.h>
 #include <string>
+
+// Forward decleration
+class connection;
 
 class meshCell {
 
@@ -43,28 +47,13 @@ class meshCell {
 	int boundaryLoc = -1;
 	// Boundary condition type
 	std::string boundaryType = "None";
+
+	// Vector of cell connections
+	std::vector<connection> connections;
+
+	private:
 	// Vector of the species in the cell
 	std::vector<species> speciesVector;
-
-	// Connection info for mesh cells
-	// Pointer to the east mesh cell
-	meshCell *eastCellPtr = nullptr;
-	// Pointer to the west mesh cell
-	meshCell *westCellPtr = nullptr;
-	// Pointer to the north mesh cell
-	meshCell *northCellPtr = nullptr;
-	// Pointer to the south mesh cell
-	meshCell *southCellPtr = nullptr;
-
-	// Connection info for mesh cell faces
-	// Pointer to the east mesh cell
-	meshCellFace *eastFacePtr = nullptr;
-	// Pointer to the west mesh cell
-	meshCellFace *westFacePtr = nullptr;
-	// Pointer to the north mesh cell
-	meshCellFace *northFacePtr = nullptr;
-	// Pointer to the south mesh cell
-	meshCellFace *southFacePtr = nullptr;
 
 	public:
 	// Constructor

@@ -12,6 +12,7 @@
 //*****************************************************************************
 #ifndef MESHCELLFACE_H
 #define MESHCELLFACE_H
+
 class meshCellFace {
 
 	public:

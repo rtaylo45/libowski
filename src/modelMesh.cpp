@@ -85,17 +85,18 @@ void modelMesh::createCellFaces(){
 // Connects the nodes
 //*****************************************************************************
 void modelMesh::connectCells(){
+	meshCell* cellPtr;
 	int kEast, kWest, kSouth, kNorth;
 
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
-			meshCell* cell = getCellByLoc(i,j);
+			cellPtr = getCellByLoc(i,j);
 
 			// Sets pointer to the cells
-			cell->northCellPtr = getCellByLoc(i,j+1);
-			cell->southCellPtr = getCellByLoc(i,j-1);
-			cell->westCellPtr = getCellByLoc(i-1,j);
-			cell->eastCellPtr = getCellByLoc(i+1,j);
+			meshCell* northCellPtr = getCellByLoc(i,j+1);
+			meshCell* southCellPtr = getCellByLoc(i,j-1);
+			meshCell* westCellPtr = getCellByLoc(i-1,j);
+			meshCell* eastCellPtr = getCellByLoc(i+1,j);
 
 			// Gets the absolute indices for the cell faces
 			kEast = i*(2*numOfyCells+1) + j;
@@ -104,10 +105,20 @@ void modelMesh::connectCells(){
 			kNorth = numOfyCells*(2*i+1) + i + j + 1;
 	
 			// Sets the pointers for cell faces	
-			cell->eastFacePtr = &meshCellFaces[kEast];
-			cell->westFacePtr = &meshCellFaces[kWest];
-			cell->southFacePtr = &meshCellFaces[kSouth];
-			cell->northFacePtr = &meshCellFaces[kNorth];
+			meshCellFace* eastFacePtr = &meshCellFaces[kEast];
+			meshCellFace* westFacePtr = &meshCellFaces[kWest];
+			meshCellFace* southFacePtr = &meshCellFaces[kSouth];
+			meshCellFace* northFacePtr = &meshCellFaces[kNorth];
+			
+			connection northCon(northCellPtr, northFacePtr, cellPtr->dy);
+			connection southCon(southCellPtr, southFacePtr, cellPtr->dy);
+			connection eastCon(eastCellPtr, eastFacePtr, cellPtr->dx);
+			connection westCon(westCellPtr, westFacePtr, cellPtr->dx);
+
+			cellPtr->connections.push_back(northCon);
+			cellPtr->connections.push_back(southCon);
+			cellPtr->connections.push_back(westCon);
+			cellPtr->connections.push_back(eastCon);
 		}
 	}
 }
