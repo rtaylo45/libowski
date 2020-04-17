@@ -110,10 +110,10 @@ void modelMesh::connectCells(){
 			meshCellFace* southFacePtr = &meshCellFaces[kSouth];
 			meshCellFace* northFacePtr = &meshCellFaces[kNorth];
 			
-			connection northCon(northCellPtr, northFacePtr, cellPtr->dy);
-			connection southCon(southCellPtr, southFacePtr, cellPtr->dy);
-			connection eastCon(eastCellPtr, eastFacePtr, cellPtr->dx);
-			connection westCon(westCellPtr, westFacePtr, cellPtr->dx);
+			connection northCon(northCellPtr, northFacePtr, cellPtr->dy, -1., 0);
+			connection southCon(southCellPtr, southFacePtr, cellPtr->dy, 1., 1);
+			connection eastCon(eastCellPtr, eastFacePtr, cellPtr->dx, -1., 2);
+			connection westCon(westCellPtr, westFacePtr, cellPtr->dx, 1., 3);
 
 			cellPtr->connections.push_back(northCon);
 			cellPtr->connections.push_back(southCon);
@@ -189,9 +189,15 @@ void modelMesh::setConstantXVelocity(double velocity){
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
-			
-			cell->eastFacePtr->xVl = velocity;
-			cell->westFacePtr->xVl = velocity;
+
+			// loop over connections
+			for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+				connection thisCon = cell->connections[conCount];
+				// sets the face velocity for east and west faces
+				if (thisCon.loc == 2 or thisCon.loc == 3){
+					thisCon.connectionFacePtr->xVl = velocity;
+				}
+			}
 		}
 	}
 }
@@ -205,8 +211,14 @@ void modelMesh::setConstantXVelocity(double velocity, int row){
 	for (int i = 0; i < numOfxCells; i++){
 		meshCell* cell = getCellByLoc(i,row);
 		
-		cell->eastFacePtr->xVl = velocity;
-		cell->westFacePtr->xVl = velocity;
+		// loop over connections
+		for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+			connection thisCon = cell->connections[conCount];
+			// sets the face velocity for east and west faces
+			if (thisCon.loc == 2 or thisCon.loc == 3){
+				thisCon.connectionFacePtr->xVl = velocity;
+			}
+		}
 	}
 }
 
@@ -220,8 +232,14 @@ void modelMesh::setConstantYVelocity(double velocity){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			
-			cell->northFacePtr->yVl = velocity;
-			cell->southFacePtr->yVl = velocity;
+			// loop over connections
+			for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+				connection thisCon = cell->connections[conCount];
+				// sets the face velocity for north and south faces
+				if (thisCon.loc == 0 or thisCon.loc == 1){
+					thisCon.connectionFacePtr->yVl = velocity;
+				}
+			}
 		}
 	}
 }
@@ -235,8 +253,14 @@ void modelMesh::setConstantYVelocity(double velocity, int column){
 	for (int j = 0; j < numOfyCells; j++){
 		meshCell* cell = getCellByLoc(column,j);
 		
-		cell->northFacePtr->yVl = velocity;
-		cell->southFacePtr->yVl = velocity;
+		// loop over connections
+		for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+			connection thisCon = cell->connections[conCount];
+			// sets the face velocity for north and south faces
+			if (thisCon.loc == 0 or thisCon.loc == 1){
+				thisCon.connectionFacePtr->yVl = velocity;
+			}
+		}
 	}
 }
 

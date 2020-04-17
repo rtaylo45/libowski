@@ -241,7 +241,9 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* thisCell = modelPtr->getCellByLoc(i,yCellMax);
 				meshCell* southCell = modelPtr->getCellByLoc(i,yCellMin);
-				thisCell->northCellPtr = southCell;
+				connection thisCellCon = thisCell->connections[0];
+				assert(thisCellCon.loc == 0);
+				thisCellCon.connectionCellPtr = southCell;
 			}
 			break;
 		}
@@ -250,7 +252,9 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* thisCell = modelPtr->getCellByLoc(i,yCellMin);
 				meshCell* northCell = modelPtr->getCellByLoc(i,yCellMax);
-				thisCell->southCellPtr = northCell;
+				connection thisCellCon = thisCell->connections[1];
+				assert(thisCellCon.loc == 1);
+				thisCellCon.connectionCellPtr = northCell;
 			}
 			break;
 		}
@@ -259,7 +263,9 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 			for (int j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* thisCell = modelPtr->getCellByLoc(xCellMax,j);
 				meshCell* westCell = modelPtr->getCellByLoc(xCellMin,j);
-				thisCell->eastCellPtr = westCell;
+				connection thisCellCon = thisCell->connections[2];
+				assert(thisCellCon.loc == 2);
+				thisCellCon.connectionCellPtr = westCell;
 			}
 			break;
 		}
@@ -268,7 +274,9 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 			for (int j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* thisCell = modelPtr->getCellByLoc(xCellMin,j);
 				meshCell* eastCell = modelPtr->getCellByLoc(xCellMax,j);
-				thisCell->westCellPtr = eastCell;
+				connection thisCellCon = thisCell->connections[3];
+				assert(thisCellCon.loc == 3);
+				thisCellCon.connectionCellPtr = eastCell;
 			}
 			break;
 		}
@@ -374,11 +382,9 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
 	double diffusionCoeff = 0.0;
 	double aSb = 0.0, aNb = 0.0, aWb = 0.0, aEb = 0.0;
-	double rN, rS, rE, rW;
-	double psiN, psiS, psiE, psiW;
-	double aN, aS, aE, aW;
+	double rCon, psi, a, tran
+	double psi
 	double coeff;
-	double nTran, sTran, eTran, wTran;
 	double dN, dS, dW, dE;
 	double aP;
 	double dx, dy;
@@ -438,14 +444,22 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 
 			// loop over cell connections
 			for (int conCount = 0; conCount < connections.size(); conCount ++){
-				connection* connections[conCount];
-				// need to fix the conCount var in the future for this 
-				// function
-				rCon = calcSpecConvectionSlope(cellID, specID, conCount, tran);
+				// Gets connection and other pointers to cells and cell
+				// faces
+				connection thisCon = thisCellPtr->connections[conCount];
+				meshCell* otherCellPtr = thisCon.connectionCellPtr;
+				meshCellFace* conFace = thisCeon.connectionFacePtr;
+
+
+				// Gets the convective species slope
+				rCon = calcSpecConvectionSlope(cellID, specID, thisCon.loc, tran);
 				// flux limiter
 				psi = fluxLim.getPsi(rCon);
 				// matrix coefficient
-				a = std::max(direction*tran, 0.0) + diffusionCoeff;
+				// because small delta x,y and big delta x,y are the same 
+				// dd is just dx*dx or dy*dy. 
+				a = std::max(direction*tran, 0.0) + diffusionCoeff*dd;
+				// sets the flow coefficients if the pointer is not null
 			}
 
 
