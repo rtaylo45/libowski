@@ -125,7 +125,6 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 	int specID, double bc){
 
 	int locID = -1;
-	dummySpec = 1;
 
 	if (loc == "north") {locID = 0;};
 	if (loc == "south") {locID = 1;};
@@ -135,9 +134,11 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 
 	if (BCType == "dirichlet") {
 		setGeneralBoundaryCondition(BCType, locID, specID, bc);
+		dummySpec = 1;
 	}
 	else if (BCType == "newmann"){
 		setGeneralBoundaryCondition(BCType, locID, specID, bc);
+		dummySpec = 1;
 	} 
 	else if (BCType == "periodic"){
 		setPeriodicBoundaryCondition(locID);
@@ -321,20 +322,16 @@ void speciesDriver::solveImplicit(double solveTime){
 	VectorD b;
 	VectorD sol;
 	VectorD solOld;
+	MatrixD dA;
 	bool augmented = true;
-	//bool augmented = false;
 	SparseLU<SparseMatrixD, COLAMDOrdering<int> > LinearSolver;
 	double timeStep = solveTime - lastSolveTime;
 
 	solOld = buildInitialConditionVector(augmented);
-	//A = buildTransMatrix(augmented, timeStep);
-	//b = -solOld/timeStep + buildbVector();
 	if (not matrixInit){
 		A = buildTransMatrix(augmented, 0.0);
 		matrixInit = true;
 	}
-	//LinearSolver.compute(A);
-	//sol = LinearSolver.solve(b);
 
 	sol = intSolver->integrate(A, solOld, timeStep);
 	
@@ -354,6 +351,7 @@ void speciesDriver::solve(){
 
 	A = buildTransMatrix(augmented, 0.0);
 	b = buildbVector();
+	dA = Eigen::MatrixXd(A);
 
 	LinearSolver.compute(A);
 	sol = LinearSolver.solve(b);
