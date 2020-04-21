@@ -110,10 +110,14 @@ void modelMesh::connectCells(){
 			meshCellFace* southFacePtr = &meshCellFaces[kSouth];
 			meshCellFace* northFacePtr = &meshCellFaces[kNorth];
 			
-			connection northCon(northCellPtr, northFacePtr, cellPtr->dy, -1., 0);
-			connection southCon(southCellPtr, southFacePtr, cellPtr->dy, 1., 1);
-			connection eastCon(eastCellPtr, eastFacePtr, cellPtr->dx, -1., 2);
-			connection westCon(westCellPtr, westFacePtr, cellPtr->dx, 1., 3);
+			connection northCon(northCellPtr, northFacePtr, 
+				cellPtr->dx, -1., 0, cellPtr->dy);
+			connection southCon(southCellPtr, southFacePtr, 
+				cellPtr->dx, 1., 1, cellPtr->dy);
+			connection eastCon(eastCellPtr, eastFacePtr, 
+				cellPtr->dy, -1., 2, cellPtr->dx);
+			connection westCon(westCellPtr, westFacePtr, 
+				cellPtr->dy, 1., 3, cellPtr->dx);
 
 			cellPtr->connections.push_back(northCon);
 			cellPtr->connections.push_back(southCon);
@@ -195,7 +199,7 @@ void modelMesh::setConstantXVelocity(double velocity){
 				connection thisCon = cell->connections[conCount];
 				// sets the face velocity for east and west faces
 				if (thisCon.loc == 2 or thisCon.loc == 3){
-					thisCon.connectionFacePtr->xVl = velocity;
+					thisCon.connectionFacePtr->vl = velocity;
 				}
 			}
 		}
@@ -216,7 +220,7 @@ void modelMesh::setConstantXVelocity(double velocity, int row){
 			connection thisCon = cell->connections[conCount];
 			// sets the face velocity for east and west faces
 			if (thisCon.loc == 2 or thisCon.loc == 3){
-				thisCon.connectionFacePtr->xVl = velocity;
+				thisCon.connectionFacePtr->vl = velocity;
 			}
 		}
 	}
@@ -237,7 +241,7 @@ void modelMesh::setConstantYVelocity(double velocity){
 				connection thisCon = cell->connections[conCount];
 				// sets the face velocity for north and south faces
 				if (thisCon.loc == 0 or thisCon.loc == 1){
-					thisCon.connectionFacePtr->yVl = velocity;
+					thisCon.connectionFacePtr->vl = velocity;
 				}
 			}
 		}
@@ -258,7 +262,7 @@ void modelMesh::setConstantYVelocity(double velocity, int column){
 			connection thisCon = cell->connections[conCount];
 			// sets the face velocity for north and south faces
 			if (thisCon.loc == 0 or thisCon.loc == 1){
-				thisCon.connectionFacePtr->yVl = velocity;
+				thisCon.connectionFacePtr->vl = velocity;
 			}
 		}
 	}

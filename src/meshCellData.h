@@ -34,20 +34,12 @@ class meshCell {
 	double dx = -1.;
 	// dy of cell
 	double dy = -1.;
+	// cell volume
+	double volume = 0.0;
 	// Temperature of cell in kelvin
 	double T = -1.;
 	// Presure in lbf/in^2
 	double P = -1.;
-	// Denote if a cell is at a  boundary
-	bool boundary = false;
-	// Boundary location: 0 = North
-	//							 1 = South
-	//							 2 = East
-	//							 3 = West
-	int boundaryLoc = -1;
-	// Boundary condition type
-	std::string boundaryType = "None";
-
 	// Vector of cell connections
 	std::vector<connection> connections;
 

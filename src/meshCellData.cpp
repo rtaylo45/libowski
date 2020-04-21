@@ -23,6 +23,7 @@ meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor,
 	y = yCor;
 	dx = dx_;
 	dy = dy_;	
+	volume = dx_*dy_;
 }
 
 //*****************************************************************************

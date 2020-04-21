@@ -175,9 +175,9 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		case 0: {
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* cell = modelPtr->getCellByLoc(i,yCellMax);
-				cell->boundary = true;
-				cell->boundaryLoc = 0;
-				cell->boundaryType = type;
+				connection northCon = cell->connections[0];
+				northCon.boundary = true;
+				northCon.boundaryType = type;
    			species* spec = getSpeciesPtr(i, yCellMax, specID);
 				spec->bc = bc;
 			}
@@ -187,9 +187,9 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		case 1: {
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* cell = modelPtr->getCellByLoc(i,yCellMin);
-				cell->boundary = true;
-				cell->boundaryLoc = 1;
-				cell->boundaryType = type;
+				connection southCon = cell->connections[1];
+				southCon.boundary = true;
+				southCon.boundaryType = type;
    			species* spec = getSpeciesPtr(i, yCellMin, specID);
 				spec->bc = bc;
 			}
@@ -199,9 +199,9 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		case 2: {
 			for (int j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* cell = modelPtr->getCellByLoc(xCellMax,j);
-				cell->boundary = true;
-				cell->boundaryLoc = 2;
-				cell->boundaryType = type;
+				connection eastCon = cell->connections[2];
+				eastCon.boundary = true;
+				eastCon.boundaryType = type;
    			species* spec = getSpeciesPtr(xCellMax, j, specID);
 				spec->bc = bc;
 			}
@@ -211,9 +211,9 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		case 3: {
 			for (int j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* cell = modelPtr->getCellByLoc(xCellMin,j);
-				cell->boundary = true;
-				cell->boundaryLoc = 3;
-				cell->boundaryType = type;
+				connection westCon = cell->connections[3];
+				westCon.boundary = true;
+				westCon.boundaryType = type;
    			species* spec = getSpeciesPtr(xCellMin, j, specID);
 				spec->bc = bc;
 			}
@@ -381,13 +381,9 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	int totalCells = modelPtr->numOfTotalCells;
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
 	double diffusionCoeff = 0.0;
-	double aSb = 0.0, aNb = 0.0, aWb = 0.0, aEb = 0.0;
-	double rCon, psi, a, tran
-	double psi
-	double coeff;
-	double dN, dS, dW, dE;
+	double rCon, psi, a, tran;
+	double psi, coeff, conDirection, conDist;
 	double aP;
-	double dx, dy;
 	tripletList.reserve(nonZeros);	
 
 	// if the matrix is not augmented then we no longer need to add a dummy
@@ -402,37 +398,9 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	// Loop over cells
 	for (int cellID = 0; cellID < totalCells; cellID++){
 		// Set coefficients to zero
-		dN = 0.0, dS = 0.0, dW = 0.0, dE = 0.0;
-		nTran = 0.0, sTran = 0.0, eTran = 0.0, wTran = 0.0;
+		tran = 0.0;
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
-		// gets dx and dy. If either of these are zero then the problem is 1D
-		dx = thisCellPtr->dx;
-		dy = thisCellPtr->dy;
-
-		// Gets pointer to connecting cells
-		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
-		meshCell* thisCellSouthCellPtr = thisCellPtr->southCellPtr;
-		meshCell* thisCellEastCellPtr = thisCellPtr->eastCellPtr;
-		meshCell* thisCellWestCellPtr = thisCellPtr->westCellPtr;
-
-		// Gets pointer to the cell faces
-		meshCellFace* thisCellNorthFacePtr = thisCellPtr->northFacePtr;
-		meshCellFace* thisCellSouthFacePtr = thisCellPtr->southFacePtr;
-		meshCellFace* thisCellEastFacePtr = thisCellPtr->eastFacePtr;
-		meshCellFace* thisCellWestFacePtr = thisCellPtr->westFacePtr;
-
-		// Gets the transition coefficient for species convective flux
-		if (dy){nTran = thisCellNorthFacePtr->yVl/dy;};
-		if (dy){sTran = thisCellSouthFacePtr->yVl/dy;};
-		if (dx){eTran = thisCellEastFacePtr->xVl/dx;};
-		if (dx){wTran = thisCellWestFacePtr->xVl/dx;};
-
-		// Calculates the diffusion transition
-		if (dy){dN = 1./(dy*dy);};
-		if (dy){dS = 1./(dy*dy);};
-		if (dx){dW = 1./(dx*dx);};
-		if (dx){dE = 1./(dx*dx);};
 
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
@@ -441,137 +409,69 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			diffusionCoeff = thisSpecPtr->D;
 			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
+			// Sets the ap coeff
+			ap = 0.0;
 
 			// loop over cell connections
-			for (int conCount = 0; conCount < connections.size(); conCount ++){
-				// Gets connection and other pointers to cells and cell
-				// faces
+			for (int conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
+				// Gets cell connection object pointer
 				connection thisCon = thisCellPtr->connections[conCount];
+				// Gets pointer to connected cell
 				meshCell* otherCellPtr = thisCon.connectionCellPtr;
-				meshCellFace* conFace = thisCeon.connectionFacePtr;
+				// Gets the direction required to multiply by the convection transition
+				conDirection = thisCon.direction;
+				// Gets the distance from this cell center to connection cell center
+				conDist = thisCeon.distance;
+				// Sets the matrix coefficient to zero
+				a = 0.0;
+				// Sets a variable that holdes if the matrix coeff is used for setting
+				// the boundary condition
+				ab = 0.0;
 
-
-				// Gets the convective species slope
-				rCon = calcSpecConvectionSlope(cellID, specID, thisCon.loc, tran);
-				// flux limiter
-				psi = fluxLim.getPsi(rCon);
-				// matrix coefficient
-				// because small delta x,y and big delta x,y are the same 
-				// dd is just dx*dx or dy*dy. 
-				a = std::max(direction*tran, 0.0) + diffusionCoeff*dd;
-				// sets the flow coefficients if the pointer is not null
-			}
-
-
-			// Conecntration slopes
-			rN = calcSpecConvectiveSlope(cellID, specID, 0, nTran);
-			rS = calcSpecConvectiveSlope(cellID, specID, 1, sTran);
-			rE = calcSpecConvectiveSlope(cellID, specID, 2, eTran);
-			rW = calcSpecConvectiveSlope(cellID, specID, 3, wTran);
-
-			// flux limiter
-			psiN = fluxLim.getPsi(rN);
-			psiS = fluxLim.getPsi(rS);
-			psiE = fluxLim.getPsi(rE);
-			psiW = fluxLim.getPsi(rW);
-
-			// Matrix Coefficient
-			aN = std::max(-nTran,0.0) + diffusionCoeff*dN;
-			aS = std::max(sTran,0.0) + diffusionCoeff*dS;
-			aE = std::max(-eTran,0.0) + diffusionCoeff*dE;
-			aW = std::max(wTran, 0.0) + diffusionCoeff*dW;
-
-			// Sets the north flow coefficient 
-			if (thisCellNorthCellPtr){
-				j = getAi(thisCellNorthCellPtr->absIndex, totalCells, specID, 
-					totalSpecs);
-				tripletList.push_back(T(i, j, aN));
-			}	
-			// Sets the south flow coefficient
-			if (thisCellSouthCellPtr){
-				j = getAi(thisCellSouthCellPtr->absIndex, totalCells, specID, 
-					totalSpecs);
-				tripletList.push_back(T(i, j, aS));
-			}
-			// Sets the east flow coefficient
-			if(thisCellEastCellPtr){
-				j = getAi(thisCellEastCellPtr->absIndex, totalCells, specID, 
-					totalSpecs);
-				tripletList.push_back(T(i, j, aE));
-			}
-			// Sets the west flow coefficient
-			if(thisCellWestCellPtr){
-				j = getAi(thisCellWestCellPtr->absIndex, totalCells, specID, 
-					totalSpecs);
-				tripletList.push_back(T(i, j, aW));
-			}
-			// Sets the coefficients for non-constant source terms
-			double thisCoeff = 0.0;
-			if (thisSpecPtr->coeffs.size()){
-				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
-					coeff = thisSpecPtr->coeffs[specCounter];
-					if (specCounter == specID){
-						thisCoeff += coeff;
-					}
-					else{
-						j = getAi(cellID, totalCells, specCounter, totalSpecs);
-						tripletList.push_back(T(i, j, coeff));
-					}
+				// If the connection distance is zero then there is no cell in that 
+				// direction and the transition rate is zero. This will happen 
+				// when modeling 1D cases.
+				if (conDist){
+					// Computes the transition coefficient for convection
+					tran = thisCeon.connectionFacePtr->vl*thisCon.area/thisCell->volume;
+					// Gets the convective species slope
+					rCon = calcSpecConvectionSlope(cellID, specID, thisCon.loc, tran);
+					// flux limiter
+					psi = fluxLim.getPsi(rCon);
+					// matrix coefficient
+					a = std::max(conDirection*tran, 0.0) + 
+						diffusionCoeff*thisCeon.area/thisCell->volume/conDist;
+					// sets the flow coefficients if the pointer is not null
+					if (otherCellPtr){
+						j = getAi(otherCellPtr->absIndex, totalCells, specID, 
+							totalSpecs);
+						tripletList.push_back(T(i, j, aN));
+					}	
 				}
-			}
-
-			// Added sthe Dirichlet boundary condition to the sourse term
-			if (thisCellPtr->boundaryType == "dirichlet"){
-				if (thisCellPtr->boundaryLoc == 0){thisSpecPtr->s += 2.*aN*thisSpecPtr->bc;};
-				if (thisCellPtr->boundaryLoc == 1){thisSpecPtr->s += 2.*aS*thisSpecPtr->bc;};
-				if (thisCellPtr->boundaryLoc == 2){thisSpecPtr->s += 2.*aE*thisSpecPtr->bc;};
-				if (thisCellPtr->boundaryLoc == 3){thisSpecPtr->s += 2.*aW*thisSpecPtr->bc;};
-
-				// Sets the boundary coefficients which are used to modifiy the ap 
-				// coefficient
-				if (thisCellPtr->boundaryLoc == 0){aNb = -aN;};
-				if (thisCellPtr->boundaryLoc == 1){aSb = -aS;};
-				if (thisCellPtr->boundaryLoc == 2){aEb = -aE;};
-				if (thisCellPtr->boundaryLoc == 3){aWb = -aW;};
-			}
-			// Added sthe Newmann boundary condition to the sourse term
-			else if (thisCellPtr->boundaryType == "newmann"){
-				if (thisCellPtr->boundaryLoc == 0){
-					thisSpecPtr->s -= aN*thisSpecPtr->bc*dy;
+				// Added sthe Dirichlet boundary condition to the sourse term
+				if (thisCon.boundaryType == "dirichlet"){
+					thisSpecPtr->s += 2.*a*thisSpecPtr->bc;
+					ab = -a;
 				}
-				if (thisCellPtr->boundaryLoc == 1){
-					thisSpecPtr->s -= aS*thisSpecPtr->bc*dy;
-				}
-				if (thisCellPtr->boundaryLoc == 2){
-					thisSpecPtr->s -= aE*thisSpecPtr->bc*dx;
-				}
-				if (thisCellPtr->boundaryLoc == 3){
-					thisSpecPtr->s -= aW*thisSpecPtr->bc*dx;
+				// Added sthe Newmann boundary condition to the sourse term
+				else if (thisCellPtr->boundaryType == "newmann"){
+					thisSpecPtr->s -= a*thisSpecPtr->bc*conDist;
+					ab = a;
 				}
 
-				// Sets the boundary coefficients which are used to modifiy the ap 
-				// coefficient
-				if (thisCellPtr->boundaryLoc == 0){aNb = aN;};
-				if (thisCellPtr->boundaryLoc == 1){aSb = aS;};
-				if (thisCellPtr->boundaryLoc == 2){aEb = aE;};
-				if (thisCellPtr->boundaryLoc == 3){aWb = aW;};
+				// aP coefficient
+				aP += -a;
+				// Adds the coefficents if the connection is a boundary
+				thisCoeff += ab;
 			}
 
-			// aP coefficient
-			aP = -(aE + aS + aW + aN);
-
-			// Adds the coeff for this species implicit solve
-			if (dt != 0.0){thisCoeff += aP - 1./dt;};
 			// Steady state or matrix exp solve
 			if (dt == 0.0){thisCoeff += aP;};
-			// Adds the coefficents if the cell in a boundary
-			thisCoeff += (aSb + aNb + aWb + aEb);
+
 			tripletList.push_back(T(i, i, thisCoeff));
 
 			// Sets the constant source terms
 			if (Augmented){tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));};
-			// Resets the boundary coefficients
-			aSb = 0.0, aNb = 0.0, aWb = 0.0, aEb = 0.0;
 		}
 	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());

@@ -21,10 +21,8 @@ class meshCellFace {
 	// Index of face in y direction
 	int j;
 	int absIndex;
-	// x component velocity
-	double xVl = 0.0;
-	// y component velocity
-	double yVl = 0.0;
+	// Velocity component normal to the surface
+	double vl = 0.0;
 	// x direction length
 	double dx = 0.0;
 	// y direction length
