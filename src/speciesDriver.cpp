@@ -381,9 +381,8 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	int totalCells = modelPtr->numOfTotalCells;
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
 	double diffusionCoeff = 0.0;
-	double rCon, psi, a, tran;
-	double psi, coeff, conDirection, conDist;
-	double aP;
+	double rCon, psi, a, tran, thisCoeff, conDirection, conDist;
+	double aP, ab;
 	tripletList.reserve(nonZeros);	
 
 	// if the matrix is not augmented then we no longer need to add a dummy
@@ -410,7 +409,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
 			// Sets the ap coeff
-			ap = 0.0;
+			aP = 0.0;
 
 			// loop over cell connections
 			for (int conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
@@ -421,7 +420,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				// Gets the direction required to multiply by the convection transition
 				conDirection = thisCon.direction;
 				// Gets the distance from this cell center to connection cell center
-				conDist = thisCeon.distance;
+				conDist = thisCon.distance;
 				// Sets the matrix coefficient to zero
 				a = 0.0;
 				// Sets a variable that holdes if the matrix coeff is used for setting
@@ -433,19 +432,19 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				// when modeling 1D cases.
 				if (conDist){
 					// Computes the transition coefficient for convection
-					tran = thisCeon.connectionFacePtr->vl*thisCon.area/thisCell->volume;
+					tran = thisCon.connectionFacePtr->vl*thisCon.area/thisCellPtr->volume;
 					// Gets the convective species slope
-					rCon = calcSpecConvectionSlope(cellID, specID, thisCon.loc, tran);
+					rCon = calcSpecConvectiveSlope(cellID, specID, thisCon.loc, tran);
 					// flux limiter
 					psi = fluxLim.getPsi(rCon);
 					// matrix coefficient
 					a = std::max(conDirection*tran, 0.0) + 
-						diffusionCoeff*thisCeon.area/thisCell->volume/conDist;
+						diffusionCoeff*thisCon.area/thisCellPtr->volume/conDist;
 					// sets the flow coefficients if the pointer is not null
 					if (otherCellPtr){
 						j = getAi(otherCellPtr->absIndex, totalCells, specID, 
 							totalSpecs);
-						tripletList.push_back(T(i, j, aN));
+						tripletList.push_back(T(i, j, a));
 					}	
 				}
 				// Added sthe Dirichlet boundary condition to the sourse term
@@ -454,7 +453,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 					ab = -a;
 				}
 				// Added sthe Newmann boundary condition to the sourse term
-				else if (thisCellPtr->boundaryType == "newmann"){
+				else if (thisCon.boundaryType == "newmann"){
 					thisSpecPtr->s -= a*thisSpecPtr->bc*conDist;
 					ab = a;
 				}
@@ -571,9 +570,17 @@ double speciesDriver::calcSpecConvectiveSlope(int cellID, int specID,
 		double alphal = 0.0;
 		double rohP = 0.0, rohN = 0.0, rohE = 0.0, rohS = 0.0, rohW = 0.0;
 		double rohNN, rohSS, rohEE, rohWW;
-		double r;
+		double r = 0.0;
 		if (tran < 0.0) {alphal = 1.0;};
 		if (tran == 0.0) {return 0.0;};
+
+
+		/*
+		This section is a work in progress
+
+		Commenting all of the second order convection flux stuff out for now
+		This wasn't even working and i need to come back and fix this
+
 
 		// This cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
@@ -643,6 +650,7 @@ double speciesDriver::calcSpecConvectiveSlope(int cellID, int specID,
 			}
 
 		}
+		*/
 		return r;
 }
 
