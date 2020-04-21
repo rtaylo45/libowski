@@ -25,7 +25,7 @@
 //	Domaine:
 //			x = [0, 100]
 //			t = [0, 20]
-//			lambda = 1.0
+//			lambda = 0.01
 //
 //	Initial conditions and BC's:
 //			C(x, 0) = x
@@ -85,7 +85,7 @@ void moleProblem1(int myid){
 					x1 = xc - dx/2;
 
 					// Calculates the initial concentration from MVT. 
-					initCon = (1./(2.*dx))*(x2*x2 - x1*x1);		
+					initCon = 1000.0;
 
 					spec.setSpeciesCon(i, j, cID, initCon);
 
@@ -146,16 +146,16 @@ void moleProblem1(int myid){
 //			lambda = 0.01
 //
 //	Initial conditions and BC's:
-//			C(x, 0) = e^(-((x-5)/10)^2)
-//			C(0,t) = C(100,t)
+//			C(x, 0) = 0.0
+//			C(0,t) = 1000.0
 //
 //	Solution:
-//			C(x,t) = e^(-((x - v*t - 30)/10)^2 - lambda*t)
+//			C(x,t) = TBD
 //
 //*****************************************************************************
 void moleProblem2(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{1000};
+	std::vector<int> numOfxCells{10};
 	std::vector<double> steps = {1};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
@@ -193,6 +193,9 @@ void moleProblem2(int myid){
 			// add specs
 			cID = spec.addSpecies(1.0, 0.0, 0.0);
 
+			spec.setBoundaryCondition("dirichlet","west", cID, 1000.0);
+
+
 			// sets the intial condition and sources
 			for (int i = 0; i < xCells; i++){
 				for (int j = 0; j < yCells; j++){
@@ -205,7 +208,7 @@ void moleProblem2(int myid){
 					x1 = xc - dx/2.;
 
 					// calculates the initial concentration from mvt. 
-					initCon = (5.*(std::pow(M_PI, 0.5))/(dx))*(erf(3.-x1/10.) - erf(3.-x2/10.));
+					initCon = 1000.;
 
 					spec.setSpeciesCon(i, j, cID, initCon);
 
@@ -229,7 +232,7 @@ void moleProblem2(int myid){
 
 						// caclulate analytical solution
 						xc = cell->x;
-						cSol = exp(-((xc-velocity*t-30.)/10.)*((xc-velocity*t-30.)/10.) - lambda*t);
+						cSol = 0.0;
 
 						// get libowski solution
 						cCon = spec.getSpecies(i, j, cID);
@@ -266,14 +269,13 @@ void moleProblem2(int myid){
 //	Domaine:
 //			x = [0, 100]
 //			t = [0, 20]
-//			lambda = 1.0
 //			R(T) = A1*e^(A2/T)
-//			A1 = 1.0
-//			A2 = -5000./8.31
+//			A1 = 0.1
+//			A2 = -500.
 //			T = 900
 //
 //	Initial conditions and BC's:
-//			Ci(x, 0) = x + 10
+//			Ci(x, 0) = 1000.0
 //			Ci(0,t) = Ci(100,t)
 //			Cw(x, 0) = 0
 //			Cw(0,t) = Cw(100,t)
@@ -289,7 +291,7 @@ void moleProblem3(int myid){
 	std::vector<double> steps = {1};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
-	double A1 = 1.0, A2 = 5000./8.31, T = 900.;
+	double A1 = 1.0, A2 = 500, T = 900.;
 	double R = A1*exp(-A2/T);
 	double CiSol, CwSol, CiCon, CwCon;
 	int CiID, CwID;
@@ -336,7 +338,7 @@ void moleProblem3(int myid){
 					x1 = xc - dx/2;
 
 					// calculates the initial concentration from mvt. 
-					initCon = (1./(dx))*(0.5*(x2*x2 - x1*x1) + 10.*(x2 - x1));
+					initCon = 1000.0;
 
 					spec.setSpeciesCon(i, j, CiID, initCon);
 
@@ -360,7 +362,7 @@ void moleProblem3(int myid){
 
 						// caclulate analytical solution
 						xc = cell->x;
-						CiSol = xc - R*t + 10.;
+						CiSol = xc - R*t + 1000.;
 						CwSol = R*t;
 
 						// get libowski solution
@@ -396,23 +398,21 @@ void moleProblem3(int myid){
 //	Domaine:
 //			x = [0, 100]
 //			t = [0, 20]
-//			lambda = 1.0
 //			v = 2.0
 //			R(T) = A1*e^(A2/T)
-//			A1 = 1.0
-//			A2 = -5000./8.31
+//			A1 = 0.1
+//			A2 = -500.
 //			T = 900
 //
 //	Initial conditions and BC's:
-//			Ci(x, 0) = e^(-((x-30)/10)^2) + 10
-//			Ci(0,t) = Ci(100,t)
+//			Ci(x, 0) = 1000.0
+//			Ci(0,t) = 1000.0
 //			Cw(x, 0) = 0
 //			Cw(0,t) = Cw(100,t)
 //
 //	Solution: 
-//			Ci(x,t) = Ci0 - R(T)*t
-//			C(x,t) = e^(-((x - v*t - 30)/10)^2) - R*t + 10
-//			Cw(x,t) = R(T)*t
+//			Ci(x,t) = TBD
+//			Cw(x,t) = TBD
 //
 //*****************************************************************************
 void moleProblem4(int myid){
@@ -421,7 +421,7 @@ void moleProblem4(int myid){
 	std::vector<double> steps = {1};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 10.0;	// seconds
-	double A1 = 1.0, A2 = 5000./8.31, T = 900.;
+	double A1 = 0.1, A2 = 500., T = 900.;
 	double velocity = 2.0; // cm/s
 	double R = A1*exp(-A2/T);
 	double CiSol, CwSol, CiCon, CwCon;
@@ -471,7 +471,7 @@ void moleProblem4(int myid){
 
 					// calculates the initial concentration from mvt. 
 					initCon = (5.*(std::pow(M_PI, 0.5))/(dx))*(erf(3.-x1/10.) - erf(3.-x2/10.));
-					initCon += (10.*x2 - 10.*x1);
+					initCon += (1/dx)*(10.*x2 - 10.*x1);
 
 					spec.setSpeciesCon(i, j, CiID, initCon);
 
@@ -495,8 +495,7 @@ void moleProblem4(int myid){
 
 						// caclulate analytical solution
 						xc = cell->x;
-						CiSol = exp(-((xc-velocity*t-30.)/10.)*((xc-velocity*t-30.)/10.)) -
-							R*t + 10.;
+						CiSol = 0.0;
 						CwSol = R*t;
 
 						// get libowski solution
@@ -533,23 +532,21 @@ void moleProblem4(int myid){
 //	Domaine:
 //			x = [0, 100]
 //			t = [0, 20]
-//			lambda = 1.0
 //			v = 2.0
 //			R(T) = A1*e^(A2/T)
-//			T = 850 + 10
-//			A1 = 1.0
-//			A2 = -5000./8.31
-//			T = 900
+//			T = 850 + x
+//			A1 = 0.1
+//			A2 = -500.
 //
 //	Initial conditions and BC's:
-//			Ci(x, 0) = e^(-((x-30)/10)^2) + 10
-//			Ci(0,t) = Ci(100,t)
+//			Ci(x, 0) = 1000.0
+//			Ci(0,t) = 1000.0
 //			Cw(x, 0) = 0
 //			Cw(0,t) = Cw(100,t)
 //
-//	Solution: Need to fix this
-//			C(x,t) = e^(-((x - v*t - 30)/10)^2) - R*t + 10
-//			Cw(x,t) = R(T)*t
+//	Solution: 
+//			C(x,t) = TBD
+//			Cw(x,t) = TBD
 //
 //*****************************************************************************
 void moleProblem5(int myid){
@@ -558,7 +555,7 @@ void moleProblem5(int myid){
 	std::vector<double> steps = {1};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 10.0;	// seconds
-	double A1 = 1.0, A2 = 5000./8.31, T = 900.;
+	double A1 = 0.1, A2 = 500., T = 900.;
 	double velocity = 2.0; // cm/s
 	double R = A1*exp(-A2/T);
 	double CiSol, CwSol, CiCon, CwCon;
@@ -608,7 +605,7 @@ void moleProblem5(int myid){
 
 					// calculates the initial concentration from mvt. 
 					initCon = (5.*(std::pow(M_PI, 0.5))/(dx))*(erf(3.-x1/10.) - erf(3.-x2/10.));
-					initCon += (10.*x2 - 10.*x1);
+					initCon += (1/dx)*(10.*x2 - 10.*x1);
 
 					spec.setSpeciesCon(i, j, CiID, initCon);
 
