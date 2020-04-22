@@ -3,6 +3,7 @@
 #include <math.h>
 #include <cmath>
 #include <iostream>
+#include <chrono>
 
 #include "mpiProcess.h"
 #include "modelMesh.h"
@@ -28,7 +29,7 @@
 //			lambda = 0.01
 //
 //	Initial conditions and BC's:
-//			C(x, 0) = x
+//			C(x, 0) = 1000.
 //			C(0,t) = C(100,t)
 //
 //	Solution:
@@ -36,16 +37,17 @@
 //
 //*****************************************************************************
 void moleProblem1(int myid){
-	int yCells = 1;
-	std::vector<int> numOfxCells{10, 20};
-	std::vector<double> steps = {1, 2, 5, 10};
-	double xLength = 100, yLength = 0.0; // cm
+	int yCells = 1, xCells = 1;
+	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
+	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
+		"pade-method1", "pade-method2"};
+	double xLength = 100., yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
-	double lambda = 1.0;	// 1/s
+	double lambda = 0.1;	// 1/s
 	double cSol, cCon;
 	int cID;
 	double x1, x2, initCon, dx, xc, dt, t;
-	double linfError = 0.0;
+	double percentError = 0.0;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
 	std::vector<double> cCoeffs = {-lambda};
@@ -55,18 +57,22 @@ void moleProblem1(int myid){
 	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 	outputFile << "Total problem time: " << tEnd << "\n";
 
-	// Loops over number of cells
-	for (int &xCells : numOfxCells){
-		// Build the Mesh
-		modelMesh model(xCells, yCells, xLength, yLength);
-		// Build species driver
-		speciesDriver spec = speciesDriver(&model);
+	// Build the Mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+	// Build species driver
+	speciesDriver spec = speciesDriver(&model);
+
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
+		// Sets the species matrix exp solver
+		spec.setMatrixExpSolver(solverType);
 
 
 		// Loops over number of time steps
 		for (double &numOfSteps	: steps){
+			percentError = 0.0;
 			dt = tEnd/numOfSteps;
-			outputFile << "dx: " << xLength/(double)xCells << "\n";
+			outputFile << "Solver: " << solverType << "\n";
 			outputFile << "dt: " << dt << "\n";
 			outputFile << "x"	<< " " << "C" << "\n";
 
@@ -95,11 +101,14 @@ void moleProblem1(int myid){
 			}
 			t = 0.0;
 			// Solve the problem
+			auto start = std::chrono::high_resolution_clock::now();
 			for (int step = 1; step <= numOfSteps; step++){
 				t = step*dt;
-				// Solve with CRAM
 				spec.solve(t);
 			}
+			auto end = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+					end - start);
 
 			// Gets species Concentrations
 			if (myid==0){
@@ -109,24 +118,24 @@ void moleProblem1(int myid){
 
 						// Caclulate analytical solution
 						xc = cell->x;
-						cSol = xc*exp(-lambda*t);
+						cSol = 1000.*exp(-lambda*t);
 
 						// Get libowski solution
 						cCon = spec.getSpecies(i, j, cID);
 
 						//assert(isApprox(VSol, VCon, 1e-5, 1e-4));
-						linfError = std::max(linfError, std::abs(cSol-cCon)/cSol);
+						percentError = std::max(percentError, std::abs(cSol-cCon)/cSol*100.);
 						outputFile << xc << " " << cCon << "\n";
 					}
 				}
 			}
 			outputFile << "\n";
-			//std::cout << dx << " " << dt << " " << linfError << "\n";
+			//std::cout << solverType << " " << dt << " " << percentError << " " << 
+			//	duration.count()/1.e6 << "\n";
 			// Clean species
 			spec.clean();
 		}
 		spec.clean();
-		model.clean();
 	}
 }
 
@@ -157,6 +166,8 @@ void moleProblem2(int myid){
 	int yCells = 1;
 	std::vector<int> numOfxCells{10};
 	std::vector<double> steps = {1};
+	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
+		"pade-method1", "pade-method2"};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
 	double lambda = 0.01;	// 1/s
@@ -174,83 +185,89 @@ void moleProblem2(int myid){
 	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 	outputFile << "Total problem time: " << tEnd << "\n";
 
-	// loops over number of cells
-	for (int &xCells : numOfxCells){
-		// build the mesh
-		modelMesh model(xCells, yCells, xLength, yLength);
-		// build species driver
-		speciesDriver spec = speciesDriver(&model);
-		// set x velocity
-		model.setConstantXVelocity(velocity);
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
 
-		// loops over number of time steps
-		for (double &numofsteps	: steps){
-			dt = tEnd/numofsteps;
-			outputFile << "dx: " << xLength/(double)xCells << "\n";
-			outputFile << "dt: " << dt << "\n";
-			outputFile << "x"	<< " " << "C" << "\n";
+		// loops over number of cells
+		for (int &xCells : numOfxCells){
+			// build the mesh
+			modelMesh model(xCells, yCells, xLength, yLength);
+			// build species driver
+			speciesDriver spec = speciesDriver(&model);
+			// set x velocity
+			model.setConstantXVelocity(velocity);
+			// Sets the species matrix exp solver
+			spec.setMatrixExpSolver(solverType);
 
-			// add specs
-			cID = spec.addSpecies(1.0, 0.0, 0.0);
+			// loops over number of time steps
+			for (double &numofsteps	: steps){
+				dt = tEnd/numofsteps;
+				outputFile << "dx: " << xLength/(double)xCells << "\n";
+				outputFile << "dt: " << dt << "\n";
+				outputFile << "x"	<< " " << "C" << "\n";
 
-			spec.setBoundaryCondition("dirichlet","west", cID, 1000.0);
+				// add specs
+				cID = spec.addSpecies(1.0, 0.0, 0.0);
+
+				spec.setBoundaryCondition("dirichlet","west", cID, 1000.0);
 
 
-			// sets the intial condition and sources
-			for (int i = 0; i < xCells; i++){
-				for (int j = 0; j < yCells; j++){
-					cell = model.getCellByLoc(i,j);	
-
-					// calculates the x positions as the cell faces
-					dx = cell->dx;
-					xc = cell->x;
-					x2 = xc + dx/2.;
-					x1 = xc - dx/2.;
-
-					// calculates the initial concentration from mvt. 
-					initCon = 1000.;
-
-					spec.setSpeciesCon(i, j, cID, initCon);
-
-					// sets the sources
-					spec.setSpeciesSource(i, j, cID, ccoeffs, 0.0);
-				}
-			}
-			t = 0.0;
-			// solve the problem
-			for (int step = 1; step <= numofsteps; step++){
-				t = step*dt;
-				// solve with cram
-				spec.solve(t);
-				//spec.solveImplicit(t);
-			}
-			// gets species concentrations
-			if (myid==0){
+				// sets the intial condition and sources
 				for (int i = 0; i < xCells; i++){
 					for (int j = 0; j < yCells; j++){
 						cell = model.getCellByLoc(i,j);	
 
-						// caclulate analytical solution
+						// calculates the x positions as the cell faces
+						dx = cell->dx;
 						xc = cell->x;
-						cSol = 0.0;
+						x2 = xc + dx/2.;
+						x1 = xc - dx/2.;
 
-						// get libowski solution
-						cCon = spec.getSpecies(i, j, cID);
+						// calculates the initial concentration from mvt. 
+						initCon = 1000.;
 
-						//assert(isapprox(vsol, vcon, 1e-5, 1e-4));
-						linfError = std::max(linfError, std::abs(cSol-cCon)/cSol);
-						outputFile << xc << " " << cSol << " " << cCon << "\n";
-						std::cout << cSol << " " << cCon << std::endl;
+						spec.setSpeciesCon(i, j, cID, initCon);
+
+						// sets the sources
+						spec.setSpeciesSource(i, j, cID, ccoeffs, 0.0);
 					}
 				}
+				t = 0.0;
+				// solve the problem
+				for (int step = 1; step <= numofsteps; step++){
+					t = step*dt;
+					// solve with cram
+					spec.solve(t);
+					//spec.solveImplicit(t);
+				}
+				// gets species concentrations
+				if (myid==0){
+					for (int i = 0; i < xCells; i++){
+						for (int j = 0; j < yCells; j++){
+							cell = model.getCellByLoc(i,j);	
+
+							// caclulate analytical solution
+							xc = cell->x;
+							cSol = 0.0;
+
+							// get libowski solution
+							cCon = spec.getSpecies(i, j, cID);
+
+							//assert(isapprox(vsol, vcon, 1e-5, 1e-4));
+							linfError = std::max(linfError, std::abs(cSol-cCon)/cSol);
+							outputFile << xc << " " << cSol << " " << cCon << "\n";
+							std::cout << cSol << " " << cCon << std::endl;
+						}
+					}
+				}
+				outputFile << "\n";
+				//std::cout << dx << " " << dt << " " << linfError << "\n";
+				// clean species
+				spec.clean();
 			}
-			outputFile << "\n";
-			//std::cout << dx << " " << dt << " " << linfError << "\n";
-			// clean species
 			spec.clean();
+			model.clean();
 		}
-		spec.clean();
-		model.clean();
 	}
 }
 
@@ -657,9 +674,9 @@ int main(){
 
 	moleProblem1(myid);
 	moleProblem2(myid);
-	moleProblem3(myid);
-	moleProblem4(myid);
-	moleProblem5(myid);
+	//moleProblem3(myid);
+	//moleProblem4(myid);
+	//moleProblem5(myid);
 
 	mpi.finalize();
 }
