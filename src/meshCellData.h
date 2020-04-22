@@ -62,6 +62,8 @@ class meshCell {
 	void setTemperature(double);
 	// Sets the cells pressure
 	void setPressure(double);
+	// Gets a pointer to the connection
+	connection* getConnection(int);
 	// Clean species
 	void cleanSpecies();
 

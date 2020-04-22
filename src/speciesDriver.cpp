@@ -175,9 +175,9 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		case 0: {
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* cell = modelPtr->getCellByLoc(i,yCellMax);
-				connection northCon = cell->connections[0];
-				northCon.boundary = true;
-				northCon.boundaryType = type;
+				connection* northCon = cell->getConnection(0);
+				northCon->boundary = true;
+				northCon->boundaryType = type;
    			species* spec = getSpeciesPtr(i, yCellMax, specID);
 				spec->bc = bc;
 			}
@@ -187,9 +187,9 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		case 1: {
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* cell = modelPtr->getCellByLoc(i,yCellMin);
-				connection southCon = cell->connections[1];
-				southCon.boundary = true;
-				southCon.boundaryType = type;
+				connection* southCon = cell->getConnection(1);
+				southCon->boundary = true;
+				southCon->boundaryType = type;
    			species* spec = getSpeciesPtr(i, yCellMin, specID);
 				spec->bc = bc;
 			}
@@ -199,9 +199,9 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		case 2: {
 			for (int j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* cell = modelPtr->getCellByLoc(xCellMax,j);
-				connection eastCon = cell->connections[2];
-				eastCon.boundary = true;
-				eastCon.boundaryType = type;
+				connection* eastCon = cell->getConnection(2);
+				eastCon->boundary = true;
+				eastCon->boundaryType = type;
    			species* spec = getSpeciesPtr(xCellMax, j, specID);
 				spec->bc = bc;
 			}
@@ -211,9 +211,9 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		case 3: {
 			for (int j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* cell = modelPtr->getCellByLoc(xCellMin,j);
-				connection westCon = cell->connections[3];
-				westCon.boundary = true;
-				westCon.boundaryType = type;
+				connection* westCon = cell->getConnection(3);
+				westCon->boundary = true;
+				westCon->boundaryType = type;
    			species* spec = getSpeciesPtr(xCellMin, j, specID);
 				spec->bc = bc;
 			}
@@ -241,9 +241,9 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* thisCell = modelPtr->getCellByLoc(i,yCellMax);
 				meshCell* southCell = modelPtr->getCellByLoc(i,yCellMin);
-				connection thisCellCon = thisCell->connections[0];
-				assert(thisCellCon.loc == 0);
-				thisCellCon.connectionCellPtr = southCell;
+				connection* thisCellCon = thisCell->getConnection(0);
+				assert(thisCellCon->loc == 0);
+				thisCellCon->connectionCellPtr = southCell;
 			}
 			break;
 		}
@@ -252,9 +252,9 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* thisCell = modelPtr->getCellByLoc(i,yCellMin);
 				meshCell* northCell = modelPtr->getCellByLoc(i,yCellMax);
-				connection thisCellCon = thisCell->connections[1];
-				assert(thisCellCon.loc == 1);
-				thisCellCon.connectionCellPtr = northCell;
+				connection* thisCellCon = thisCell->getConnection(1);
+				assert(thisCellCon->loc == 1);
+				thisCellCon->connectionCellPtr = northCell;
 			}
 			break;
 		}
@@ -263,9 +263,9 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 			for (int j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* thisCell = modelPtr->getCellByLoc(xCellMax,j);
 				meshCell* westCell = modelPtr->getCellByLoc(xCellMin,j);
-				connection thisCellCon = thisCell->connections[2];
-				assert(thisCellCon.loc == 2);
-				thisCellCon.connectionCellPtr = westCell;
+				connection* thisCellCon = thisCell->getConnection(2);
+				assert(thisCellCon->loc == 2);
+				thisCellCon->connectionCellPtr = westCell;
 			}
 			break;
 		}
@@ -274,9 +274,9 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 			for (int j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* thisCell = modelPtr->getCellByLoc(xCellMin,j);
 				meshCell* eastCell = modelPtr->getCellByLoc(xCellMax,j);
-				connection thisCellCon = thisCell->connections[3];
-				assert(thisCellCon.loc == 3);
-				thisCellCon.connectionCellPtr = eastCell;
+				connection* thisCellCon = thisCell->getConnection(3);
+				assert(thisCellCon->loc == 3);
+				thisCellCon->connectionCellPtr = eastCell;
 			}
 			break;
 		}
@@ -293,7 +293,7 @@ void speciesDriver::solve(double solveTime){
 
 	if (not matrixInit){
 		A = buildTransMatrix(augmented, 0.0);
-		//dA = Eigen::MatrixXd(A*solveTime);
+		//dA = Eigen::MatrixXd(A);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
 		//outputFile.open("matrix.out", std::ios_base::app);
@@ -382,7 +382,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
 	double diffusionCoeff = 0.0;
 	double rCon, psi, a, tran, thisCoeff, conDirection, conDist;
-	double aP, ab;
+	double aP, ab, coeff;
 	tripletList.reserve(nonZeros);	
 
 	// if the matrix is not augmented then we no longer need to add a dummy
@@ -396,8 +396,6 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 		dummySpec);
 	// Loop over cells
 	for (int cellID = 0; cellID < totalCells; cellID++){
-		// Set coefficients to zero
-		tran = 0.0;
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
 
@@ -410,36 +408,40 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			i = getAi(cellID, totalCells, specID, totalSpecs);
 			// Sets the ap coeff
 			aP = 0.0;
+			// Set coefficients to zero
+			tran = 0.0;
+			// i,i coefficient
+			thisCoeff = 0.0;
 
 			// loop over cell connections
 			for (int conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
-				// Gets cell connection object pointer
-				connection thisCon = thisCellPtr->connections[conCount];
-				// Gets pointer to connected cell
-				meshCell* otherCellPtr = thisCon.connectionCellPtr;
-				// Gets the direction required to multiply by the convection transition
-				conDirection = thisCon.direction;
-				// Gets the distance from this cell center to connection cell center
-				conDist = thisCon.distance;
 				// Sets the matrix coefficient to zero
 				a = 0.0;
 				// Sets a variable that holdes if the matrix coeff is used for setting
 				// the boundary condition
 				ab = 0.0;
+				// Gets cell connection object pointer
+				connection* thisCon = thisCellPtr->getConnection(conCount);
+				// Gets pointer to connected cell
+				meshCell* otherCellPtr = thisCon->connectionCellPtr;
+				// Gets the direction required to multiply by the convection transition
+				conDirection = thisCon->direction;
+				// Gets the distance from this cell center to connection cell center
+				conDist = thisCon->distance;
 
 				// If the connection distance is zero then there is no cell in that 
 				// direction and the transition rate is zero. This will happen 
 				// when modeling 1D cases.
 				if (conDist){
 					// Computes the transition coefficient for convection
-					tran = thisCon.connectionFacePtr->vl*thisCon.area/thisCellPtr->volume;
+					tran = thisCon->connectionFacePtr->vl*thisCon->area/thisCellPtr->volume;
 					// Gets the convective species slope
-					rCon = calcSpecConvectiveSlope(cellID, specID, thisCon.loc, tran);
+					rCon = calcSpecConvectiveSlope(cellID, specID, thisCon->loc, tran);
 					// flux limiter
 					psi = fluxLim.getPsi(rCon);
 					// matrix coefficient
 					a = std::max(conDirection*tran, 0.0) + 
-						diffusionCoeff*thisCon.area/thisCellPtr->volume/conDist;
+						diffusionCoeff*thisCon->area/thisCellPtr->volume/conDist;
 					// sets the flow coefficients if the pointer is not null
 					if (otherCellPtr){
 						j = getAi(otherCellPtr->absIndex, totalCells, specID, 
@@ -448,20 +450,31 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 					}	
 				}
 				// Added sthe Dirichlet boundary condition to the sourse term
-				if (thisCon.boundaryType == "dirichlet"){
+				if (thisCon->boundaryType == "dirichlet"){
 					thisSpecPtr->s += 2.*a*thisSpecPtr->bc;
 					ab = -a;
 				}
 				// Added sthe Newmann boundary condition to the sourse term
-				else if (thisCon.boundaryType == "newmann"){
+				else if (thisCon->boundaryType == "newmann"){
 					thisSpecPtr->s -= a*thisSpecPtr->bc*conDist;
 					ab = a;
 				}
 
 				// aP coefficient
-				aP += -a;
-				// Adds the coefficents if the connection is a boundary
-				thisCoeff += ab;
+				aP += (-a + ab);
+			}
+			// Sets the coefficients for linear source terms
+			if (thisSpecPtr->coeffs.size()){
+				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
+					coeff = thisSpecPtr->coeffs[specCounter];
+					if (specCounter == specID){
+						thisCoeff += coeff;
+					}
+					else{
+						j = getAi(cellID, totalCells, specCounter, totalSpecs);
+						tripletList.push_back(T(i, j, coeff));
+					}
+				}
 			}
 
 			// Steady state or matrix exp solve

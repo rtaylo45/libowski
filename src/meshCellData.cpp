@@ -22,8 +22,19 @@ meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor,
 	x = xCor;
 	y = yCor;
 	dx = dx_;
-	dy = dy_;	
-	volume = dx_*dy_;
+	dy = dy_;
+	// 2D problem
+	if (dx_ and dy_){
+		volume = dx_*dy_;
+	}
+	// 1D problem in the x direction
+	else if (dx_ and not dy_){
+		volume = dx_;
+	}
+	// 1D problem in the y direction
+	else if (dy_ and not dx_){
+		volume = dy_;
+	}
 }
 
 //*****************************************************************************
@@ -86,6 +97,21 @@ void meshCell::setPressure(double pressure){
 //*****************************************************************************
 void meshCell::setTemperature(double temp){
 	T = temp;
+}
+//*****************************************************************************
+// Gets a pointer to a cell connection
+//
+// @param specID	ID of the connection
+//								north = 0
+//								south = 1
+//								east = 2
+//								west = 3
+//*****************************************************************************
+connection* meshCell::getConnection(int conID){
+	// Checks to make sure the conID is not out of range
+	assert(conID <= connections.size() and conID>= 0);
+	//assert(connections[conID].loc == conID);
+	return &connections[conID];
 }
 
 //*****************************************************************************

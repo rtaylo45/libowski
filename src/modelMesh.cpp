@@ -87,6 +87,7 @@ void modelMesh::createCellFaces(){
 void modelMesh::connectCells(){
 	meshCell* cellPtr;
 	int kEast, kWest, kSouth, kNorth;
+	double dxFlowArea, dyFlowArea;
 
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
@@ -109,20 +110,24 @@ void modelMesh::connectCells(){
 			meshCellFace* westFacePtr = &meshCellFaces[kWest];
 			meshCellFace* southFacePtr = &meshCellFaces[kSouth];
 			meshCellFace* northFacePtr = &meshCellFaces[kNorth];
+
+			// Sets the areas for flow 
+			dxFlowArea = (cellPtr->dx) ? cellPtr->dx : 1;
+			dyFlowArea = (cellPtr->dy) ? cellPtr->dy : 1;
 			
 			connection northCon(northCellPtr, northFacePtr, 
-				cellPtr->dx, -1., 0, cellPtr->dy);
+				dxFlowArea, -1., 0, cellPtr->dy);
 			connection southCon(southCellPtr, southFacePtr, 
-				cellPtr->dx, 1., 1, cellPtr->dy);
+				dxFlowArea, 1., 1, cellPtr->dy);
 			connection eastCon(eastCellPtr, eastFacePtr, 
-				cellPtr->dy, -1., 2, cellPtr->dx);
+				dyFlowArea, -1., 2, cellPtr->dx);
 			connection westCon(westCellPtr, westFacePtr, 
-				cellPtr->dy, 1., 3, cellPtr->dx);
+				dyFlowArea, 1., 3, cellPtr->dx);
 
 			cellPtr->connections.push_back(northCon);
 			cellPtr->connections.push_back(southCon);
-			cellPtr->connections.push_back(westCon);
 			cellPtr->connections.push_back(eastCon);
+			cellPtr->connections.push_back(westCon);
 		}
 	}
 }
