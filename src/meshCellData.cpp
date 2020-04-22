@@ -119,4 +119,8 @@ connection* meshCell::getConnection(int conID){
 //*****************************************************************************
 void meshCell::cleanSpecies(){
 	speciesVector.clear();
+	// loop over cell connections
+	for (int conCount = 0; conCount < connections.size(); conCount ++){
+		connection* thisCon = getConnection(conCount);
+	}
 }

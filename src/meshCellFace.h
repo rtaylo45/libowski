@@ -27,6 +27,7 @@ class meshCellFace {
 	double dx = 0.0;
 	// y direction length
 	double dy = 0.0;
+	
 
 	// Constructor
 	meshCellFace(int, int, int);
