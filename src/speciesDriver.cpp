@@ -293,14 +293,14 @@ void speciesDriver::solve(double solveTime){
 
 	if (not matrixInit){
 		A = buildTransMatrix(augmented, 0.0);
-		//dA = Eigen::MatrixXd(A);
+		dA = Eigen::MatrixXd(A);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
 		//outputFile.open("matrix.out", std::ios_base::app);
 		//outputFile << dA << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << " "  << std::endl;
-		//std::cout << dA  << std::endl;
+		std::cout << dA  << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		//std::cout << dA.norm() << std::endl;
 		//std::cout << N0  << std::endl;
@@ -451,6 +451,9 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				}
 				// Added sthe Dirichlet boundary condition to the sourse term
 				if (thisCon->boundaryType == "dirichlet"){
+					std::cout << i << " " << thisCon->loc << " " << a << " " << 
+						thisSpecPtr->bc << " " <<  thisCon->boundaryType << 
+						" " << 2.*a*thisSpecPtr->bc << std::endl;
 					thisSpecPtr->s += 2.*a*thisSpecPtr->bc;
 					ab = -a;
 				}
@@ -462,6 +465,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 
 				// aP coefficient
 				aP += (-a + ab);
+				//std::cout << cellID << " " << a << " " << ab << " " << aP << std::endl;
 			}
 			// Sets the coefficients for linear source terms
 			if (thisSpecPtr->coeffs.size()){
@@ -483,7 +487,9 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			tripletList.push_back(T(i, i, thisCoeff));
 
 			// Sets the constant source terms
-			if (Augmented){tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));};
+			if (Augmented){
+				tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
+			}
 		}
 	}
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
