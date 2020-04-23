@@ -124,10 +124,6 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc, 
 	int specID, double bc){
 
-	int xCellMax = modelPtr->numOfxCells - 1;
-	int xCellMin = 0;
-	int yCellMax = modelPtr->numOfyCells - 1;
-	int yCellMin = 0;
 	int locID = -1;
 	dummySpec = 1;
 

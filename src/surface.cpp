@@ -37,3 +37,4 @@ species* surface::getSpecies(int specID){
 //*****************************************************************************
 void surface::clean(){
 	speciesVector.clear();
+}

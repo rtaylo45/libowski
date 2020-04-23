@@ -47,6 +47,16 @@ meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor,
 void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff){
 
 	species spec(molarMass, initCon, diffCoeff);
+	// loop over connections to see if the species needs to be added
+	// to a surface
+	for (int conCount = 0; conCount < connections.size(); conCount ++){
+		connection* thisCon = getConnection(conCount);
+		// if the pointer is not null then add species to that surface
+		if(thisCon->connectionFacePtr->surfacePtr){
+			thisCon->connectionFacePtr->surfacePtr->addSpecies(molarMass, 
+				initCon, diffCoeff);
+		}
+	}
 	speciesVector.push_back(spec);
 
 }
@@ -101,7 +111,7 @@ void meshCell::setTemperature(double temp){
 //*****************************************************************************
 // Gets a pointer to a cell connection
 //
-// @param specID	ID of the connection
+// @param conID		ID of the connection
 //								north = 0
 //								south = 1
 //								east = 2
@@ -110,8 +120,23 @@ void meshCell::setTemperature(double temp){
 connection* meshCell::getConnection(int conID){
 	// Checks to make sure the conID is not out of range
 	assert(conID <= connections.size() and conID>= 0);
-	//assert(connections[conID].loc == conID);
+	assert(connections[conID].loc == conID);
 	return &connections[conID];
+}
+
+//*****************************************************************************
+// Adds a surface to the cell
+//
+// @param locID			location ID of the surface to add
+//								north = 0
+//								south = 1
+//								east = 2
+//								west = 3
+//	@param surfacePtr		Pointer to the surface object
+//*****************************************************************************
+void meshCell::addSurface(int locID, surface* surfacePtr_){
+	connection* myCon = getConnection(locID);
+	myCon->connectionFacePtr->surfacePtr = surfacePtr_;
 }
 
 //*****************************************************************************

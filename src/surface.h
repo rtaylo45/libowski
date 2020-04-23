@@ -7,6 +7,7 @@
 #ifndef SURFACE_H
 #define SURFACE_H
 #include "species.h"
+#include <assert.h>
 
 class surface {
 
@@ -18,7 +19,8 @@ class surface {
 	// Gets a pointer to the species
 	species* getSpecies(int);
 	// Clean
-	clean();
+	void clean();
+
 	private:
 	// Vector of the species on the surface
 	std::vector<species> speciesVector;

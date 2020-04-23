@@ -7,6 +7,7 @@
 #define MODELMESH_H
 #include "meshCellData.h"
 #include "meshCellFace.h"
+#include "surface.h"
 #include <vector>
 #include <assert.h>
 
@@ -27,6 +28,8 @@ class modelMesh {
 	std::vector<meshCell> meshCells;
 	// Vector of all cell faces
 	std::vector<meshCellFace> meshCellFaces;
+	// Vector of cell surfaces
+	std::vector<surface> surfaces;
 	// Change in x direction
 	double dx = 0.0;
 	// Change in y direction
@@ -57,6 +60,10 @@ class modelMesh {
 	void setCellTemperature(int, int, double);
 	// Set pressure in a cell
 	void setCellPressure(int, int, double);
+	// Adds a physical surface to a cell
+	void addSurface(int, int, std::string);
+	// Adds a physical surface along a boundary
+	void addBoundarySurface(std::string);
 	// Cleans the model
 	void clean();
 

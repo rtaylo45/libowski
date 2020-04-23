@@ -326,6 +326,87 @@ void modelMesh::setCellPressure(int i, int j, double pressure){
 }
 
 //*****************************************************************************
+// Adds a surface to a cell
+//
+// @param i				x cell index
+// @param j				y cell index
+// @param loc			Location of the surface in the cell
+//							north
+//							south
+//							east
+//							west
+//*****************************************************************************
+void modelMesh::addSurface(int i, int j, std::string loc){
+	int locID = -1;
+	if (loc == "north"){locID = 0;};
+	if (loc == "south"){locID = 1;};
+	if (loc == "east"){locID = 2;};
+	if (loc == "west"){locID = 3;};
+	assert(locID != -1);
+
+	meshCell* cell = getCellByLoc(i,j);
+	surface mySurface = surface();
+	cell->addSurface(locID, &mySurface);
+	surfaces.push_back(mySurface);
+}
+
+//*****************************************************************************
+// Adds a surface to the mesh boundary
+//
+// @param loc			Location of the surface boundary
+//							north
+//							south
+//							east
+//							west
+//*****************************************************************************
+void modelMesh::addBoundarySurface(std::string loc){
+	int xCellMax = numOfxCells - 1;
+	int xCellMin = 0;
+	int yCellMax = numOfyCells - 1;
+	int yCellMin = 0;
+	int locID = -1;
+
+	if (loc == "north"){locID = 0;};
+	if (loc == "south"){locID = 1;};
+	if (loc == "east"){locID = 2;};
+	if (loc == "west"){locID = 3;};
+	assert(locID != -1);
+
+	switch(locID){
+
+		// North location
+		case 0: {
+			for (int i = 0; i < numOfxCells; i++){
+				addSurface(i, yCellMax, "north");
+			}
+			break;
+		}
+		// South location
+		case 1: {
+			for (int i = 0; i < numOfxCells; i++){
+				addSurface(i, yCellMin, "south");
+			}
+			break;
+		}
+		// East location
+		case 2: {
+			for (int j = 0; j < numOfyCells; j++){
+				addSurface(xCellMax, j, "east");
+			}
+			break;
+		}
+		// West location
+		case 3: {
+			for (int j = 0; j < numOfyCells; j++){
+				addSurface(xCellMin, j, "west");
+			}
+			break;
+		}
+	}
+
+}
+
+//*****************************************************************************
 // Cleans the model
 //*****************************************************************************
 void modelMesh::clean(){
