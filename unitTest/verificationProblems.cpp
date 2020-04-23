@@ -194,6 +194,9 @@ void testProblem2(int myid){
 
 			// Build the Mesh
 			modelMesh model(xCells, yCells, xLength, yLength);
+			// Sets the surfaces
+			model.addBoundarySurface("east");
+			model.addBoundarySurface("west");
 			// Build species driver
 			speciesDriver spec = speciesDriver(&model);
 

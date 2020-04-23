@@ -26,7 +26,7 @@ void surface::addSpecies(double molarMass, double initCon, double diffCoeff){
 //
 // @param specID	ID of the species
 //*****************************************************************************
-species* surface::getSpecies(int specID){
+species* surface::getSpeciesPtr(int specID){
 	// Checks to make sure the specID is not out of range
 	assert(specID <= speciesVector.size() and specID>= 0);
 	return &speciesVector[specID];

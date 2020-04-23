@@ -17,7 +17,7 @@ class surface {
 	// Add species
 	void addSpecies(double, double, double);
 	// Gets a pointer to the species
-	species* getSpecies(int);
+	species* getSpeciesPtr(int);
 	// Clean
 	void clean();
 

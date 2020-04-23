@@ -174,7 +174,8 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 				connection* northCon = cell->getConnection(0);
 				northCon->boundary = true;
 				northCon->boundaryType = type;
-   			species* spec = getSpeciesPtr(i, yCellMax, specID);
+				surface* northSurface = northCon->connectionFacePtr->surfacePtr;
+   			species* spec = northSurface->getSpeciesPtr(specID);
 				spec->bc = bc;
 			}
 			break;
@@ -186,7 +187,8 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 				connection* southCon = cell->getConnection(1);
 				southCon->boundary = true;
 				southCon->boundaryType = type;
-   			species* spec = getSpeciesPtr(i, yCellMin, specID);
+				surface* southSurface = southCon->connectionFacePtr->surfacePtr;
+   			species* spec = southSurface->getSpeciesPtr(specID);
 				spec->bc = bc;
 			}
 			break;
@@ -198,7 +200,8 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 				connection* eastCon = cell->getConnection(2);
 				eastCon->boundary = true;
 				eastCon->boundaryType = type;
-   			species* spec = getSpeciesPtr(xCellMax, j, specID);
+				surface* eastSurface = eastCon->connectionFacePtr->surfacePtr;
+   			species* spec = eastSurface->getSpeciesPtr(specID);
 				spec->bc = bc;
 			}
 			break;
@@ -210,7 +213,8 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 				connection* westCon = cell->getConnection(3);
 				westCon->boundary = true;
 				westCon->boundaryType = type;
-   			species* spec = getSpeciesPtr(xCellMin, j, specID);
+				surface* westSurface = westCon->connectionFacePtr->surfacePtr;
+   			species* spec = westSurface->getSpeciesPtr(specID);
 				spec->bc = bc;
 			}
 			break;
