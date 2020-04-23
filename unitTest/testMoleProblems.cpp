@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <chrono>
+#include <stdio.h>
 
 #include "mpiProcess.h"
 #include "modelMesh.h"
@@ -29,18 +30,19 @@
 //			lambda = 0.01
 //
 //	Initial conditions and BC's:
-//			C(x, 0) = 1000.
+//			C(x, 0) = 1000.(x + 1)
 //			C(0,t) = C(100,t)
 //
 //	Solution:
-//			C(x,t) = x*e^(-lambda*t)
+//			C(x,t) = C(x,0)*e^(-lambda*t)
 //
 //*****************************************************************************
 void moleProblem1(int myid){
-	int yCells = 1, xCells = 1;
+	int yCells = 1, xCells = 1000;
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
 		"pade-method1", "pade-method2"};
+	//std::vector<std::string> solvers {"CRAM"};
 	double xLength = 100., yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
 	double lambda = 0.1;	// 1/s
@@ -87,11 +89,12 @@ void moleProblem1(int myid){
 					// Calculates the x positions as the cell faces
 					dx = cell->dx;
 					xc = cell->x;
-					x2 = xc + dx/2;
-					x1 = xc - dx/2;
+					x2 = xc + dx/2.;
+					x1 = xc - dx/2.;
 
 					// Calculates the initial concentration from MVT. 
-					initCon = 1000.0;
+					initCon = 1000.*((x2 + x1)/2. + 1.);
+					double s = 1000.*(xc+1);
 
 					spec.setSpeciesCon(i, j, cID, initCon);
 
@@ -118,7 +121,7 @@ void moleProblem1(int myid){
 
 						// Caclulate analytical solution
 						xc = cell->x;
-						cSol = 1000.*exp(-lambda*t);
+						cSol = 1000.*(xc+1)*exp(-lambda*t);
 
 						// Get libowski solution
 						cCon = spec.getSpecies(i, j, cID);
@@ -131,7 +134,9 @@ void moleProblem1(int myid){
 			}
 			outputFile << "\n";
 			//std::cout << solverType << " " << dt << " " << percentError << " " << 
-			//	duration.count()/1.e6 << "\n";
+				//duration.count()/1.e6 << "\n";
+			printf("%15s %4.2f %4.2E %3.5f \n", solverType.c_str(), dt, percentError,
+					duration.count()/1.e6);
 			// Clean species
 			spec.clean();
 		}
@@ -155,7 +160,7 @@ void moleProblem1(int myid){
 //			lambda = 0.01
 //
 //	Initial conditions and BC's:
-//			C(x, 0) = 0.0
+//			C(x, 0) = 1000.0
 //			C(0,t) = 1000.0
 //
 //	Solution:
@@ -164,10 +169,11 @@ void moleProblem1(int myid){
 //*****************************************************************************
 void moleProblem2(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{10};
+	std::vector<int> numOfxCells{10, 100, 200, 500};
 	std::vector<double> steps = {1};
-	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
-		"pade-method1", "pade-method2"};
+	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
+	//	"pade-method1", "pade-method2"};
+	std::vector<std::string> solvers {"CRAM"};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
 	double lambda = 0.01;	// 1/s
@@ -175,7 +181,7 @@ void moleProblem2(int myid){
 	double cSol, cCon;
 	int cID;
 	double x1, x2, initCon, dx, xc, dt, t;
-	double linfError = 0.0;
+	double percentError = 0.0;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
 	std::vector<double> ccoeffs = {-lambda};
@@ -201,7 +207,9 @@ void moleProblem2(int myid){
 
 			// loops over number of time steps
 			for (double &numofsteps	: steps){
+				percentError = 0.0;
 				dt = tEnd/numofsteps;
+				outputFile << "Solver: " << solverType << "\n";
 				outputFile << "dx: " << xLength/(double)xCells << "\n";
 				outputFile << "dt: " << dt << "\n";
 				outputFile << "x"	<< " " << "C" << "\n";
@@ -248,20 +256,27 @@ void moleProblem2(int myid){
 
 							// caclulate analytical solution
 							xc = cell->x;
-							cSol = 0.0;
+							if (xc < velocity*t){
+								cSol = 1000.*exp(-lambda*xc/velocity);
+							}
+							else{
+								cSol = 1000.*exp(-lambda*t);
+							}
 
 							// get libowski solution
 							cCon = spec.getSpecies(i, j, cID);
 
 							//assert(isapprox(vsol, vcon, 1e-5, 1e-4));
-							linfError = std::max(linfError, std::abs(cSol-cCon)/cSol);
+							//linfError = std::max(linfError, std::abs(cSol-cCon)/cSol);
 							outputFile << xc << " " << cSol << " " << cCon << "\n";
-							std::cout << cSol << " " << cCon << std::endl;
+							//std::cout << xc << std::endl; // << cSol << " " << cCon << std::endl;
+							percentError = std::max(percentError, std::abs(cSol-cCon)/cSol*100.);
 						}
 					}
 				}
 				outputFile << "\n";
-				//std::cout << dx << " " << dt << " " << linfError << "\n";
+				std::cout << solverType << " " << dx << " " << dt 
+					<< " " << percentError << "\n";
 				// clean species
 				spec.clean();
 			}
@@ -673,7 +688,7 @@ int main(){
 	int numprocs = mpi.size;
 
 	moleProblem1(myid);
-	moleProblem2(myid);
+	//moleProblem2(myid);
 	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);
