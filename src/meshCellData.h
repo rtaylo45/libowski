@@ -8,6 +8,7 @@
 #define MESHCELLDATA_H
 #include "cellConnection.h"
 #include "meshCellFace.h"
+#include "surface.h"
 #include "species.h"
 #include <vector>
 #include <assert.h>
@@ -64,6 +65,8 @@ class meshCell {
 	void setPressure(double);
 	// Gets a pointer to the connection
 	connection* getConnection(int);
+	// Adds a surface 
+	void addSurface(int, surface*);
 	// Clean species
 	void cleanSpecies();
 

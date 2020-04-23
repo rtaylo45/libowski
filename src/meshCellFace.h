@@ -12,6 +12,7 @@
 //*****************************************************************************
 #ifndef MESHCELLFACE_H
 #define MESHCELLFACE_H
+#include "surface.h"
 
 class meshCellFace {
 
@@ -27,6 +28,8 @@ class meshCellFace {
 	double dx = 0.0;
 	// y direction length
 	double dy = 0.0;
+	// pointer to the surface object. This is a physical surface
+	surface* surfacePtr = nullptr;
 
 	// Constructor
 	meshCellFace(int, int, int);

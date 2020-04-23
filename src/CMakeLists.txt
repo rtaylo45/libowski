@@ -11,6 +11,7 @@ set(PROJECT_SOURCES
 	matrixExponential.cpp 
 	ODEintegrator.cpp 
 	cellConnection.cpp
+	surface.cpp
 )	
 
 # All sources that also need to be tested in unit tests go into a static library
