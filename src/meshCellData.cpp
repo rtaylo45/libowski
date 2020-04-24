@@ -22,7 +22,19 @@ meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor,
 	x = xCor;
 	y = yCor;
 	dx = dx_;
-	dy = dy_;	
+	dy = dy_;
+	// 2D problem
+	if (dx_ and dy_){
+		volume = dx_*dy_;
+	}
+	// 1D problem in the x direction
+	else if (dx_ and not dy_){
+		volume = dx_;
+	}
+	// 1D problem in the y direction
+	else if (dy_ and not dx_){
+		volume = dy_;
+	}
 }
 
 //*****************************************************************************
@@ -35,6 +47,16 @@ meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor,
 void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff){
 
 	species spec(molarMass, initCon, diffCoeff);
+	// loop over connections to see if the species needs to be added
+	// to a surface
+	for (int conCount = 0; conCount < connections.size(); conCount ++){
+		connection* thisCon = getConnection(conCount);
+		surface* conSurface = thisCon->getSurface();
+		// if the pointer is not null then add species to that surface
+		if(conSurface->isInit){
+			conSurface->addSpecies(molarMass, initCon, diffCoeff);
+		}
+	}
 	speciesVector.push_back(spec);
 
 }
@@ -86,10 +108,43 @@ void meshCell::setPressure(double pressure){
 void meshCell::setTemperature(double temp){
 	T = temp;
 }
+//*****************************************************************************
+// Gets a pointer to a cell connection
+//
+// @param conID		ID of the connection
+//								north = 0
+//								south = 1
+//								east = 2
+//								west = 3
+//*****************************************************************************
+connection* meshCell::getConnection(int conID){
+	// Checks to make sure the conID is not out of range
+	assert(conID <= connections.size() and conID>= 0);
+	assert(connections[conID].loc == conID);
+	return &connections[conID];
+}
+
+//*****************************************************************************
+// Adds a surface to the cell
+//
+// @param locID			location ID of the surface to add
+//								north = 0
+//								south = 1
+//								east = 2
+//								west = 3
+//*****************************************************************************
+void meshCell::addSurface(int locID){
+	connection* myCon = getConnection(locID);
+	myCon->addSurface();
+}
 
 //*****************************************************************************
 // Cleans the species in the cell
 //*****************************************************************************
 void meshCell::cleanSpecies(){
 	speciesVector.clear();
+	// loop over cell connections
+	for (int conCount = 0; conCount < connections.size(); conCount ++){
+		connection* thisCon = getConnection(conCount);
+	}
 }

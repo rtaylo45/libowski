@@ -12,6 +12,8 @@
 //*****************************************************************************
 #ifndef MESHCELLFACE_H
 #define MESHCELLFACE_H
+#include "surface.h"
+
 class meshCellFace {
 
 	public:
@@ -20,17 +22,19 @@ class meshCellFace {
 	// Index of face in y direction
 	int j;
 	int absIndex;
-	// x component velocity
-	double xVl = 0.0;
-	// y component velocity
-	double yVl = 0.0;
+	// Velocity component normal to the surface
+	double vl = 0.0;
 	// x direction length
 	double dx = 0.0;
 	// y direction length
 	double dy = 0.0;
+	// Surface object
+	surface mySurface = surface();
 
 	// Constructor
 	meshCellFace(int, int, int);
+	// Gets a pointer to the surface
+	surface* getSurface();
 
 };
 #endif

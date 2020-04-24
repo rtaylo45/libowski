@@ -6,11 +6,17 @@
 //*****************************************************************************
 #ifndef MESHCELLDATA_H
 #define MESHCELLDATA_H
+#include "cellConnection.h"
 #include "meshCellFace.h"
+#include "surface.h"
 #include "species.h"
 #include <vector>
+#include <iostream>
 #include <assert.h>
 #include <string>
+
+// Forward decleration
+class connection;
 
 class meshCell {
 
@@ -30,41 +36,18 @@ class meshCell {
 	double dx = -1.;
 	// dy of cell
 	double dy = -1.;
+	// cell volume
+	double volume = 0.0;
 	// Temperature of cell in kelvin
 	double T = -1.;
 	// Presure in lbf/in^2
 	double P = -1.;
-	// Denote if a cell is at a  boundary
-	bool boundary = false;
-	// Boundary location: 0 = North
-	//							 1 = South
-	//							 2 = East
-	//							 3 = West
-	int boundaryLoc = -1;
-	// Boundary condition type
-	std::string boundaryType = "None";
+	// Vector of cell connections
+	std::vector<connection> connections;
+
+	private:
 	// Vector of the species in the cell
 	std::vector<species> speciesVector;
-
-	// Connection info for mesh cells
-	// Pointer to the east mesh cell
-	meshCell *eastCellPtr = nullptr;
-	// Pointer to the west mesh cell
-	meshCell *westCellPtr = nullptr;
-	// Pointer to the north mesh cell
-	meshCell *northCellPtr = nullptr;
-	// Pointer to the south mesh cell
-	meshCell *southCellPtr = nullptr;
-
-	// Connection info for mesh cell faces
-	// Pointer to the east mesh cell
-	meshCellFace *eastFacePtr = nullptr;
-	// Pointer to the west mesh cell
-	meshCellFace *westFacePtr = nullptr;
-	// Pointer to the north mesh cell
-	meshCellFace *northFacePtr = nullptr;
-	// Pointer to the south mesh cell
-	meshCellFace *southFacePtr = nullptr;
 
 	public:
 	// Constructor
@@ -81,6 +64,10 @@ class meshCell {
 	void setTemperature(double);
 	// Sets the cells pressure
 	void setPressure(double);
+	// Gets a pointer to the connection
+	connection* getConnection(int);
+	// Adds a surface 
+	void addSurface(int);
 	// Clean species
 	void cleanSpecies();
 

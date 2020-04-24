@@ -194,6 +194,9 @@ void testProblem2(int myid){
 
 			// Build the Mesh
 			modelMesh model(xCells, yCells, xLength, yLength);
+			// Sets the surfaces
+			model.addBoundarySurface("east");
+			model.addBoundarySurface("west");
 			// Build species driver
 			speciesDriver spec = speciesDriver(&model);
 
@@ -320,6 +323,8 @@ void testProblem2Krylov(int myid){
 
 	// Build the Mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("east");
+	model.addBoundarySurface("west");
 	// Build species driver
 	speciesDriver spec = speciesDriver(&model);
 
@@ -455,6 +460,8 @@ void testProblem2IntegratorMethods(int myid){
 
 	// Build the Mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("east");
+	model.addBoundarySurface("west");
 	// Build species driver
 	speciesDriver spec = speciesDriver(&model);
 
@@ -815,6 +822,7 @@ void testXenonIodineYFlow(int myid){
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("south");
 
 	// Sets the x velocity
 	model.setConstantYVelocity(yVelocity);
@@ -851,9 +859,10 @@ void testXenonIodineYFlow(int myid){
 				double b = gamma_I*Sigma_f*flux*iodineMM/AvogNum/lambda_I;
    			double N_I = b + (iodineInitCon - b)*exp(-lambda_I/yVelocity*y);
 
-				//std::cout << xenonCon << " " << iodineCon << " " << N_I << std::endl;
-				//error = std::max(std::abs(iodineCon - N_I)/N_I, error);
-				error = std::abs(iodineCon - N_I)/N_I;
+				//std::cout << y << " " << iodineCon << " " << N_I << std::endl;
+				error = std::max(std::abs(iodineCon - N_I)/N_I, error);
+				//error = std::abs(iodineCon - N_I)/N_I;
+				//std::cout << y << " " << error << std::endl;
 				assert(isApprox(iodineCon, N_I));
 			}
 		}
@@ -871,7 +880,7 @@ void testXenonIodineYFlow(int myid){
 //*****************************************************************************
 void testXenonIodineXFlow(int myid){
 	int xCells = 500, yCells = 1;
-	double xLength = 10.0, yLength = 1.0;
+	double xLength = 10.0, yLength = 0.0;
 	double xVelocity = 8.0;
 	double xenonInitCon = 5e-6, iodineInitCon = 5e-6;
 	double xenonMM = 135.0, iodineMM = 135.0;
@@ -896,6 +905,7 @@ void testXenonIodineXFlow(int myid){
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("west");
 
 	// Sets the x velocity
 	model.setConstantXVelocity(xVelocity);
@@ -935,8 +945,9 @@ void testXenonIodineXFlow(int myid){
 				//std::cout << xenonCon << " " << iodineCon << " " << N_I << std::endl;
 				//iodineError = std::abs(iodineCon-N_I)/N_I;
 				//printf (" %2i %2i %e \n", i, j, iodineError);
-				//error = std::max(std::abs(iodineCon - N_I)/N_I, error);
+				error = std::max(std::abs(iodineCon - N_I)/N_I, error);
 				//std::cout << x << " " << iodineError << std::endl;
+				//std::cout << x << " " << iodineCon << " " << N_I << std::endl;
 				assert(isApprox(iodineCon, N_I));
 			}
 		}
@@ -966,6 +977,10 @@ void testDiffusion2D(int myid){
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("north");
+	model.addBoundarySurface("south");
+	model.addBoundarySurface("east");
+	model.addBoundarySurface("west");
 
 	// Sets species driver
 	speciesDriver spec = speciesDriver(&model);
@@ -1017,13 +1032,12 @@ void testDiffusion2D(int myid){
 					}
 					exact = exact*400./M_PI;
 					error += pow(std::abs(specCon - exact), 2);
-					//std::cout << x << " " << y << " " << specCon << " " << exact << std::endl;
 					outputFile << i << " " << j << " " << specCon << std::endl;
 				}
 			}
 		}
 		error = pow(error,0.5)/(xCells*yCells);
-		assert(error < 0.008);
+		assert(error < 0.003);
 		//std::cout << "Error: " << error << std::endl;
 	}
 
@@ -1106,6 +1120,7 @@ void testNeutronPrecursorsFlow(int myid){
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("south");
 
 	// Sets the y velocity
 	model.setConstantYVelocity(yVelocity);
@@ -1463,6 +1478,7 @@ void testBenBenchmark(int myid){
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("south");
 
 	// Sets the x velocity
 	model.setConstantYVelocity(yVelocity);

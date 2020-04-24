@@ -85,17 +85,19 @@ void modelMesh::createCellFaces(){
 // Connects the nodes
 //*****************************************************************************
 void modelMesh::connectCells(){
+	meshCell* cellPtr;
 	int kEast, kWest, kSouth, kNorth;
+	double dxFlowArea, dyFlowArea;
 
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
-			meshCell* cell = getCellByLoc(i,j);
+			cellPtr = getCellByLoc(i,j);
 
 			// Sets pointer to the cells
-			cell->northCellPtr = getCellByLoc(i,j+1);
-			cell->southCellPtr = getCellByLoc(i,j-1);
-			cell->westCellPtr = getCellByLoc(i-1,j);
-			cell->eastCellPtr = getCellByLoc(i+1,j);
+			meshCell* northCellPtr = getCellByLoc(i,j+1);
+			meshCell* southCellPtr = getCellByLoc(i,j-1);
+			meshCell* westCellPtr = getCellByLoc(i-1,j);
+			meshCell* eastCellPtr = getCellByLoc(i+1,j);
 
 			// Gets the absolute indices for the cell faces
 			kEast = i*(2*numOfyCells+1) + j;
@@ -104,10 +106,28 @@ void modelMesh::connectCells(){
 			kNorth = numOfyCells*(2*i+1) + i + j + 1;
 	
 			// Sets the pointers for cell faces	
-			cell->eastFacePtr = &meshCellFaces[kEast];
-			cell->westFacePtr = &meshCellFaces[kWest];
-			cell->southFacePtr = &meshCellFaces[kSouth];
-			cell->northFacePtr = &meshCellFaces[kNorth];
+			meshCellFace* eastFacePtr = &meshCellFaces[kEast];
+			meshCellFace* westFacePtr = &meshCellFaces[kWest];
+			meshCellFace* southFacePtr = &meshCellFaces[kSouth];
+			meshCellFace* northFacePtr = &meshCellFaces[kNorth];
+
+			// Sets the areas for flow 
+			dxFlowArea = (cellPtr->dx) ? cellPtr->dx : 1;
+			dyFlowArea = (cellPtr->dy) ? cellPtr->dy : 1;
+			
+			connection northCon(northCellPtr, northFacePtr, 
+				dxFlowArea, -1., 0, cellPtr->dy);
+			connection southCon(southCellPtr, southFacePtr, 
+				dxFlowArea, 1., 1, cellPtr->dy);
+			connection eastCon(eastCellPtr, eastFacePtr, 
+				dyFlowArea, -1., 2, cellPtr->dx);
+			connection westCon(westCellPtr, westFacePtr, 
+				dyFlowArea, 1., 3, cellPtr->dx);
+
+			cellPtr->connections.push_back(northCon);
+			cellPtr->connections.push_back(southCon);
+			cellPtr->connections.push_back(eastCon);
+			cellPtr->connections.push_back(westCon);
 		}
 	}
 }
@@ -178,9 +198,15 @@ void modelMesh::setConstantXVelocity(double velocity){
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
-			
-			cell->eastFacePtr->xVl = velocity;
-			cell->westFacePtr->xVl = velocity;
+
+			// loop over connections
+			for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+				connection thisCon = cell->connections[conCount];
+				// sets the face velocity for east and west faces
+				if (thisCon.loc == 2 or thisCon.loc == 3){
+					thisCon.connectionFacePtr->vl = velocity;
+				}
+			}
 		}
 	}
 }
@@ -194,8 +220,14 @@ void modelMesh::setConstantXVelocity(double velocity, int row){
 	for (int i = 0; i < numOfxCells; i++){
 		meshCell* cell = getCellByLoc(i,row);
 		
-		cell->eastFacePtr->xVl = velocity;
-		cell->westFacePtr->xVl = velocity;
+		// loop over connections
+		for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+			connection thisCon = cell->connections[conCount];
+			// sets the face velocity for east and west faces
+			if (thisCon.loc == 2 or thisCon.loc == 3){
+				thisCon.connectionFacePtr->vl = velocity;
+			}
+		}
 	}
 }
 
@@ -209,8 +241,14 @@ void modelMesh::setConstantYVelocity(double velocity){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			
-			cell->northFacePtr->yVl = velocity;
-			cell->southFacePtr->yVl = velocity;
+			// loop over connections
+			for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+				connection thisCon = cell->connections[conCount];
+				// sets the face velocity for north and south faces
+				if (thisCon.loc == 0 or thisCon.loc == 1){
+					thisCon.connectionFacePtr->vl = velocity;
+				}
+			}
 		}
 	}
 }
@@ -224,8 +262,14 @@ void modelMesh::setConstantYVelocity(double velocity, int column){
 	for (int j = 0; j < numOfyCells; j++){
 		meshCell* cell = getCellByLoc(column,j);
 		
-		cell->northFacePtr->yVl = velocity;
-		cell->southFacePtr->yVl = velocity;
+		// loop over connections
+		for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+			connection thisCon = cell->connections[conCount];
+			// sets the face velocity for north and south faces
+			if (thisCon.loc == 0 or thisCon.loc == 1){
+				thisCon.connectionFacePtr->vl = velocity;
+			}
+		}
 	}
 }
 
@@ -279,6 +323,85 @@ void modelMesh::setCellTemperature(int i, int j, double temp){
 void modelMesh::setCellPressure(int i, int j, double pressure){
 	meshCell* cell = getCellByLoc(i,j);
 	cell->setPressure(pressure);
+}
+
+//*****************************************************************************
+// Adds a surface to a cell
+//
+// @param i				x cell index
+// @param j				y cell index
+// @param loc			Location of the surface in the cell
+//							north
+//							south
+//							east
+//							west
+//*****************************************************************************
+void modelMesh::addSurface(int i, int j, std::string loc){
+	int locID = -1;
+	if (loc == "north"){locID = 0;};
+	if (loc == "south"){locID = 1;};
+	if (loc == "east"){locID = 2;};
+	if (loc == "west"){locID = 3;};
+	assert(locID != -1);
+
+	meshCell* cell = getCellByLoc(i,j);
+	cell->addSurface(locID);
+}
+
+//*****************************************************************************
+// Adds a surface to the mesh boundary
+//
+// @param loc			Location of the surface boundary
+//							north
+//							south
+//							east
+//							west
+//*****************************************************************************
+void modelMesh::addBoundarySurface(std::string loc){
+	int xCellMax = numOfxCells - 1;
+	int xCellMin = 0;
+	int yCellMax = numOfyCells - 1;
+	int yCellMin = 0;
+	int locID = -1;
+
+	if (loc == "north"){locID = 0;};
+	if (loc == "south"){locID = 1;};
+	if (loc == "east"){locID = 2;};
+	if (loc == "west"){locID = 3;};
+	assert(locID != -1);
+
+	switch(locID){
+
+		// North location
+		case 0: {
+			for (int i = 0; i < numOfxCells; i++){
+				addSurface(i, yCellMax, "north");
+			}
+			break;
+		}
+		// South location
+		case 1: {
+			for (int i = 0; i < numOfxCells; i++){
+				addSurface(i, yCellMin, "south");
+			}
+			break;
+		}
+		// East location
+		case 2: {
+			for (int j = 0; j < numOfyCells; j++){
+				addSurface(xCellMax, j, "east");
+			}
+			break;
+		}
+		// West location
+		case 3: {
+			for (int j = 0; j < numOfyCells; j++){
+				addSurface(xCellMin, j, "west");
+			}
+			break;
+		}
+	}
+
 }
 
 //*****************************************************************************
