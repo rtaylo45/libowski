@@ -11,6 +11,7 @@
 #include "surface.h"
 #include "species.h"
 #include <vector>
+#include <iostream>
 #include <assert.h>
 #include <string>
 

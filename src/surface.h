@@ -7,6 +7,7 @@
 #ifndef SURFACE_H
 #define SURFACE_H
 #include "species.h"
+#include <string>
 #include <assert.h>
 
 class surface {
@@ -18,6 +19,7 @@ class surface {
 	void addSpecies(double, double, double);
 	// Gets a pointer to the species
 	species* getSpeciesPtr(int);
+	std::string name = "zack";
 	// Clean
 	void clean();
 

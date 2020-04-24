@@ -323,6 +323,8 @@ void testProblem2Krylov(int myid){
 
 	// Build the Mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("east");
+	model.addBoundarySurface("west");
 	// Build species driver
 	speciesDriver spec = speciesDriver(&model);
 
@@ -458,6 +460,8 @@ void testProblem2IntegratorMethods(int myid){
 
 	// Build the Mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("east");
+	model.addBoundarySurface("west");
 	// Build species driver
 	speciesDriver spec = speciesDriver(&model);
 
@@ -818,6 +822,7 @@ void testXenonIodineYFlow(int myid){
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("south");
 
 	// Sets the x velocity
 	model.setConstantYVelocity(yVelocity);
@@ -900,6 +905,7 @@ void testXenonIodineXFlow(int myid){
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("west");
 
 	// Sets the x velocity
 	model.setConstantXVelocity(xVelocity);
@@ -957,7 +963,7 @@ void testXenonIodineXFlow(int myid){
 // Test 2D diffusion
 //*****************************************************************************
 void testDiffusion2D(int myid){
-	int xCells = 5, yCells = 5;
+	int xCells = 3, yCells = 3;
 	double xLength = 15.0, yLength = 20.0;
 	double totalTime = 1000000.0;
 	double t = 0.0;
@@ -971,6 +977,10 @@ void testDiffusion2D(int myid){
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("north");
+	model.addBoundarySurface("south");
+	model.addBoundarySurface("east");
+	model.addBoundarySurface("west");
 
 	// Sets species driver
 	speciesDriver spec = speciesDriver(&model);
@@ -1111,6 +1121,7 @@ void testNeutronPrecursorsFlow(int myid){
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("south");
 
 	// Sets the y velocity
 	model.setConstantYVelocity(yVelocity);
@@ -1468,6 +1479,7 @@ void testBenBenchmark(int myid){
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("south");
 
 	// Sets the x velocity
 	model.setConstantYVelocity(yVelocity);

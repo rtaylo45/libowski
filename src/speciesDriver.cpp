@@ -451,15 +451,19 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				}
 				// Added sthe Dirichlet boundary condition to the sourse term
 				if (thisCon->boundaryType == "dirichlet"){
+					surface* thisSurface = thisCon->connectionFacePtr->surfacePtr;
+   				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
 					std::cout << i << " " << thisCon->loc << " " << a << " " << 
-						thisSpecPtr->bc << " " <<  thisCon->boundaryType << 
-						" " << 2.*a*thisSpecPtr->bc << std::endl;
-					thisSpecPtr->s += 2.*a*thisSpecPtr->bc;
+						surfaceSpecPtr->bc << " " <<  thisCon->boundaryType << 
+						" " << 2.*a*surfaceSpecPtr->bc << std::endl;
+					thisSpecPtr->s += 2.*a*surfaceSpecPtr->bc;
 					ab = -a;
 				}
 				// Added sthe Newmann boundary condition to the sourse term
 				else if (thisCon->boundaryType == "newmann"){
-					thisSpecPtr->s -= a*thisSpecPtr->bc*conDist;
+					surface* thisSurface = thisCon->connectionFacePtr->surfacePtr;
+   				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
+					thisSpecPtr->s -= a*surfaceSpecPtr->bc*conDist;
 					ab = a;
 				}
 
