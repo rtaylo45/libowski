@@ -28,11 +28,13 @@ class meshCellFace {
 	double dx = 0.0;
 	// y direction length
 	double dy = 0.0;
-	// pointer to the surface object. This is a physical surface
-	surface* surfacePtr = nullptr;
+	// Surface object
+	surface mySurface = surface();
 
 	// Constructor
 	meshCellFace(int, int, int);
+	// Gets a pointer to the surface
+	surface* getSurface();
 
 };
 #endif

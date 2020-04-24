@@ -867,7 +867,7 @@ void testXenonIodineYFlow(int myid){
 			}
 		}
 	}
-	std::cout << "Max l-1 error: " << error << std::endl;
+	//std::cout << "Max l-1 error: " << error << std::endl;
 
 	
 	model.clean();
@@ -952,7 +952,7 @@ void testXenonIodineXFlow(int myid){
 			}
 		}
 	}
-	std::cout << "Max l-1 error: " << error << std::endl;
+	//std::cout << "Max l-1 error: " << error << std::endl;
 
 	
 	model.clean();
@@ -963,7 +963,7 @@ void testXenonIodineXFlow(int myid){
 // Test 2D diffusion
 //*****************************************************************************
 void testDiffusion2D(int myid){
-	int xCells = 3, yCells = 3;
+	int xCells = 50, yCells = 50;
 	double xLength = 15.0, yLength = 20.0;
 	double totalTime = 1000000.0;
 	double t = 0.0;
@@ -1032,14 +1032,13 @@ void testDiffusion2D(int myid){
 					}
 					exact = exact*400./M_PI;
 					error += pow(std::abs(specCon - exact), 2);
-					std::cout << x << " " << y << " " << specCon << " " << exact << std::endl;
 					outputFile << i << " " << j << " " << specCon << std::endl;
 				}
 			}
 		}
 		error = pow(error,0.5)/(xCells*yCells);
-		//assert(error < 0.008);
-		std::cout << "Error: " << error << std::endl;
+		assert(error < 0.003);
+		//std::cout << "Error: " << error << std::endl;
 	}
 
 	
@@ -1534,18 +1533,18 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	//testProblem1(myid);
-	//testProblem2(myid);
-	//testProblem2IntegratorMethods(myid);
-	//testProblem2Krylov(myid);
-	//testProblem3(myid);
-	//testXenonIodineNoFlow(myid);
-	//testXenonIodineYFlow(myid);
-	//testXenonIodineXFlow(myid);
+	testProblem1(myid);
+	testProblem2(myid);
+	testProblem2IntegratorMethods(myid);
+	testProblem2Krylov(myid);
+	testProblem3(myid);
+	testXenonIodineNoFlow(myid);
+	testXenonIodineYFlow(myid);
+	testXenonIodineXFlow(myid);
 	testDiffusion2D(myid);
-	//testNeutronPrecursorsFlow(myid);
+	testNeutronPrecursorsFlow(myid);
 	//testNeutronPrecursorsMultiChanFlow(myid);
-	//testBenBenchmark(myid);
+	testBenBenchmark(myid);
 
 	mpi.finalize();
 }

@@ -67,7 +67,7 @@ class meshCell {
 	// Gets a pointer to the connection
 	connection* getConnection(int);
 	// Adds a surface 
-	void addSurface(int, surface*);
+	void addSurface(int);
 	// Clean species
 	void cleanSpecies();
 

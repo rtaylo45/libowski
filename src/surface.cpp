@@ -9,6 +9,12 @@
 surface::surface(){};
 
 //*****************************************************************************
+// Initilizes the surface
+//*****************************************************************************
+void surface::set(){
+	isInit = true;
+}
+//*****************************************************************************
 // Adds a species to the surface
 //
 // @param molarMass	Molar mass of species [lbm/mol]
@@ -36,5 +42,6 @@ species* surface::getSpeciesPtr(int specID){
 // Clean
 //*****************************************************************************
 void surface::clean(){
+	isInit = false;
 	speciesVector.clear();
 }

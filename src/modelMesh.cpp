@@ -345,9 +345,7 @@ void modelMesh::addSurface(int i, int j, std::string loc){
 	assert(locID != -1);
 
 	meshCell* cell = getCellByLoc(i,j);
-	surface mySurface = surface();
-	surfaces.push_back(mySurface);
-	cell->addSurface(locID, &surfaces[surfaces.size()-1]);
+	cell->addSurface(locID);
 }
 
 //*****************************************************************************

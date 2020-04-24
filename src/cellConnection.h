@@ -37,6 +37,10 @@ class connection {
 	meshCellFace* connectionFacePtr = nullptr;
 	// pointer to connecting cell
 	meshCell* connectionCellPtr = nullptr;
+	// Adds a surface to the connection face pointer
+	void addSurface();
+	// Gets a pointer to the connection surface
+	surface* getSurface();
 
 	// constructor
 	connection(meshCell*, meshCellFace*, double, double, int, double);

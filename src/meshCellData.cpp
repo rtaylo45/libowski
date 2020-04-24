@@ -51,10 +51,10 @@ void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff){
 	// to a surface
 	for (int conCount = 0; conCount < connections.size(); conCount ++){
 		connection* thisCon = getConnection(conCount);
+		surface* conSurface = thisCon->getSurface();
 		// if the pointer is not null then add species to that surface
-		if(thisCon->connectionFacePtr->surfacePtr){
-			thisCon->connectionFacePtr->surfacePtr->addSpecies(molarMass, 
-				initCon, diffCoeff);
+		if(conSurface->isInit){
+			conSurface->addSpecies(molarMass, initCon, diffCoeff);
 		}
 	}
 	speciesVector.push_back(spec);
@@ -132,11 +132,10 @@ connection* meshCell::getConnection(int conID){
 //								south = 1
 //								east = 2
 //								west = 3
-//	@param surfacePtr		Pointer to the surface object
 //*****************************************************************************
-void meshCell::addSurface(int locID, surface* surfacePtr_){
+void meshCell::addSurface(int locID){
 	connection* myCon = getConnection(locID);
-	myCon->connectionFacePtr->surfacePtr = surfacePtr_;
+	myCon->addSurface();
 }
 
 //*****************************************************************************

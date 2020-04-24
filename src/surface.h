@@ -15,13 +15,16 @@ class surface {
 	public:
 	// Constructure
 	surface();
+	// Initilizes the surface
+	void set();
 	// Add species
 	void addSpecies(double, double, double);
 	// Gets a pointer to the species
 	species* getSpeciesPtr(int);
-	std::string name = "zack";
 	// Clean
 	void clean();
+	// Logical to set if the surface is initilized (exist)
+	bool isInit = false;
 
 	private:
 	// Vector of the species on the surface

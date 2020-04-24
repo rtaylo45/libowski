@@ -8,3 +8,10 @@ meshCellFace::meshCellFace(int iIndex, int jIndex, int absoluteIndex){
 	j = jIndex;	
 	absIndex = absoluteIndex;	
 }
+
+//**************************************************************************
+// Returns a pointer to the surface object
+//**************************************************************************
+surface* meshCellFace::getSurface(){
+	return &mySurface;
+}

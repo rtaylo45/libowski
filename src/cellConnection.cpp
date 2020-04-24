@@ -35,3 +35,18 @@ connection::connection(meshCell *conCell, meshCellFace *conFace, double
 	loc = loc_;
 	distance = distance_;
 }
+
+//**************************************************************************
+// Initilizes the surface for a connection face
+//**************************************************************************
+void connection::addSurface(){
+	surface* conSurface = connectionFacePtr->getSurface();
+	conSurface->set();
+}
+
+//**************************************************************************
+// Gets a pointer to the surface object 
+//**************************************************************************
+surface* connection::getSurface(){
+	return connectionFacePtr->getSurface();
+}

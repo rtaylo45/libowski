@@ -174,7 +174,7 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 				connection* northCon = cell->getConnection(0);
 				northCon->boundary = true;
 				northCon->boundaryType = type;
-				surface* northSurface = northCon->connectionFacePtr->surfacePtr;
+				surface* northSurface = northCon->getSurface();
    			species* spec = northSurface->getSpeciesPtr(specID);
 				spec->bc = bc;
 			}
@@ -187,7 +187,7 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 				connection* southCon = cell->getConnection(1);
 				southCon->boundary = true;
 				southCon->boundaryType = type;
-				surface* southSurface = southCon->connectionFacePtr->surfacePtr;
+				surface* southSurface = southCon->getSurface();
    			species* spec = southSurface->getSpeciesPtr(specID);
 				spec->bc = bc;
 			}
@@ -200,7 +200,7 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 				connection* eastCon = cell->getConnection(2);
 				eastCon->boundary = true;
 				eastCon->boundaryType = type;
-				surface* eastSurface = eastCon->connectionFacePtr->surfacePtr;
+				surface* eastSurface = eastCon->getSurface();
    			species* spec = eastSurface->getSpeciesPtr(specID);
 				spec->bc = bc;
 			}
@@ -213,7 +213,7 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 				connection* westCon = cell->getConnection(3);
 				westCon->boundary = true;
 				westCon->boundaryType = type;
-				surface* westSurface = westCon->connectionFacePtr->surfacePtr;
+				surface* westSurface = westCon->getSurface();
    			species* spec = westSurface->getSpeciesPtr(specID);
 				spec->bc = bc;
 			}
@@ -293,14 +293,14 @@ void speciesDriver::solve(double solveTime){
 
 	if (not matrixInit){
 		A = buildTransMatrix(augmented, 0.0);
-		dA = Eigen::MatrixXd(A);
+		//dA = Eigen::MatrixXd(A);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
 		//outputFile.open("matrix.out", std::ios_base::app);
 		//outputFile << dA << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << " "  << std::endl;
-		std::cout << dA  << std::endl;
+		//std::cout << dA  << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		//std::cout << dA.norm() << std::endl;
 		//std::cout << N0  << std::endl;
@@ -451,17 +451,14 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				}
 				// Added sthe Dirichlet boundary condition to the sourse term
 				if (thisCon->boundaryType == "dirichlet"){
-					surface* thisSurface = thisCon->connectionFacePtr->surfacePtr;
+					surface* thisSurface = thisCon->getSurface();
    				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
-					std::cout << i << " " << thisCon->loc << " " << a << " " << 
-						surfaceSpecPtr->bc << " " <<  thisCon->boundaryType << 
-						" " << 2.*a*surfaceSpecPtr->bc << std::endl;
 					thisSpecPtr->s += 2.*a*surfaceSpecPtr->bc;
 					ab = -a;
 				}
 				// Added sthe Newmann boundary condition to the sourse term
 				else if (thisCon->boundaryType == "newmann"){
-					surface* thisSurface = thisCon->connectionFacePtr->surfacePtr;
+					surface* thisSurface = thisCon->getSurface();
    				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
 					thisSpecPtr->s -= a*surfaceSpecPtr->bc*conDist;
 					ab = a;
