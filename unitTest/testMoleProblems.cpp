@@ -169,11 +169,14 @@ void moleProblem1(int myid){
 //*****************************************************************************
 void moleProblem2(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{10, 100, 200, 500};
-	std::vector<double> steps = {1};
-	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
-	//	"pade-method1", "pade-method2"};
-	std::vector<std::string> solvers {"CRAM"};
+	std::vector<int> numOfxCells{10, 100, 500, 1000};
+	std::vector<double> steps = {20};
+	//std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
+	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
+	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
+		"pade-method1", "pade-method2"};
+	//std::vector<std::string> solvers {"CRAM"};
+	//std::vector<std::string> solvers {"BDF1", "BDF2", "BDF3", "BDF4", "BDF5", "BDF6"};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
 	double lambda = 0.01;	// 1/s
@@ -190,6 +193,8 @@ void moleProblem2(int myid){
 	outputFileName = "moleproblem2.out";
 	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 	outputFile << "Total problem time: " << tEnd << "\n";
+	outputFile << "Total problem length: " << xLength << "\n";
+	outputFile << "Refinement: " << "space" << "\n";
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
@@ -198,12 +203,15 @@ void moleProblem2(int myid){
 		for (int &xCells : numOfxCells){
 			// build the mesh
 			modelMesh model(xCells, yCells, xLength, yLength);
+			// Add BC surface
+			model.addBoundarySurface("west");
 			// build species driver
 			speciesDriver spec = speciesDriver(&model);
 			// set x velocity
 			model.setConstantXVelocity(velocity);
 			// Sets the species matrix exp solver
 			spec.setMatrixExpSolver(solverType);
+			//spec.setIntegratorSolver("implicit", solverType);
 
 			// loops over number of time steps
 			for (double &numofsteps	: steps){
@@ -212,7 +220,7 @@ void moleProblem2(int myid){
 				outputFile << "Solver: " << solverType << "\n";
 				outputFile << "dx: " << xLength/(double)xCells << "\n";
 				outputFile << "dt: " << dt << "\n";
-				outputFile << "x"	<< " " << "C" << "\n";
+				outputFile << "variables " << "x " << "Solution " << "Libowski" << "\n";
 
 				// add specs
 				cID = spec.addSpecies(1.0, 0.0, 0.0);
@@ -242,12 +250,16 @@ void moleProblem2(int myid){
 				}
 				t = 0.0;
 				// solve the problem
+				auto start = std::chrono::high_resolution_clock::now();
 				for (int step = 1; step <= numofsteps; step++){
 					t = step*dt;
 					// solve with cram
 					spec.solve(t);
 					//spec.solveImplicit(t);
 				}
+				auto end = std::chrono::high_resolution_clock::now();
+				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+						end - start);
 				// gets species concentrations
 				if (myid==0){
 					for (int i = 0; i < xCells; i++){
@@ -275,15 +287,18 @@ void moleProblem2(int myid){
 					}
 				}
 				outputFile << "\n";
-				std::cout << solverType << " " << dx << " " << dt 
-					<< " " << percentError << "\n";
+				//std::cout << solverType << " " << dx << " " << dt 
+				//	<< " " << percentError << "\n";
 				// clean species
+				printf("%15s %2.3f %2.2f %4.2E %3.5f\n", solverType.c_str(), dt, dx, 
+					percentError, duration.count()/1.e6);
 				spec.clean();
 			}
 			spec.clean();
 			model.clean();
 		}
 	}
+	outputFile << "end";
 }
 
 //*****************************************************************************
@@ -608,6 +623,8 @@ void moleProblem5(int myid){
 	for (int &xCells : numOfxCells){
 		// build the mesh
 		modelMesh model(xCells, yCells, xLength, yLength);
+		// Add BC surface
+		model.addBoundarySurface("west");
 		// build species driver
 		speciesDriver spec = speciesDriver(&model);
 		// set x velocity
@@ -687,8 +704,8 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	moleProblem1(myid);
-	//moleProblem2(myid);
+	//moleProblem1(myid);
+	moleProblem2(myid);
 	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);
