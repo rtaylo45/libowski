@@ -50,3 +50,4 @@ void connection::addSurface(){
 surface* connection::getSurface(){
 	return connectionFacePtr->getSurface();
 }
+

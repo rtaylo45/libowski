@@ -583,14 +583,115 @@ void speciesDriver::unpackSolution(const VectorD& sol){
 //			2 = east
 //			3 = west
 //*****************************************************************************
-double speciesDriver::calcSpecConvectiveSlope(int cellID, int specID, 
-		int loc, double tran){
+double speciesDriver::calcSpecConvectiveSlope(meshCell* cellPtr, connection* cellCon, 
+		int specID, double tran){
 		double alphal = 0.0;
 		double rohP = 0.0, rohN = 0.0, rohE = 0.0, rohS = 0.0, rohW = 0.0;
-		double rohNN, rohSS, rohEE, rohWW;
+		double rohNN = 0.0, rohSS = 0.0, rohEE = 0.0, rohWW 0.0;
+		double rohbc = 0.0;
 		double r = 0.0;
 		if (tran < 0.0) {alphal = 1.0;};
 		if (tran == 0.0) {return 0.0;};
+
+		meshCell* northCell = cellPtr->getConnection(0)->conCell;
+		meshCell* southCell = cellPtr->getConnection(1)->conCell;
+		meshCell* eastCell = cellPtr->getConnection(2)->conCell;
+		meshCell* westCell = cellPtr->getConnection(3)->conCell;
+		
+		meshCell* northNorthCell = northPtr->getConnection(0)->conCell;
+		meshCell* southSouthCell = southPtr->getConnection(1)->conCell;
+		meshCell* eastEastCell = eastPtr->getConnection(2)->conCell;
+		meshCell* westWestCell = westPtr->getConnection(3)->conCell;
+
+		rohP = cellPtr->getSpecCon(specID);
+
+		// North
+		if (northCell){
+			rohN = northCellPtr->getSpecCon(specID);
+		}
+		else{
+			rohbc = cellPtr->getConnection(0)->getSurface->getSpeciesPtr(specID)->bc;
+			rohN = 8./3.*rohbc - 2.*southCell->getSpecCon(specID) + 
+				1./3.*southSouthCell->getSpecCon(specID);
+		}
+		if (northNorthCell){
+			rohNN = northNorthCell->getSpecCon(specID);
+		}
+		else{
+			rohbc = cellPtr->getConnection(0)->getSurface->getSpeciesPtr(specID)->bc;
+			rohN = 8./3.*rohbc - 2.*southCell->getSpecCon(specID) + 
+				1./3.*southSouthCell->getSpecCon(specID);
+			rohNN = 3.*rohN - 3.*southCell->getSpecCon(specID) + 
+				southSouthCell->getSpecCon(specID);
+		}
+
+		// South
+		if (northCell){
+		if (southCell){
+			rohS = southCellPtr->getSpecCon(specID);
+		}
+		else{
+			rohbc = cellPtr->getConnection(1)->getSurface->getSpeciesPtr(specID)->bc;
+			rohS = 8./3.*rohbc - 2.northCell->getSpecCon(specID) + 
+				1./3.*northNorthCell->getSpecCon(specID);
+		}
+		if (southSouthCell){
+			rohSS = southSouthCellPtr->getSpecCon(specID);		
+		}
+		else{
+			rohbc = cellPtr->getConnection(1)->getSurface->getSpeciesPtr(specID)->bc;
+			rohS = 8./3.*rohbc - 2.northCell->getSpecCon(specID) + 
+				1./3.*northNorthCell->getSpecCon(specID);
+			rohSS = 3.*rohS - 3.*northCell->getSpecCon(specID) + 
+				northNorthCell->getSpecCon(specID);
+		}
+
+		// East
+		if(eastCell){
+			rohE = eastCellPtr->getSpecCon(specID);
+		}
+		else{
+			rohbc = cellPtr->getConnection(2)->getSurface->getSpeciesPtr(specID)->bc;
+			rohE = 8./3.*rohbc - 2.*westCell->getSpecCon(specID) + 
+				1./3.*westWestCell->getSpecCon(specID);
+		}
+		if(eastEastCell){
+			rohEE = eastEastCellPtr->getSpecCon(specID);
+		}
+		else{
+			rohbc = cellPtr->getConnection(2)->getSurface->getSpeciesPtr(specID)->bc;
+			rohE = 8./3.*rohbc - 2.*westCell->getSpecCon(specID) + 
+				1./3.*westWestCell->getSpecCon(specID);
+			rohEE = 3.*rohE - 3.westCell->getSpecCon(specID) + 
+				westWestCell->getSpecCon(specID);
+		}
+
+		// West
+		if(westCell){
+			rohW = westCellPtr->getSpecCon(specID);
+		}
+		else{
+			rohbc = cellPtr->getConnection(3)->getSurface->getSpeciesPtr(specID)->bc;
+			rohW = 8./3.*rohbc - 2.eastCell->getSpecCon(specID) +
+				1./3.*eastEastCell->getSpecCon(specID);
+		}
+		if(westWestCell){
+			rohWW = westWestCellPtr->getSpecCon(specID);
+		}
+		else{
+			rohbc = cellPtr->getConnection(3)->getSurface->getSpeciesPtr(specID)->bc;
+			rohW = 8./3.*rohbc - 2.*eastCell->getSpecCon(specID) +
+				1./3.*eastEastCell->getSpecCon(specID);
+			rohWW = 3.*rohW - 3.*eastCell->getSpecCon(specID) + 
+				eastEastCell->getSpecCon(specID);
+		}
+
+		// The cell face is on north side
+		if (cellCon->loc == 0){
+				
+	
+
+		}
 
 
 		/*
