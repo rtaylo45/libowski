@@ -49,7 +49,7 @@ void moleProblem1(int myid){
 	double cSol, cCon;
 	int cID;
 	double x1, x2, initCon, dx, xc, dt, t;
-	double percentError = 0.0;
+	double maxRelativeError = 0.0, relativeError = 0.0, rmse = 0.0;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
 	std::vector<double> cCoeffs = {-lambda};
@@ -72,7 +72,8 @@ void moleProblem1(int myid){
 
 		// Loops over number of time steps
 		for (double &numOfSteps	: steps){
-			percentError = 0.0;
+			maxRelativeError = 0.0;
+			rmse = 0.0;
 			dt = tEnd/numOfSteps;
 			outputFile << "Solver: " << solverType << "\n";
 			outputFile << "dt: " << dt << "\n";
@@ -127,7 +128,9 @@ void moleProblem1(int myid){
 						cCon = spec.getSpecies(i, j, cID);
 
 						//assert(isApprox(VSol, VCon, 1e-5, 1e-4));
-						percentError = std::max(percentError, std::abs(cSol-cCon)/cSol*100.);
+						relativeError = std::abs(cSol-cCon)/cSol;
+						maxRelativeError = std::max(maxRelativeError, relativeError);
+						rmse += std::pow(relativeError,2.);
 						outputFile << xc << " " << cCon << "\n";
 					}
 				}
@@ -135,8 +138,8 @@ void moleProblem1(int myid){
 			outputFile << "\n";
 			//std::cout << solverType << " " << dt << " " << percentError << " " << 
 				//duration.count()/1.e6 << "\n";
-			printf("%15s %4.2f %4.2E %3.5f \n", solverType.c_str(), dt, percentError,
-					duration.count()/1.e6);
+			printf("%15s %4.2f %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, relativeError,
+					std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
 			// Clean species
 			spec.clean();
 		}
@@ -187,7 +190,7 @@ void moleProblem2(int myid){
 	double cSol, cCon;
 	int cID;
 	double x1, x2, initCon, dx, xc, dt, t;
-	double percentError = 0.0;
+	double maxRelativeError = 0.0, relativeError = 0.0, rmse = 0.0;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
 	std::vector<double> ccoeffs = {-lambda};
@@ -222,7 +225,8 @@ void moleProblem2(int myid){
 
 			// loops over number of time steps
 			for (double &numofsteps	: steps){
-				percentError = 0.0;
+				maxRelativeError = 0.0;
+				rmse = 0.0;
 				dt = tEnd/numofsteps;
 				outputFile << "Solver: " << solverType << "\n";
 				//outputFile << "Solver: " << limiterType << "\n";
@@ -293,7 +297,9 @@ void moleProblem2(int myid){
 							//linfError = std::max(linfError, std::abs(cSol-cCon)/cSol);
 							outputFile << xc << " " << cSol << " " << cCon << "\n";
 							//std::cout << xc << std::endl; // << cSol << " " << cCon << std::endl;
-							percentError = std::max(percentError, std::abs(cSol-cCon)/cSol);
+							relativeError = std::abs(cSol-cCon)/cSol;
+							maxRelativeError = std::max(maxRelativeError, relativeError);
+							rmse += std::pow(relativeError,2.);
 						}
 					}
 				}
@@ -301,9 +307,8 @@ void moleProblem2(int myid){
 				//std::cout << solverType << " " << dx << " " << dt 
 				//	<< " " << percentError << "\n";
 				// clean species
-				printf("%15s %2.3f %2.2f %4.2E %3.5f\n", solverType.c_str(), dt, dx, 
-				//printf("%15s %2.3f %2.2f %4.2E %3.5f\n", limiterType.c_str(), dt, dx, 
-					percentError, duration.count()/1.e6);
+				printf("%15s %2.3f %4.2E %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, dx, 
+						maxRelativeError, std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
 				spec.clean();
 			}
 			spec.clean();
