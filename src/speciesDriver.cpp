@@ -291,10 +291,12 @@ void speciesDriver::solve(double solveTime){
 	MatrixD dA;
 	bool augmented = true;
 	double timeStep = solveTime - lastSolveTime;
+	double rtol = 1.e-5, diff;
+	VectorD defSourceOld, defSourceNew;
 
 	if (not matrixInit){
 		A = buildTransMatrix(augmented, 0.0);
-		//dA = Eigen::MatrixXd(A);
+		//dA = Eigen::MatrixXd(A*timeStep);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
 		//outputFile.open("matrix.out", std::ios_base::app);
@@ -305,14 +307,16 @@ void speciesDriver::solve(double solveTime){
 		//std::cout << dA.determinant() << std::endl;
 		//std::cout << dA.norm() << std::endl;
 		//std::cout << N0  << std::endl;
-		matrixInit = true;
+		//matrixInit = true;
 		//N0 = buildInitialConditionVector(augmented);
 	}
+
 	N0 = buildInitialConditionVector(augmented);
 
 	sol = expSolver->apply(A, N0, timeStep);
 	if (mpi.rank == 0){unpackSolution(sol);};
 	lastSolveTime = solveTime;
+	step += 1;
 }
 
 //*****************************************************************************
@@ -326,12 +330,31 @@ void speciesDriver::solveImplicit(double solveTime){
 	bool augmented = true;
 	SparseLU<SparseMatrixD, COLAMDOrdering<int> > LinearSolver;
 	double timeStep = solveTime - lastSolveTime;
+	double rtol = 1.e-5, diff = 5.0;
+	VectorD defSourceOld, defSourceNew;
 
 	solOld = buildInitialConditionVector(augmented);
 	if (not matrixInit){
 		A = buildTransMatrix(augmented, 0.0);
-		matrixInit = true;
+		//matrixInit = true;
 	}
+	// Inner iterations
+	int iterations = 0;
+	//while (iterations < 1){
+	//	std::cout << iterations << std::endl;
+	//	defSourceOld = calcDefSourceVector();
+	//	N0 = buildInitialConditionVector(augmented);
+	//	sol = expSolver->apply(A, N0, timeStep);
+	//	if (mpi.rank == 0){unpackSolution(sol);};
+	//	defSourceNew = calcDefSourceVector();
+	//	//std::cout << defSourceOld << std::endl;
+	//	//std::cout << " "  << std::endl;
+	//	//std::cout << defSourceNew << std::endl;
+	//	diff = (defSourceOld - defSourceNew).norm();
+	//	//std::cout << " "  << std::endl;
+	//	//std::cout << diff  << std::endl;
+	//	iterations += 1;
+	//}
 
 	sol = intSolver->integrate(A, solOld, timeStep);
 	
@@ -380,7 +403,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
 	double diffusionCoeff = 0.0;
 	double rCon, psi, a, tran, thisCoeff, conDirection, conDist;
-	double aP, ab, coeff;
+	double aP, ab, coeff, defCor, thisSpecSource;
 	tripletList.reserve(nonZeros);	
 
 	// if the matrix is not augmented then we no longer need to add a dummy
@@ -402,6 +425,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			// Gets the species pointer
 			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
 			diffusionCoeff = thisSpecPtr->D;
+			thisSpecSource = thisSpecPtr->s;
 			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
 			// Sets the ap coeff
@@ -433,10 +457,6 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				if (conDist){
 					// Computes the transition coefficient for convection
 					tran = thisCon->connectionFacePtr->vl*thisCon->area/thisCellPtr->volume;
-					// Gets the convective species slope
-					rCon = calcSpecConvectiveSlope(cellID, specID, thisCon->loc, tran);
-					// flux limiter
-					psi = fluxLim.getPsi(rCon);
 					// matrix coefficient
 					a = std::max(conDirection*tran, 0.0) + 
 						diffusionCoeff*thisCon->area/thisCellPtr->volume/conDist;
@@ -445,26 +465,35 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 						j = getAi(otherCellPtr->absIndex, totalCells, specID, 
 							totalSpecs);
 						tripletList.push_back(T(i, j, a));
-					}	
+					}
+					// Sets the deferred correction for second order flux
+					if (thisCellPtr->secondOrderFlux and not thisCon->boundary 
+							and step > 0){
+						std::cout << "cellID: " << cellID  << " connectionLoc: " << conCount << std::endl;
+						// set source for deffered correction
+						defCor = calcDefCor(thisCellPtr, thisCon, specID, tran);
+						//std::cout << rCon << " " << psi << " " << defCor << std::endl;
+						std::cout << " " << std::endl;
+						thisSpecSource += defCor;
+					}
 				}
 				// Added sthe Dirichlet boundary condition to the sourse term
 				if (thisCon->boundaryType == "dirichlet"){
 					surface* thisSurface = thisCon->getSurface();
    				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
-					thisSpecPtr->s += 2.*a*surfaceSpecPtr->bc;
-					ab = -a;
+					thisSpecSource += tran*conDirection*surfaceSpecPtr->bc;
+					//ab = -a;
 				}
 				// Added sthe Newmann boundary condition to the sourse term
 				else if (thisCon->boundaryType == "newmann"){
 					surface* thisSurface = thisCon->getSurface();
    				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
-					thisSpecPtr->s -= a*surfaceSpecPtr->bc*conDist;
+					thisSpecSource -= a*surfaceSpecPtr->bc*conDist;
 					ab = a;
 				}
 
 				// aP coefficient
 				aP += (-a + ab);
-				//std::cout << cellID << " " << a << " " << ab << " " << aP << std::endl;
 			}
 			// Sets the coefficients for linear source terms
 			if (thisSpecPtr->coeffs.size()){
@@ -487,7 +516,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 
 			// Sets the constant source terms
 			if (Augmented){
-				tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
+				tripletList.push_back(T(i, A.cols()-1, thisSpecSource));
 			}
 		}
 	}
@@ -572,205 +601,232 @@ void speciesDriver::unpackSolution(const VectorD& sol){
 	}
 }
 //*****************************************************************************
-// Claculatest the convective species slop in a cell
+// Calculates the TVD deferred correction
 //
-// @param cellID	Global cellID
+// @param cellPtr	pointer to cell
+// @param cellCon pointer to cell connection
 // @param specID	Species ID
 // @pram tran		Transton value	[1/s]
-// @param loc		Location of adjacent cell
-//			0 = north
-//			1 = south
-//			2 = east
-//			3 = west
 //*****************************************************************************
-double speciesDriver::calcSpecConvectiveSlope(meshCell* cellPtr, connection* cellCon, 
-		int specID, double tran){
-		double alphal = 0.0;
-		double rohP = 0.0, rohN = 0.0, rohE = 0.0, rohS = 0.0, rohW = 0.0;
-		double rohNN = 0.0, rohSS = 0.0, rohEE = 0.0, rohWW 0.0;
-		double rohbc = 0.0;
-		double r = 0.0;
-		if (tran < 0.0) {alphal = 1.0;};
-		if (tran == 0.0) {return 0.0;};
+double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon, 
+	int specID, double tran){
+	int alphal = 1;
+	double rohP = 0.0, rohN = 0.0, rohE = 0.0, rohS = 0.0, rohW = 0.0;
+	double rohNN = 0.0, rohSS = 0.0, rohEE = 0.0, rohWW = 0.0;
+	double rohbc = 0.0, dir = 0.0;
+	double r = 0.0, defCor = 0.0, psi = 0.0;
+	meshCell* northCell = nullptr;
+	meshCell* southCell = nullptr;
+	meshCell* eastCell = nullptr;
+	meshCell* westCell = nullptr;
+	meshCell* northNorthCell = nullptr;
+	meshCell* southSouthCell = nullptr;
+	meshCell* eastEastCell = nullptr;
+	meshCell* westWestCell = nullptr;
+	meshCell* otherCell = nullptr;
+	if (tran < 0.0) {alphal = 0;};
+	if (tran == 0.0) {return 0.0;};
 
-		meshCell* northCell = cellPtr->getConnection(0)->conCell;
-		meshCell* southCell = cellPtr->getConnection(1)->conCell;
-		meshCell* eastCell = cellPtr->getConnection(2)->conCell;
-		meshCell* westCell = cellPtr->getConnection(3)->conCell;
-		
-		meshCell* northNorthCell = northPtr->getConnection(0)->conCell;
-		meshCell* southSouthCell = southPtr->getConnection(1)->conCell;
-		meshCell* eastEastCell = eastPtr->getConnection(2)->conCell;
-		meshCell* westWestCell = westPtr->getConnection(3)->conCell;
+	rohP = cellPtr->getSpecCon(specID);
+	otherCell = cellCon->connectionCellPtr;
 
-		rohP = cellPtr->getSpecCon(specID);
+	switch(cellCon->loc){
 
-		// North
-		if (northCell){
-			rohN = northCellPtr->getSpecCon(specID);
-		}
-		else{
-			rohbc = cellPtr->getConnection(0)->getSurface->getSpeciesPtr(specID)->bc;
-			rohN = 8./3.*rohbc - 2.*southCell->getSpecCon(specID) + 
-				1./3.*southSouthCell->getSpecCon(specID);
-		}
-		if (northNorthCell){
-			rohNN = northNorthCell->getSpecCon(specID);
-		}
-		else{
-			rohbc = cellPtr->getConnection(0)->getSurface->getSpeciesPtr(specID)->bc;
-			rohN = 8./3.*rohbc - 2.*southCell->getSpecCon(specID) + 
-				1./3.*southSouthCell->getSpecCon(specID);
-			rohNN = 3.*rohN - 3.*southCell->getSpecCon(specID) + 
-				southSouthCell->getSpecCon(specID);
-		}
-
-		// South
-		if (northCell){
-		if (southCell){
-			rohS = southCellPtr->getSpecCon(specID);
-		}
-		else{
-			rohbc = cellPtr->getConnection(1)->getSurface->getSpeciesPtr(specID)->bc;
-			rohS = 8./3.*rohbc - 2.northCell->getSpecCon(specID) + 
-				1./3.*northNorthCell->getSpecCon(specID);
-		}
-		if (southSouthCell){
-			rohSS = southSouthCellPtr->getSpecCon(specID);		
-		}
-		else{
-			rohbc = cellPtr->getConnection(1)->getSurface->getSpeciesPtr(specID)->bc;
-			rohS = 8./3.*rohbc - 2.northCell->getSpecCon(specID) + 
-				1./3.*northNorthCell->getSpecCon(specID);
-			rohSS = 3.*rohS - 3.*northCell->getSpecCon(specID) + 
-				northNorthCell->getSpecCon(specID);
+		// North location
+		case 0: {
+			northCell = cellPtr->getConnection(0)->connectionCellPtr;
+			southCell = cellPtr->getConnection(1)->connectionCellPtr;
+			northNorthCell = northCell->getConnection(0)->connectionCellPtr;
+			rohN = northCell->getSpecCon(specID);
+			rohS = southCell->getSpecCon(specID);
+			// North
+			if (northNorthCell){
+				rohNN = northNorthCell->getSpecCon(specID);
+			}
+			else{
+				if (cellCon->boundary){
+					rohbc = otherCell->getConnection(0)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellCon->boundaryType == "dirichlet"){
+						rohNN = 2.*rohbc - rohP;
+					}
+					else if (cellCon->boundaryType == "newmann"){
+						rohNN = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			//r = alphal*(rohP - rohS)/(rohN - rohP) + 
+			//	(1.-alphal)*(rohNN - rohN)/(rohN - rohP);
+			//psi = fluxLim.getPsi(r);
+			//dir = cellCon->direction;
+			//defCor = 0.5*dir*tran*(-(1.-alphal)*psi + alphal*psi)*(rohN-rohP);
+			break;
 		}
 
-		// East
-		if(eastCell){
-			rohE = eastCellPtr->getSpecCon(specID);
-		}
-		else{
-			rohbc = cellPtr->getConnection(2)->getSurface->getSpeciesPtr(specID)->bc;
-			rohE = 8./3.*rohbc - 2.*westCell->getSpecCon(specID) + 
-				1./3.*westWestCell->getSpecCon(specID);
-		}
-		if(eastEastCell){
-			rohEE = eastEastCellPtr->getSpecCon(specID);
-		}
-		else{
-			rohbc = cellPtr->getConnection(2)->getSurface->getSpeciesPtr(specID)->bc;
-			rohE = 8./3.*rohbc - 2.*westCell->getSpecCon(specID) + 
-				1./3.*westWestCell->getSpecCon(specID);
-			rohEE = 3.*rohE - 3.westCell->getSpecCon(specID) + 
-				westWestCell->getSpecCon(specID);
-		}
-
-		// West
-		if(westCell){
-			rohW = westCellPtr->getSpecCon(specID);
-		}
-		else{
-			rohbc = cellPtr->getConnection(3)->getSurface->getSpeciesPtr(specID)->bc;
-			rohW = 8./3.*rohbc - 2.eastCell->getSpecCon(specID) +
-				1./3.*eastEastCell->getSpecCon(specID);
-		}
-		if(westWestCell){
-			rohWW = westWestCellPtr->getSpecCon(specID);
-		}
-		else{
-			rohbc = cellPtr->getConnection(3)->getSurface->getSpeciesPtr(specID)->bc;
-			rohW = 8./3.*rohbc - 2.*eastCell->getSpecCon(specID) +
-				1./3.*eastEastCell->getSpecCon(specID);
-			rohWW = 3.*rohW - 3.*eastCell->getSpecCon(specID) + 
-				eastEastCell->getSpecCon(specID);
+		// South location
+		case 1: {
+			northCell = cellPtr->getConnection(0)->connectionCellPtr;
+			southCell = cellPtr->getConnection(1)->connectionCellPtr;
+			rohN = northCell->getSpecCon(specID);
+			rohS = southCell->getSpecCon(specID);
+			southSouthCell = southCell->getConnection(1)->connectionCellPtr;
+			if (southSouthCell){
+				rohSS = southSouthCell->getSpecCon(specID);		
+			}
+			else{
+				if (cellCon->boundary){
+					rohbc = otherCell->getConnection(1)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellCon->boundaryType == "dirichlet"){
+						rohSS = 2.*rohbc - rohP;
+					}
+					else if (cellCon->boundaryType == "newmann"){
+						rohSS = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			//r = alphal*(rohS - rohSS)/(rohP - rohS) + 
+			//	(1.-alphal)*(rohN - rohS)/(rohP - rohS);
+			//psi = fluxLim.getPsi(r);
+			//dir = cellCon->direction;
+			//defCor = 0.5*dir*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohS);
+			break;
 		}
 
-		// The cell face is on north side
-		if (cellCon->loc == 0){
-				
-	
-
+		// East location
+		case 2: {
+			eastCell = cellPtr->getConnection(2)->connectionCellPtr;
+			westCell = cellPtr->getConnection(3)->connectionCellPtr;
+			rohE = eastCell->getSpecCon(specID);
+			eastEastCell = eastCell->getConnection(2)->connectionCellPtr;
+			if(westCell){
+				rohW = westCell->getSpecCon(specID);
+			}
+			else{
+				if (cellPtr->getConnection(3)->boundary){
+					rohbc = cellPtr->getConnection(3)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellPtr->getConnection(3)->boundaryType == "dirichlet"){
+						rohW = (2.*rohbc - rohP);
+					}
+					else if (cellPtr->getConnection(3)->boundaryType == "newmann"){
+						rohW = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			r = alphal*(rohP - rohW)/(rohE - rohP) + 
+				(1.- alphal)*(rohEE - rohE)/(rohE - rohP);
+			psi = fluxLim.getPsi(r);
+			//psi = r;
+			dir = cellCon->direction;
+			std::cout << "eastCellID: " << eastCell->absIndex << std::endl;
+			if (westCell){
+				std::cout << "westCellID: " << westCell->absIndex << std::endl;
+			}
+			//defCor = 0.5*dir*tran*(-(1.-alphal)*psi + alphal*psi)*(rohE-rohP);
+			defCor = 0.5*tran*((1.-alphal)*psi - alphal*psi)*(rohE-rohP);
+			std::cout << "r: " << r << std::endl;
+			std::cout << "psi: " << psi << std::endl;
+			std::cout << "deferred Corection: " << defCor << std::endl;
+			break;
 		}
 
+		// West location
+		case 3: {
+			eastCell = cellPtr->getConnection(2)->connectionCellPtr;
+			westCell = cellPtr->getConnection(3)->connectionCellPtr;
+			rohW = westCell->getSpecCon(specID);
+			westWestCell = cellPtr->getConnection(3)->connectionCellPtr;
+			if(westWestCell){
+				rohWW = westWestCell->getSpecCon(specID);
+			}
+			else{
+				if (cellCon->boundary){
+					rohbc = otherCell->getConnection(3)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellCon->boundaryType == "dirichlet"){
+						rohWW = (2.*rohbc - rohP);
+					}
+					else if (cellCon->boundaryType == "newmann"){
+						rohWW = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			r = alphal*(rohW - rohWW)/(rohP - rohW) + 
+				(1. - alphal)*(rohE - rohP)/(rohP - rohW);
+			psi = fluxLim.getPsi(r);
+			//psi = fluxLim.(r);
+			//psi = r;
+			dir = cellCon->direction;
+			if (eastCell){
+				std::cout << "eastCellID: " << eastCell->absIndex << std::endl;
+			}
+			std::cout << "westCellID: " << westCell->absIndex << std::endl;
+			std::cout << "westWestCellID: " << westWestCell->absIndex << std::endl;
+			//defCor = 0.5*dir*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohW);
+			defCor = 0.5*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohW);
+			std::cout << "r: " << r << std::endl;
+			std::cout << "psi: " << psi << std::endl;
+			std::cout << "deferred Corection: " << defCor << std::endl;
+			break;
+		}
 
-		/*
-		This section is a work in progress
+	}
+	return defCor;
+}
 
-		Commenting all of the second order convection flux stuff out for now
-		This wasn't even working and i need to come back and fix this
+//*****************************************************************************
+// Builds a vector of the deferred correction source 
+//*****************************************************************************
+VectorD speciesDriver::calcDefSourceVector(){
+	int i;
+	double conDist, conDirection, tran, defCor;
+	int totalSpecs = numOfSpecs;
+	int totalCells = modelPtr->numOfTotalCells;
+	VectorD sourceVector(totalSpecs*totalCells*4);
 
-
-		// This cell pointer
+	// Loop over cells
+	i = 0;
+	for (int cellID = 0; cellID < totalCells; cellID++){
+		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
-	
-		// Gets pointer to connecting cells
-		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
-		meshCell* thisCellSouthCellPtr = thisCellPtr->southCellPtr;
-		meshCell* thisCellEastCellPtr = thisCellPtr->eastCellPtr;
-		meshCell* thisCellWestCellPtr = thisCellPtr->westCellPtr;
 
-		// Gets pointer to conncetions of connections
-		meshCell* thisCellNorthNorthCellPtr = nullptr;
-		meshCell* thisCellSouthSouthCellPtr = nullptr;
-		meshCell* thisCellEastEastCellPtr = nullptr;
-		meshCell* thisCellWestWestCellPtr = nullptr;
+		// Loop over species
+		for (int specID = 0; specID < totalSpecs; specID++){
+			// Gets the species pointer
+			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
+			// Set coefficients to zero
+			tran = 0.0;
 
-		if (thisCellNorthCellPtr){thisCellNorthNorthCellPtr = thisCellNorthCellPtr->northCellPtr;};
-		if (thisCellSouthCellPtr){thisCellSouthSouthCellPtr = thisCellSouthCellPtr->southCellPtr;};
-		if (thisCellEastCellPtr){thisCellEastEastCellPtr = thisCellEastCellPtr->eastCellPtr;};
-		if (thisCellWestCellPtr){thisCellWestWestCellPtr = thisCellWestCellPtr->westCellPtr;};
+			// loop over cell connections
+			for (int conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
+				// Gets cell connection object pointer
+				connection* thisCon = thisCellPtr->getConnection(conCount);
+				// Gets pointer to connected cell
+				meshCell* otherCellPtr = thisCon->connectionCellPtr;
+				// Gets the direction required to multiply by the convection transition
+				conDirection = thisCon->direction;
+				// Gets the distance from this cell center to connection cell center
+				conDist = thisCon->distance;
 
-		if (thisCellNorthCellPtr){rohN = thisCellNorthCellPtr->getSpecCon(specID);};
-		if (thisCellSouthCellPtr){rohS = thisCellSouthCellPtr->getSpecCon(specID);};
-		if (thisCellEastCellPtr){rohE = thisCellEastCellPtr->getSpecCon(specID);};
-		if (thisCellWestCellPtr){rohW = thisCellWestCellPtr->getSpecCon(specID);};
-
-		// Gets this cells species concentration
-		rohP = thisCellPtr->getSpecCon(specID);
-
-		switch(loc){
-
-			// North location
-			case 0: {
-				rohNN = (thisCellNorthNorthCellPtr) ? 
-					thisCellNorthNorthCellPtr->getSpecCon(specID) : 0.0;
-				r = (1.-alphal)*(rohP - rohS)/(rohN - rohP) + 
-					alphal*(rohNN - rohN)/(rohN - rohP);
-				
-				break;
+				// If the connection distance is zero then there is no cell in that 
+				// direction and the transition rate is zero. This will happen 
+				// when modeling 1D cases.
+				if (conDist){
+					// Computes the transition coefficient for convection
+					tran = thisCon->connectionFacePtr->vl*thisCon->area/thisCellPtr->volume;
+					// Sets the deferred correction for second order flux
+					if (thisCellPtr->secondOrderFlux and not thisCon->boundary){
+						// set source for deffered correction
+						defCor = calcDefCor(thisCellPtr, thisCon, specID, tran);
+						sourceVector[i] = defCor;
+						i += 1;
+					}
+				}
 			}
-
-			// South location
-			case 1: {
-				rohSS = (thisCellSouthSouthCellPtr) ? 
-					thisCellSouthSouthCellPtr->getSpecCon(specID) : 0.0;
-				r = (1.-alphal)*(rohS - rohSS)/(rohP - rohS) + 
-					alphal*(rohN - rohS)/(rohP - rohS);
-				break;
-			}
-
-			// East location
-			case 2: {
-				rohEE = (thisCellEastEastCellPtr) ? 
-					thisCellEastEastCellPtr->getSpecCon(specID) : 0.0;
-				r = (1.-alphal)*(rohP - rohW)/(rohE - rohP) + 
-					alphal*(rohEE - rohE)/(rohE - rohP);
-				break;
-			}
-
-			// West location
-			case 3: {
-				rohWW = (thisCellWestWestCellPtr) ? 
-					thisCellWestWestCellPtr->getSpecCon(specID) : 0.0;
-				r = (1.-alphal)*(rohW - rohWW)/(rohP - rohW) + 
-					alphal*(rohE - rohP)/(rohP - rohW);
-				break;
-			}
-
 		}
-		*/
-		return r;
+	}
+	return sourceVector;
 }
 
 //*****************************************************************************

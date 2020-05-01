@@ -29,21 +29,20 @@ class fluxLimiter {
 	public:
 	// Constructor
 	fluxLimiter(int);
-	// Function pointer that applies the limiter function
-	double getPsi(double);
-	private:
-	// Pointer to specific limiter function
-	double (fluxLimiter::*fluxLimiterPtr)(double) = nullptr;
+	//// Function pointer that applies the limiter function
+	double getPsi(const double);
+	//// Pointer to specific limiter function
+	double (fluxLimiter::*fluxLimiterPtr)(const double) = nullptr;
 	// Van Leer limiter
-	double vanLeer(double);
+	double vanLeer(const double);
 	//	Van Albada limiter
-	double vanAlbada(double);
+	double vanAlbada(const double);
 	// Min-Mod limiter
-	double minMod(double);
+	double minMod(const double);
 	// SUPERBEE limiter
-	double superbee(double);
+	double superbee(const double);
 	// Sweby limiter
-	double sweby(double);	
+	double sweby(const double);	
 	// QUICK limiter
 	//double quick(double);
 	// UMIST limiter

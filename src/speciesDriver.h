@@ -81,6 +81,8 @@ class speciesDriver {
 	void clean();
 
 	private:
+	// Solver step
+	int step = 0;
 	// Exponential solver
 	matrixExponential *expSolver;
 	// Integrator solver
@@ -96,10 +98,14 @@ class speciesDriver {
 	// Gets the i or j index for transition matrix
 	int getAi(int, int, int, int);
 	// Calculates the species convection slope across in a cell
-	double calcSpecConvectiveSlope(int, int, int, double);
+	double calcSpecConvectiveSlope(meshCell*, connection*, int, double);
 	// Sets a generic boundary condition
 	void setGeneralBoundaryCondition(std::string, int, int, double);
 	// Sets a periodic boundary condiiton
 	void setPeriodicBoundaryCondition(int);
+	// Calculates the source term for deferred correction
+	double calcDefCor(meshCell*, connection*, int, double);
+	// Calculates a vector of source terms for the deferred corrections
+	VectorD calcDefSourceVector();
 };
 #endif

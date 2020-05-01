@@ -169,17 +169,18 @@ void moleProblem1(int myid){
 //*****************************************************************************
 void moleProblem2(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{10, 100, 500, 1000};
-	std::vector<double> steps = {20};
+	std::vector<int> numOfxCells{100};
+	std::vector<double> steps = {100};
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
-	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
-		"pade-method1", "pade-method2"};
-	//std::vector<std::string> solvers {"CRAM"};
-	//std::vector<std::string> solvers {"BDF1", "BDF2", "BDF3", "BDF4", "BDF5", "BDF6"};
+	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
+	//	"pade-method1", "pade-method2"};
+	std::vector<std::string> solvers {"hyperbolic"};
+	//std::vector<std::string> solvers {"BDF2"};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
-	double lambda = 0.01;	// 1/s
+	//double lambda = 0.01;	// 1/s
+	double lambda = 0.0;	// 1/s
 	double velocity = 2.0; // cm/s
 	double cSol, cCon;
 	int cID;
@@ -194,7 +195,7 @@ void moleProblem2(int myid){
 	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 	outputFile << "Total problem time: " << tEnd << "\n";
 	outputFile << "Total problem length: " << xLength << "\n";
-	outputFile << "Refinement: " << "space" << "\n";
+	outputFile << "Refinement: " << "time" << "\n";
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
@@ -205,6 +206,7 @@ void moleProblem2(int myid){
 			modelMesh model(xCells, yCells, xLength, yLength);
 			// Add BC surface
 			model.addBoundarySurface("west");
+			model.addBoundarySurface("east");
 			// build species driver
 			speciesDriver spec = speciesDriver(&model);
 			// set x velocity
@@ -212,6 +214,7 @@ void moleProblem2(int myid){
 			// Sets the species matrix exp solver
 			spec.setMatrixExpSolver(solverType);
 			//spec.setIntegratorSolver("implicit", solverType);
+
 
 			// loops over number of time steps
 			for (double &numofsteps	: steps){
@@ -226,7 +229,7 @@ void moleProblem2(int myid){
 				cID = spec.addSpecies(1.0, 0.0, 0.0);
 
 				spec.setBoundaryCondition("dirichlet","west", cID, 1000.0);
-
+				spec.setBoundaryCondition("dirichlet","east", cID, 0.0);
 
 				// sets the intial condition and sources
 				for (int i = 0; i < xCells; i++){
@@ -241,6 +244,7 @@ void moleProblem2(int myid){
 
 						// calculates the initial concentration from mvt. 
 						initCon = 1000.;
+						initCon = 0.0;
 
 						spec.setSpeciesCon(i, j, cID, initCon);
 
@@ -269,10 +273,12 @@ void moleProblem2(int myid){
 							// caclulate analytical solution
 							xc = cell->x;
 							if (xc < velocity*t){
-								cSol = 1000.*exp(-lambda*xc/velocity);
+								//cSol = 1000.*exp(-lambda*xc/velocity);
+								cSol = 1000.;
 							}
 							else{
-								cSol = 1000.*exp(-lambda*t);
+								//cSol = 1000.*exp(-lambda*t);
+								cSol = 0.0;
 							}
 
 							// get libowski solution

@@ -92,6 +92,24 @@ void modelMesh::connectCells(){
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
 			cellPtr = getCellByLoc(i,j);
+			// 2D case
+			if (numOfxCells > 1 and numOfyCells > 1){
+				if ((i > 0 or j > 0) and (i < numOfxCells-1 or j < numOfyCells-1)){
+					cellPtr->secondOrderFlux = true;
+				}
+			}
+			// 1D case x direction
+			else if (numOfyCells == 1 and numOfxCells > 1){
+				if (i > 3 and i < numOfxCells-3){
+					cellPtr->secondOrderFlux = true;
+				}
+			}
+			// 1D case y direction
+			else if (numOfxCells == 1 and numOfyCells > 1){
+				if (j > 0 and j < numOfyCells-1){
+					cellPtr->secondOrderFlux = true;
+				}
+			}
 
 			// Sets pointer to the cells
 			meshCell* northCellPtr = getCellByLoc(i,j+1);
