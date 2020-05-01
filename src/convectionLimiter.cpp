@@ -41,7 +41,6 @@ fluxLimiter::fluxLimiter(int limitType){
 //*****************************************************************************
 double fluxLimiter::getPsi(const double r){
 	double psi = (this->*fluxLimiterPtr)(r);
-	//std::cout << r << " " << psi << std::endl;
 	return psi;
 }
 
@@ -61,7 +60,7 @@ double fluxLimiter::vanLeer(const double r){
 // @param r		Flux slope
 //*****************************************************************************
 double fluxLimiter::vanAlbada(const double r){
-	double psi = 1.;
+	double psi = (r + std::pow(r, 2.))/(1. + std::pow(r,2.));
 	return psi;
 }
 
@@ -72,9 +71,12 @@ double fluxLimiter::vanAlbada(const double r){
 //*****************************************************************************
 double fluxLimiter::minMod(const double r){
 	double psi, val1, val2;
-	val1 = 2./(1.+r);
-	val2 = (2.*r)/(1.+r);
-	psi = std::min(val1, val2);
+	if (r > 0){
+		psi = std::min(r,1.);
+	}
+	else{
+		psi = 0.0;
+	}
 	return psi;
 }
 
@@ -85,9 +87,10 @@ double fluxLimiter::minMod(const double r){
 //*****************************************************************************
 double fluxLimiter::superbee(const double r){
 	double psi, val1, val2;
-	val1 = std::min(4.*r/(1.+r), 2./(1.+r));
-	val2 = std::min(2.*r/(1.+r), 4./(1.+r));
+	val1 = std::min(2.*r, 1.);
+	val2 = std::min(r, 2.);
 	psi = std::max(val1, val2);
+	psi = std::max(0., psi);
 	return psi;
 }
 
@@ -97,8 +100,11 @@ double fluxLimiter::superbee(const double r){
 // @param r		Flux slope
 //*****************************************************************************
 double fluxLimiter::sweby(const double r){
-	double beta = 1.5;
-	double psi = 1.;
+	double beta = 1.5, psi, val1, val2;
+	val1 = std::min(beta*r, 1.);
+	val2 = std::min(r, beta*);
+	psi = std::max(val1, val2);
+	psi = std::max(0., psi);
 	return psi;
 }
 
