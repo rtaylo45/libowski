@@ -77,6 +77,8 @@ class speciesDriver {
 	void setMatrixExpSolver(std::string, bool = false, int = 10);
 	// Gives ability to set the integrator solver
 	void setIntegratorSolver(std::string, std::string);
+	// Gives ability to set the flux limiter function
+	void setFluxLimiter(std::string);
 	// Cleans species
 	void clean();
 

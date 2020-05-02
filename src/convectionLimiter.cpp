@@ -16,10 +16,28 @@
 //    2 = Van Albada
 //    3 = Min-Mod
 //    4 = Sweby
-//    5 = QUICK
-//    6 = UMIST
+//    5 = First order upwind
+//    6 = QUICK
+//    7 = UMIST
 //*****************************************************************************
 fluxLimiter::fluxLimiter(int limitType){
+	setLimiterFunction(limitType);
+}
+
+//*****************************************************************************
+// Changes the flux limiter function
+//
+// @param limitType	Type of flux limiter
+//    0 = SUPERBEE
+//    1 = VanLeer
+//    2 = Van Albada
+//    3 = Min-Mod
+//    4 = Sweby
+//    5 = First order upwind
+//    6 = QUICK
+//    7 = UMIST
+//*****************************************************************************
+void fluxLimiter::setLimiterFunction(int limitType){
 	assert(limitType <= 6 and limitType >= 0);
 	limiterType = limitType;
 
@@ -29,10 +47,10 @@ fluxLimiter::fluxLimiter(int limitType){
 		case 2: fluxLimiterPtr = &fluxLimiter::vanAlbada; break;
 		case 3: fluxLimiterPtr = &fluxLimiter::minMod; break;
 		case 4: fluxLimiterPtr = &fluxLimiter::sweby; break;
+		case 5: fluxLimiterPtr = &fluxLimiter::firstOrder; break;
 
 	}
 }
-
 
 //*****************************************************************************
 // Gets the Psi(r) function value
@@ -41,6 +59,16 @@ fluxLimiter::fluxLimiter(int limitType){
 //*****************************************************************************
 double fluxLimiter::getPsi(const double r){
 	double psi = (this->*fluxLimiterPtr)(r);
+	return psi;
+}
+
+//*****************************************************************************
+// First order upwind difference
+//
+// @param r		Flux slope
+//*****************************************************************************
+double fluxLimiter::firstOrder(const double r){
+	double psi = 0.0;
 	return psi;
 }
 
@@ -102,7 +130,7 @@ double fluxLimiter::superbee(const double r){
 double fluxLimiter::sweby(const double r){
 	double beta = 1.5, psi, val1, val2;
 	val1 = std::min(beta*r, 1.);
-	val2 = std::min(r, beta*);
+	val2 = std::min(r, beta);
 	psi = std::max(val1, val2);
 	psi = std::max(0., psi);
 	return psi;

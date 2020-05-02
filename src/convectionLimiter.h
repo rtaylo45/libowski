@@ -29,6 +29,8 @@ class fluxLimiter {
 	public:
 	// Constructor
 	fluxLimiter(int);
+	// Sets the limiter function
+	void setLimiterFunction(int);
 	//// Function pointer that applies the limiter function
 	double getPsi(const double);
 	//// Pointer to specific limiter function
@@ -43,6 +45,8 @@ class fluxLimiter {
 	double superbee(const double);
 	// Sweby limiter
 	double sweby(const double);	
+	// First order upwind
+	double firstOrder(const double);
 	// QUICK limiter
 	//double quick(double);
 	// UMIST limiter

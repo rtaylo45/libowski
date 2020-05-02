@@ -169,18 +169,20 @@ void moleProblem1(int myid){
 //*****************************************************************************
 void moleProblem2(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{100};
-	std::vector<double> steps = {100};
-	//std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
+	std::vector<int> numOfxCells{10, 100, 1000, 10000};
+	//std::vector<double> steps = {100};
+	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
-	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
-	//	"pade-method1", "pade-method2"};
-	std::vector<std::string> solvers {"hyperbolic"};
+	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
+		"pade-method1", "pade-method2"};
+	//std::vector<std::string> solvers {"hyperbolic"};
+	std::vector<std::string> fluxLimiters {"First order upwind", "superbee", 
+		"VanLeer", "Van Albada", "Min-Mod", "Sweby"};
 	//std::vector<std::string> solvers {"BDF2"};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
-	//double lambda = 0.01;	// 1/s
-	double lambda = 0.0;	// 1/s
+	double lambda = 0.01;	// 1/s
+	//double lambda = 0.0;	// 1/s
 	double velocity = 2.0; // cm/s
 	double cSol, cCon;
 	int cID;
@@ -199,6 +201,7 @@ void moleProblem2(int myid){
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
+	//for (std::string &limiterType : fluxLimiters){
 
 		// loops over number of cells
 		for (int &xCells : numOfxCells){
@@ -214,6 +217,7 @@ void moleProblem2(int myid){
 			// Sets the species matrix exp solver
 			spec.setMatrixExpSolver(solverType);
 			//spec.setIntegratorSolver("implicit", solverType);
+			//spec.setFluxLimiter(limiterType);
 
 
 			// loops over number of time steps
@@ -221,6 +225,7 @@ void moleProblem2(int myid){
 				percentError = 0.0;
 				dt = tEnd/numofsteps;
 				outputFile << "Solver: " << solverType << "\n";
+				//outputFile << "Solver: " << limiterType << "\n";
 				outputFile << "dx: " << xLength/(double)xCells << "\n";
 				outputFile << "dt: " << dt << "\n";
 				outputFile << "variables " << "x " << "Solution " << "Libowski" << "\n";
@@ -244,7 +249,7 @@ void moleProblem2(int myid){
 
 						// calculates the initial concentration from mvt. 
 						initCon = 1000.;
-						initCon = 0.0;
+						//initCon = 0.0;
 
 						spec.setSpeciesCon(i, j, cID, initCon);
 
@@ -273,12 +278,12 @@ void moleProblem2(int myid){
 							// caclulate analytical solution
 							xc = cell->x;
 							if (xc < velocity*t){
-								//cSol = 1000.*exp(-lambda*xc/velocity);
-								cSol = 1000.;
+								cSol = 1000.*exp(-lambda*xc/velocity);
+								//cSol = 1000.;
 							}
 							else{
-								//cSol = 1000.*exp(-lambda*t);
-								cSol = 0.0;
+								cSol = 1000.*exp(-lambda*t);
+								//cSol = 0.0;
 							}
 
 							// get libowski solution
@@ -288,7 +293,7 @@ void moleProblem2(int myid){
 							//linfError = std::max(linfError, std::abs(cSol-cCon)/cSol);
 							outputFile << xc << " " << cSol << " " << cCon << "\n";
 							//std::cout << xc << std::endl; // << cSol << " " << cCon << std::endl;
-							percentError = std::max(percentError, std::abs(cSol-cCon)/cSol*100.);
+							percentError = std::max(percentError, std::abs(cSol-cCon)/cSol);
 						}
 					}
 				}
@@ -297,6 +302,7 @@ void moleProblem2(int myid){
 				//	<< " " << percentError << "\n";
 				// clean species
 				printf("%15s %2.3f %2.2f %4.2E %3.5f\n", solverType.c_str(), dt, dx, 
+				//printf("%15s %2.3f %2.2f %4.2E %3.5f\n", limiterType.c_str(), dt, dx, 
 					percentError, duration.count()/1.e6);
 				spec.clean();
 			}

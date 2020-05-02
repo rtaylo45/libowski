@@ -37,6 +37,23 @@ void speciesDriver::setIntegratorSolver(std::string method, std::string
 }
 
 //*****************************************************************************
+// Sets the flux limiter function
+//
+// @param limiterName	The name of the flux limiter
+//*****************************************************************************
+void speciesDriver::setFluxLimiter(std::string limiterName){
+	int limiterID = -1;	
+	if (limiterName == "superbee"){ limiterID = 0;};
+	if (limiterName == "VanLeer"){ limiterID = 1;};
+	if (limiterName == "Van Albada"){ limiterID = 2;};
+	if (limiterName == "Min-Mod"){ limiterID = 3;};
+	if (limiterName == "Sweby"){ limiterID = 4;};
+	if (limiterName == "First order upwind"){ limiterID = 5;};
+
+	fluxLim.setLimiterFunction(limiterID);
+}
+
+//*****************************************************************************
 // Adds a species to the model
 //
 // @param molarMass  Molar mass of species [lbm/mol]
@@ -143,6 +160,9 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 	else if (BCType == "periodic"){
 		setPeriodicBoundaryCondition(locID);
 	} 
+	else if (BCType == "free flow"){
+		setGeneralBoundaryCondition(BCType, locID, specID, bc);
+	}
 	else{
 		std::string errorMessage = 
 			" You have selected an invalid boundary condition ";
@@ -338,23 +358,6 @@ void speciesDriver::solveImplicit(double solveTime){
 		A = buildTransMatrix(augmented, 0.0);
 		//matrixInit = true;
 	}
-	// Inner iterations
-	int iterations = 0;
-	//while (iterations < 1){
-	//	std::cout << iterations << std::endl;
-	//	defSourceOld = calcDefSourceVector();
-	//	N0 = buildInitialConditionVector(augmented);
-	//	sol = expSolver->apply(A, N0, timeStep);
-	//	if (mpi.rank == 0){unpackSolution(sol);};
-	//	defSourceNew = calcDefSourceVector();
-	//	//std::cout << defSourceOld << std::endl;
-	//	//std::cout << " "  << std::endl;
-	//	//std::cout << defSourceNew << std::endl;
-	//	diff = (defSourceOld - defSourceNew).norm();
-	//	//std::cout << " "  << std::endl;
-	//	//std::cout << diff  << std::endl;
-	//	iterations += 1;
-	//}
 
 	sol = intSolver->integrate(A, solOld, timeStep);
 	
@@ -467,13 +470,9 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 						tripletList.push_back(T(i, j, a));
 					}
 					// Sets the deferred correction for second order flux
-					if (thisCellPtr->secondOrderFlux and not thisCon->boundary 
-							and step > 0){
-						std::cout << "cellID: " << cellID  << " connectionLoc: " << conCount << std::endl;
+					if (thisCellPtr->secondOrderFlux and not thisCon->boundary){
 						// set source for deffered correction
 						defCor = calcDefCor(thisCellPtr, thisCon, specID, tran);
-						//std::cout << rCon << " " << psi << " " << defCor << std::endl;
-						std::cout << " " << std::endl;
 						thisSpecSource += defCor;
 					}
 				}
@@ -482,7 +481,6 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 					surface* thisSurface = thisCon->getSurface();
    				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
 					thisSpecSource += tran*conDirection*surfaceSpecPtr->bc;
-					//ab = -a;
 				}
 				// Added sthe Newmann boundary condition to the sourse term
 				else if (thisCon->boundaryType == "newmann"){
@@ -490,6 +488,9 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
    				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
 					thisSpecSource -= a*surfaceSpecPtr->bc*conDist;
 					ab = a;
+				}
+				else if (thisCon->boundaryType == "free flow"){
+					thisSpecPtr->c;	
 				}
 
 				// aP coefficient
@@ -716,18 +717,15 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			}
 			r = alphal*(rohP - rohW)/(rohE - rohP) + 
 				(1.- alphal)*(rohEE - rohE)/(rohE - rohP);
-			psi = fluxLim.getPsi(r);
-			//psi = r;
-			dir = cellCon->direction;
-			std::cout << "eastCellID: " << eastCell->absIndex << std::endl;
-			if (westCell){
-				std::cout << "westCellID: " << westCell->absIndex << std::endl;
+			if (std::abs(rohE - rohP) > 1.e-16){
+				psi = fluxLim.getPsi(r);
 			}
-			//defCor = 0.5*dir*tran*(-(1.-alphal)*psi + alphal*psi)*(rohE-rohP);
+			else{
+				psi = 0.0;
+			}
+			//std::cout << "east: " << rohE - rohP << " r: " << r << " psi: " << psi << std::endl;
+			dir = cellCon->direction;
 			defCor = 0.5*tran*((1.-alphal)*psi - alphal*psi)*(rohE-rohP);
-			std::cout << "r: " << r << std::endl;
-			std::cout << "psi: " << psi << std::endl;
-			std::cout << "deferred Corection: " << defCor << std::endl;
 			break;
 		}
 
@@ -736,38 +734,33 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			eastCell = cellPtr->getConnection(2)->connectionCellPtr;
 			westCell = cellPtr->getConnection(3)->connectionCellPtr;
 			rohW = westCell->getSpecCon(specID);
-			westWestCell = cellPtr->getConnection(3)->connectionCellPtr;
-			if(westWestCell){
-				rohWW = westWestCell->getSpecCon(specID);
+			westWestCell = westCell->getConnection(3)->connectionCellPtr;
+			if(eastCell){
+				rohE = eastCell->getSpecCon(specID);
 			}
 			else{
 				if (cellCon->boundary){
 					rohbc = otherCell->getConnection(3)->getSurface()
 						->getSpeciesPtr(specID)->bc;
 					if (cellCon->boundaryType == "dirichlet"){
-						rohWW = (2.*rohbc - rohP);
+						rohE = (2.*rohbc - rohP);
 					}
 					else if (cellCon->boundaryType == "newmann"){
-						rohWW = rohP - rohbc*cellCon->distance;
+						rohE = rohP - rohbc*cellCon->distance;
 					}
 				}
 			}
 			r = alphal*(rohW - rohWW)/(rohP - rohW) + 
 				(1. - alphal)*(rohE - rohP)/(rohP - rohW);
-			psi = fluxLim.getPsi(r);
-			//psi = fluxLim.(r);
-			//psi = r;
-			dir = cellCon->direction;
-			if (eastCell){
-				std::cout << "eastCellID: " << eastCell->absIndex << std::endl;
+			if (std::abs(rohP - rohW) > 1.e-16){
+				psi = fluxLim.getPsi(r);
 			}
-			std::cout << "westCellID: " << westCell->absIndex << std::endl;
-			std::cout << "westWestCellID: " << westWestCell->absIndex << std::endl;
-			//defCor = 0.5*dir*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohW);
+			else{
+				psi = 0.0;
+			}
+			//std::cout << "west: " << rohW - rohWW << " r: " << r << " psi: " << psi << std::endl;
+			dir = cellCon->direction;
 			defCor = 0.5*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohW);
-			std::cout << "r: " << r << std::endl;
-			std::cout << "psi: " << psi << std::endl;
-			std::cout << "deferred Corection: " << defCor << std::endl;
 			break;
 		}
 
