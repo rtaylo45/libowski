@@ -700,6 +700,7 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			westCell = cellPtr->getConnection(3)->connectionCellPtr;
 			rohE = eastCell->getSpecCon(specID);
 			eastEastCell = eastCell->getConnection(2)->connectionCellPtr;
+			// Needed for positive flow
 			if(westCell){
 				rohW = westCell->getSpecCon(specID);
 			}
@@ -712,6 +713,22 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 					}
 					else if (cellPtr->getConnection(3)->boundaryType == "newmann"){
 						rohW = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			// Needed for negative flow
+			if(eastEastCell){
+				rohEE = eastEastCell->getSpecCon(specID);
+			}
+			else{
+				if (eastCell->getConnection(2)->boundary){
+					rohbc = eastCell->getConnection(2)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (eastCell->getConnection(2)->boundaryType == "dirichlet"){
+						rohEE = (2.*rohbc - rohP);
+					}
+					else if (eastCell->getConnection(2)->boundaryType == "newmann"){
+						rohEE = rohP - rohbc*cellCon->distance;
 					}
 				}
 			}
@@ -735,17 +752,34 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			westCell = cellPtr->getConnection(3)->connectionCellPtr;
 			rohW = westCell->getSpecCon(specID);
 			westWestCell = westCell->getConnection(3)->connectionCellPtr;
+			// Needed for positive flow
 			if(westWestCell){
 				rohWW = westWestCell->getSpecCon(specID);
 			}
 			else{
-				if (cellCon->boundary){
-					rohbc = otherCell->getConnection(3)->getSurface()
+				if (westCell->getConnection(3)->boundary){
+					rohbc = westCell->getConnection(3)->getSurface()
 						->getSpeciesPtr(specID)->bc;
-					if (cellCon->boundaryType == "dirichlet"){
+					if (eastCell->getConnection(3)->boundaryType == "dirichlet"){
 						rohWW = (2.*rohbc - rohP);
 					}
-					else if (cellCon->boundaryType == "newmann"){
+					else if (eastCell->getConnection(3)->boundaryType == "newmann"){
+						rohWW = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			// Needed for negative flow
+			if(eastCell){
+				rohE = eastCell->getSpecCon(specID);
+			}
+			else{
+				if (cellPtr->getConnection(2)->boundary){
+					rohbc = cellPtr->getConnection(2)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellPtr->getConnection(2)->boundaryType == "dirichlet"){
+						rohE = (2.*rohbc - rohP);
+					}
+					else if (cellPtr->getConnection(2)->boundaryType == "newmann"){
 						rohWW = rohP - rohbc*cellCon->distance;
 					}
 				}
