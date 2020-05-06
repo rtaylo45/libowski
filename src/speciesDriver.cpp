@@ -735,18 +735,18 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			westCell = cellPtr->getConnection(3)->connectionCellPtr;
 			rohW = westCell->getSpecCon(specID);
 			westWestCell = westCell->getConnection(3)->connectionCellPtr;
-			if(eastCell){
-				rohE = eastCell->getSpecCon(specID);
+			if(westWestCell){
+				rohWW = westWestCell->getSpecCon(specID);
 			}
 			else{
 				if (cellCon->boundary){
 					rohbc = otherCell->getConnection(3)->getSurface()
 						->getSpeciesPtr(specID)->bc;
 					if (cellCon->boundaryType == "dirichlet"){
-						rohE = (2.*rohbc - rohP);
+						rohWW = (2.*rohbc - rohP);
 					}
 					else if (cellCon->boundaryType == "newmann"){
-						rohE = rohP - rohbc*cellCon->distance;
+						rohWW = rohP - rohbc*cellCon->distance;
 					}
 				}
 			}
