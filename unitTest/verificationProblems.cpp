@@ -259,7 +259,7 @@ void testProblem2(int myid){
 							// Get libowski solution
 							UCon = spec.getSpecies(i, j, UID);
 							VCon = spec.getSpecies(i, j, VID);
-
+						
 							assert(isApprox(USol, UCon, 1e-5, 1e-4));
 							assert(isApprox(VSol, VCon, 1e-5, 1e-4));
 							linfErrorU = std::max(linfErrorU, std::abs(USol-UCon));
@@ -801,9 +801,9 @@ void testXenonIodineYFlow(int myid){
 	double xLength = 0.0, yLength = 10.0;
 	double yVelocity = 8.0;
 	double xenonInitCon = 5e-6, iodineInitCon = 5e-6;
+	double t = 10000000.0;
 	double xenonMM = 135.0, iodineMM = 135.0;
 	double AvogNum = 6.02214076E23;
-	double t = 10000000.0;
    double lambda_I = 2.11E-5;
    double lambda_xe = 2.9306E-5;
    double sigma_a = 2.002E-22;
@@ -823,6 +823,7 @@ void testXenonIodineYFlow(int myid){
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
 	model.addBoundarySurface("south");
+	model.addBoundarySurface("north");
 
 	// Sets the x velocity
 	model.setConstantYVelocity(yVelocity);
@@ -835,6 +836,8 @@ void testXenonIodineYFlow(int myid){
 	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
 	spec.setBoundaryCondition("dirichlet", "south", xenonID, xenonInitCon);
 	spec.setBoundaryCondition("dirichlet","south", iodineID, iodineInitCon);
+	spec.setBoundaryCondition("free flow", "north", xenonID);
+	spec.setBoundaryCondition("free flow","north", iodineID);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -844,7 +847,6 @@ void testXenonIodineYFlow(int myid){
 		}
 	}
 
-	// Solve with CRAM
 	spec.solve(t);
 
 	// Gets species Concentrations
@@ -863,7 +865,7 @@ void testXenonIodineYFlow(int myid){
 				error = std::max(std::abs(iodineCon - N_I)/N_I, error);
 				//error = std::abs(iodineCon - N_I)/N_I;
 				//std::cout << y << " " << error << std::endl;
-				assert(isApprox(iodineCon, N_I));
+				assert(isApprox(iodineCon, N_I, 1.e-9, 1.e-4));
 			}
 		}
 	}
@@ -906,6 +908,7 @@ void testXenonIodineXFlow(int myid){
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
 	model.addBoundarySurface("west");
+	model.addBoundarySurface("east");
 
 	// Sets the x velocity
 	model.setConstantXVelocity(xVelocity);
@@ -918,6 +921,8 @@ void testXenonIodineXFlow(int myid){
 	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
 	spec.setBoundaryCondition("dirichlet","west", xenonID, xenonInitCon);
 	spec.setBoundaryCondition("dirichlet","west", iodineID, iodineInitCon);
+	spec.setBoundaryCondition("free flow","east", xenonID);
+	spec.setBoundaryCondition("free flow","east", iodineID);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -945,10 +950,10 @@ void testXenonIodineXFlow(int myid){
 				//std::cout << xenonCon << " " << iodineCon << " " << N_I << std::endl;
 				//iodineError = std::abs(iodineCon-N_I)/N_I;
 				//printf (" %2i %2i %e \n", i, j, iodineError);
-				error = std::max(std::abs(iodineCon - N_I)/N_I, error);
+				//error = std::max(std::abs(iodineCon - N_I)/N_I, error);
 				//std::cout << x << " " << iodineError << std::endl;
 				//std::cout << x << " " << iodineCon << " " << N_I << std::endl;
-				assert(isApprox(iodineCon, N_I));
+				assert(isApprox(iodineCon, N_I, 1.e-9, 1.e-4));
 			}
 		}
 	}
@@ -1121,6 +1126,7 @@ void testNeutronPrecursorsFlow(int myid){
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
 	model.addBoundarySurface("south");
+	model.addBoundarySurface("north");
 
 	// Sets the y velocity
 	model.setConstantYVelocity(yVelocity);
@@ -1143,6 +1149,13 @@ void testNeutronPrecursorsFlow(int myid){
 	spec.setBoundaryCondition("dirichlet", "south", c4ID, c4InitCon);
 	spec.setBoundaryCondition("dirichlet", "south", c5ID, c5InitCon);
 	spec.setBoundaryCondition("dirichlet", "south", c6ID, c6InitCon);
+
+	spec.setBoundaryCondition("free flow", "north", c1ID, c1InitCon);
+	spec.setBoundaryCondition("free flow", "north", c2ID, c2InitCon);
+	spec.setBoundaryCondition("free flow", "north", c3ID, c3InitCon);
+	spec.setBoundaryCondition("free flow", "north", c4ID, c4InitCon);
+	spec.setBoundaryCondition("free flow", "north", c5ID, c5InitCon);
+	spec.setBoundaryCondition("free flow", "north", c6ID, c6InitCon);
 	// Sets BCs
 	//spec.setBoundaryCondition("periodic","south", c1ID, c1InitCon);
 	//spec.setBoundaryCondition("periodic","south", c2ID, c2InitCon);
@@ -1479,6 +1492,7 @@ void testBenBenchmark(int myid){
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
 	model.addBoundarySurface("south");
+	model.addBoundarySurface("north");
 
 	// Sets the x velocity
 	model.setConstantYVelocity(yVelocity);
@@ -1489,6 +1503,7 @@ void testBenBenchmark(int myid){
 	// Adds xenon and iodine species
 	specID = spec.addSpecies(specMM, 0.0, D_spec);
 	spec.setBoundaryCondition("dirichlet", "south", specID, 1.0);
+	spec.setBoundaryCondition("free flow", "north", specID, 1.0);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){

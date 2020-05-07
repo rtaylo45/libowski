@@ -480,7 +480,13 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				if (thisCon->boundaryType == "dirichlet"){
 					surface* thisSurface = thisCon->getSurface();
    				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
-					thisSpecSource += tran*conDirection*surfaceSpecPtr->bc;
+					if (tran){
+						thisSpecSource += tran*conDirection*surfaceSpecPtr->bc;
+					}
+					else{
+						thisSpecSource += 2.*a*surfaceSpecPtr->bc;
+						ab = -a;
+					}
 				}
 				// Added sthe Newmann boundary condition to the sourse term
 				else if (thisCon->boundaryType == "newmann"){
@@ -488,9 +494,6 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
    				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
 					thisSpecSource -= a*surfaceSpecPtr->bc*conDist;
 					ab = a;
-				}
-				else if (thisCon->boundaryType == "free flow"){
-					thisSpecPtr->c;	
 				}
 
 				// aP coefficient
@@ -637,30 +640,49 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 		case 0: {
 			northCell = cellPtr->getConnection(0)->connectionCellPtr;
 			southCell = cellPtr->getConnection(1)->connectionCellPtr;
-			northNorthCell = northCell->getConnection(0)->connectionCellPtr;
 			rohN = northCell->getSpecCon(specID);
-			rohS = southCell->getSpecCon(specID);
-			// North
+			northNorthCell = northCell->getConnection(0)->connectionCellPtr;
+			// Needed for positive flow
+			if (southCell){
+				rohS = southCell->getSpecCon(specID);
+			}
+			else{
+				if (cellPtr->getConnection(1)->boundary){
+					rohbc = cellPtr->getConnection(1)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellPtr->getConnection(1)->boundaryType == "dirichlet"){
+						rohS = 2.*rohbc - rohP;
+					}
+					else if (cellCon->boundaryType == "newmann"){
+						rohS = rohP - rohbc*cellPtr->getConnection(1)->distance;
+					}
+				}	
+			}
+			// Needed for negative flow
 			if (northNorthCell){
 				rohNN = northNorthCell->getSpecCon(specID);
 			}
 			else{
-				if (cellCon->boundary){
-					rohbc = otherCell->getConnection(0)->getSurface()
+				if (northCell->getConnection(0)->boundary){
+					rohbc = northCell->getConnection(0)->getSurface()
 						->getSpeciesPtr(specID)->bc;
-					if (cellCon->boundaryType == "dirichlet"){
+					if (northCell->getConnection(0)->boundaryType == "dirichlet"){
 						rohNN = 2.*rohbc - rohP;
 					}
-					else if (cellCon->boundaryType == "newmann"){
+					else if (northCell->getConnection(0)->boundaryType == "newmann"){
 						rohNN = rohP - rohbc*cellCon->distance;
 					}
 				}
 			}
-			//r = alphal*(rohP - rohS)/(rohN - rohP) + 
-			//	(1.-alphal)*(rohNN - rohN)/(rohN - rohP);
-			//psi = fluxLim.getPsi(r);
-			//dir = cellCon->direction;
-			//defCor = 0.5*dir*tran*(-(1.-alphal)*psi + alphal*psi)*(rohN-rohP);
+			r = alphal*(rohP - rohS)/(rohN - rohP) + 
+				(1.-alphal)*(rohNN - rohN)/(rohN - rohP);
+			if (std::abs(rohN-rohP) > 1.e-16){
+				psi = fluxLim.getPsi(r);
+			}
+			else{
+				psi = 0.0;
+			}
+			defCor = 0.5*tran*((1.-alphal)*psi - alphal*psi)*(rohN-rohP);
 			break;
 		}
 
@@ -668,29 +690,47 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 		case 1: {
 			northCell = cellPtr->getConnection(0)->connectionCellPtr;
 			southCell = cellPtr->getConnection(1)->connectionCellPtr;
-			rohN = northCell->getSpecCon(specID);
 			rohS = southCell->getSpecCon(specID);
 			southSouthCell = southCell->getConnection(1)->connectionCellPtr;
+			// Needed for positive flow
 			if (southSouthCell){
-				rohSS = southSouthCell->getSpecCon(specID);		
+				rohSS = southSouthCell->getSpecCon(specID);
 			}
 			else{
-				if (cellCon->boundary){
-					rohbc = otherCell->getConnection(1)->getSurface()
-						->getSpeciesPtr(specID)->bc;
-					if (cellCon->boundaryType == "dirichlet"){
+				if (southCell->getConnection(1)->boundary){
+					if(southCell->getConnection(1)->boundaryType == "dirichlet"){
 						rohSS = 2.*rohbc - rohP;
 					}
-					else if (cellCon->boundaryType == "newmann"){
-						rohSS = rohP - rohbc*cellCon->distance;
+					else if(southCell->getConnection(1)->boundaryType == "newmann"){
+						rohSS = rohP - rohbc*southCell->getConnection(1)->distance;
 					}
 				}
 			}
-			//r = alphal*(rohS - rohSS)/(rohP - rohS) + 
-			//	(1.-alphal)*(rohN - rohS)/(rohP - rohS);
-			//psi = fluxLim.getPsi(r);
-			//dir = cellCon->direction;
-			//defCor = 0.5*dir*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohS);
+			// Needed for negative flow
+			if (northCell){
+				rohN = northCell->getSpecCon(specID);		
+			}
+			else{
+				if (cellPtr->getConnection(0)->boundary){
+					rohbc = cellPtr->getConnection(0)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellPtr->getConnection(0)->boundaryType == "dirichlet"){
+						rohN = 2.*rohbc - rohP;
+					}
+					else if (cellPtr->getConnection(0)->boundaryType == "newmann"){
+						rohN = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			r = alphal*(rohS - rohSS)/(rohP - rohS) + 
+				(1.-alphal)*(rohN - rohS)/(rohP - rohS);
+			if (std::abs(rohP-rohS) > 1.e-16){
+				psi = fluxLim.getPsi(r);
+			}
+			else{
+				psi = 0.0;
+			}
+			defCor = 0.5*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohS);
 			break;
 		}
 
@@ -780,7 +820,7 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 						rohE = (2.*rohbc - rohP);
 					}
 					else if (cellPtr->getConnection(2)->boundaryType == "newmann"){
-						rohWW = rohP - rohbc*cellCon->distance;
+						rohE = rohP - rohbc*cellCon->distance;
 					}
 				}
 			}

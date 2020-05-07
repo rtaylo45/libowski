@@ -169,13 +169,13 @@ void moleProblem1(int myid){
 //*****************************************************************************
 void moleProblem2(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{10, 100, 1000, 10000};
+	std::vector<int> numOfxCells{10, 100, 1000};
 	//std::vector<double> steps = {100};
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
-	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
-		"pade-method1", "pade-method2"};
-	//std::vector<std::string> solvers {"hyperbolic"};
+	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
+	//	"pade-method1", "pade-method2"};
+	std::vector<std::string> solvers {"hyperbolic"};
 	std::vector<std::string> fluxLimiters {"First order upwind", "superbee", 
 		"VanLeer", "Van Albada", "Min-Mod", "Sweby"};
 	//std::vector<std::string> solvers {"BDF2"};
@@ -234,7 +234,7 @@ void moleProblem2(int myid){
 				cID = spec.addSpecies(1.0, 0.0, 0.0);
 
 				spec.setBoundaryCondition("dirichlet","west", cID, 1000.0);
-				spec.setBoundaryCondition("dirichlet","east", cID, 0.0);
+				spec.setBoundaryCondition("free flow","east", cID);
 
 				// sets the intial condition and sources
 				for (int i = 0; i < xCells; i++){
@@ -263,8 +263,8 @@ void moleProblem2(int myid){
 				for (int step = 1; step <= numofsteps; step++){
 					t = step*dt;
 					// solve with cram
-					spec.solve(t);
-					//spec.solveImplicit(t);
+					//spec.solve(t);
+					spec.solveImplicit(t);
 				}
 				auto end = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -278,7 +278,7 @@ void moleProblem2(int myid){
 							// caclulate analytical solution
 							xc = cell->x;
 							if (xc < velocity*t){
-								cSol = 1000.*exp(-lambda*xc/velocity);
+								cSol = 1000.*exp(-lambda*(xc)/velocity);
 								//cSol = 1000.;
 							}
 							else{
@@ -313,6 +313,174 @@ void moleProblem2(int myid){
 	outputFile << "end";
 }
 
+//*****************************************************************************
+// Mole problem 2 y direction
+//
+// This problem is the same as Problem 1, but with a constant flow rate of 
+// 2 cm/s in the positive x direction.
+//
+//	Problem equations:
+//			dC/dt = -vdC/dy -lambda*C(y,t)
+//
+//	Domaine:
+//			y = [0, 100]
+//			t = [0, 20]
+//			v = 2.0
+//			lambda = 0.01
+//
+//	Initial conditions and BC's:
+//			C(y, 0) = 1000.0
+//			C(0,t) = 1000.0
+//
+//	Solution:
+//			C(y,t) = TBD
+//
+//*****************************************************************************
+void moleProblem2yDirection(int myid){
+	int xCells = 1;
+	std::vector<int> numOfyCells{10, 100, 1000};
+	//std::vector<double> steps = {100};
+	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
+	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
+	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
+	//	"pade-method1", "pade-method2"};
+	std::vector<std::string> solvers {"hyperbolic"};
+	std::vector<std::string> fluxLimiters {"First order upwind", "superbee", 
+		"VanLeer", "Van Albada", "Min-Mod", "Sweby"};
+	//std::vector<std::string> solvers {"BDF2"};
+	double xLength = 0.0, yLength = 100.0; // cm
+	double tEnd = 20.0;	// seconds
+	double lambda = 0.01;	// 1/s
+	//double lambda = 0.0;	// 1/s
+	double velocity = 2.0; // cm/s
+	double cSol, cCon;
+	int cID;
+	double y1, y2, initCon, dy, yc, dt, t;
+	double percentError = 0.0;
+	meshCell* cell = nullptr;
+	std::string outputFileName;
+	std::vector<double> ccoeffs = {-lambda};
+	// sets the ouput file name
+	std::ofstream outputFile;
+	outputFileName = "moleproblem2yDirection.out";
+	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
+	outputFile << "Total problem time: " << tEnd << "\n";
+	outputFile << "Total problem length: " << yLength << "\n";
+	outputFile << "Refinement: " << "time" << "\n";
+
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
+	//for (std::string &limiterType : fluxLimiters){
+
+		// loops over number of cells
+		for (int &yCells : numOfyCells){
+			// build the mesh
+			modelMesh model(xCells, yCells, xLength, yLength);
+			// Add BC surface
+			model.addBoundarySurface("north");
+			model.addBoundarySurface("south");
+			// build species driver
+			speciesDriver spec = speciesDriver(&model);
+			// set x velocity
+			model.setConstantYVelocity(velocity);
+			// Sets the species matrix exp solver
+			spec.setMatrixExpSolver(solverType);
+			//spec.setIntegratorSolver("implicit", solverType);
+			//spec.setFluxLimiter(limiterType);
+
+
+			// loops over number of time steps
+			for (double &numofsteps	: steps){
+				percentError = 0.0;
+				dt = tEnd/numofsteps;
+				outputFile << "Solver: " << solverType << "\n";
+				//outputFile << "Solver: " << limiterType << "\n";
+				outputFile << "dy: " << yLength/(double)yCells << "\n";
+				outputFile << "dt: " << dt << "\n";
+				outputFile << "variables " << "y " << "Solution " << "Libowski" << "\n";
+
+				// add specs
+				cID = spec.addSpecies(1.0, 0.0, 0.0);
+
+				spec.setBoundaryCondition("dirichlet","south", cID, 1000.0);
+				spec.setBoundaryCondition("free flow","north", cID);
+
+				// sets the intial condition and sources
+				for (int i = 0; i < xCells; i++){
+					for (int j = 0; j < yCells; j++){
+						cell = model.getCellByLoc(i,j);	
+
+						// calculates the x positions as the cell faces
+						dy = cell->dy;
+						yc = cell->y;
+						y2 = yc + dy/2.;
+						y1 = yc - dy/2.;
+
+						// calculates the initial concentration from mvt. 
+						initCon = 1000.;
+						//initCon = 0.0;
+
+						spec.setSpeciesCon(i, j, cID, initCon);
+
+						// sets the sources
+						spec.setSpeciesSource(i, j, cID, ccoeffs, 0.0);
+					}
+				}
+				t = 0.0;
+				// solve the problem
+				auto start = std::chrono::high_resolution_clock::now();
+				for (int step = 1; step <= numofsteps; step++){
+					t = step*dt;
+					// solve with cram
+					//spec.solve(t);
+					spec.solveImplicit(t);
+				}
+				auto end = std::chrono::high_resolution_clock::now();
+				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+						end - start);
+				// gets species concentrations
+				if (myid==0){
+					for (int i = 0; i < xCells; i++){
+						for (int j = 0; j < yCells; j++){
+							cell = model.getCellByLoc(i,j);	
+
+							// caclulate analytical solution
+							yc = cell->y;
+							if (yc < velocity*t){
+								cSol = 1000.*exp(-lambda*(yc)/velocity);
+								//cSol = 1000.;
+							}
+							else{
+								cSol = 1000.*exp(-lambda*t);
+								//cSol = 0.0;
+							}
+
+							// get libowski solution
+							cCon = spec.getSpecies(i, j, cID);
+
+							//assert(isapprox(vsol, vcon, 1e-5, 1e-4));
+							//linfError = std::max(linfError, std::abs(cSol-cCon)/cSol);
+							outputFile << yc << " " << cSol << " " << cCon << "\n";
+							//std::cout << xc << std::endl; // << cSol << " " << cCon << std::endl;
+							percentError = std::max(percentError, std::abs(cSol-cCon)/cSol);
+						}
+					}
+				}
+				outputFile << "\n";
+				//std::cout << solverType << " " << dx << " " << dt 
+				//	<< " " << percentError << "\n";
+				// clean species
+				printf("%15s %2.3f %2.2f %4.2E %3.5f\n", solverType.c_str(), dt, dy, 
+				//printf("%15s %2.3f %2.2f %4.2E %3.5f\n", limiterType.c_str(), dt, dx, 
+					percentError, duration.count()/1.e6);
+				spec.clean();
+			}
+			spec.clean();
+			model.clean();
+		}
+	}
+	outputFile << "end";
+}
 //*****************************************************************************
 // Mole problem 3
 //
@@ -718,6 +886,8 @@ int main(){
 
 	//moleProblem1(myid);
 	moleProblem2(myid);
+	std::cout << " " << std::endl;
+	moleProblem2yDirection(myid);
 	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);
