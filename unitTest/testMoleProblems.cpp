@@ -170,7 +170,7 @@ void moleProblem1(int myid){
 void moleProblem2(int myid){
 	int yCells = 1;
 	std::vector<int> numOfxCells{10, 100, 1000};
-	//std::vector<double> steps = {100};
+	//std::vector<double> steps = {5};
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
 	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
@@ -263,8 +263,8 @@ void moleProblem2(int myid){
 				for (int step = 1; step <= numofsteps; step++){
 					t = step*dt;
 					// solve with cram
-					//spec.solve(t);
-					spec.solveImplicit(t);
+					spec.solve(t);
+					//spec.solveImplicit(t);
 				}
 				auto end = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -339,7 +339,7 @@ void moleProblem2(int myid){
 void moleProblem2yDirection(int myid){
 	int xCells = 1;
 	std::vector<int> numOfyCells{10, 100, 1000};
-	//std::vector<double> steps = {100};
+	//std::vector<double> steps = {5};
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
 	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
@@ -432,8 +432,8 @@ void moleProblem2yDirection(int myid){
 				for (int step = 1; step <= numofsteps; step++){
 					t = step*dt;
 					// solve with cram
-					//spec.solve(t);
-					spec.solveImplicit(t);
+					spec.solve(t);
+					//spec.solveImplicit(t);
 				}
 				auto end = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(

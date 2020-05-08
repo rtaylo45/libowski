@@ -440,6 +440,8 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 
 			// loop over cell connections
 			for (int conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
+				// Sets the deferred correction source
+				defCor = 0.0;
 				// Sets the matrix coefficient to zero
 				a = 0.0;
 				// Sets a variable that holdes if the matrix coeff is used for setting
@@ -615,10 +617,11 @@ void speciesDriver::unpackSolution(const VectorD& sol){
 double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon, 
 	int specID, double tran){
 	int alphal = 1;
-	double rohP = 0.0, rohN = 0.0, rohE = 0.0, rohS = 0.0, rohW = 0.0;
+	double rohP = 0.0, rohN = -1.0, rohE = 0.0, rohS = 0.0, rohW = 0.0;
 	double rohNN = 0.0, rohSS = 0.0, rohEE = 0.0, rohWW = 0.0;
 	double rohbc = 0.0, dir = 0.0;
 	double r = 0.0, defCor = 0.0, psi = 0.0;
+	double eps = 1.e-10;
 	meshCell* northCell = nullptr;
 	meshCell* southCell = nullptr;
 	meshCell* eastCell = nullptr;
@@ -653,7 +656,7 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 					if (cellPtr->getConnection(1)->boundaryType == "dirichlet"){
 						rohS = 2.*rohbc - rohP;
 					}
-					else if (cellCon->boundaryType == "newmann"){
+					else if (cellPtr->getConnection(1)->boundaryType == "newmann"){
 						rohS = rohP - rohbc*cellPtr->getConnection(1)->distance;
 					}
 				}	
@@ -676,7 +679,7 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			}
 			r = alphal*(rohP - rohS)/(rohN - rohP) + 
 				(1.-alphal)*(rohNN - rohN)/(rohN - rohP);
-			if (std::abs(rohN-rohP) > 1.e-16){
+			if (std::abs(rohN-rohP) > eps){
 				psi = fluxLim.getPsi(r);
 			}
 			else{
@@ -698,6 +701,8 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			}
 			else{
 				if (southCell->getConnection(1)->boundary){
+					rohbc = southCell->getConnection(1)->getSurface()
+						->getSpeciesPtr(specID)->bc;
 					if(southCell->getConnection(1)->boundaryType == "dirichlet"){
 						rohSS = 2.*rohbc - rohP;
 					}
@@ -724,7 +729,7 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			}
 			r = alphal*(rohS - rohSS)/(rohP - rohS) + 
 				(1.-alphal)*(rohN - rohS)/(rohP - rohS);
-			if (std::abs(rohP-rohS) > 1.e-16){
+			if (std::abs(rohP-rohS) > eps){
 				psi = fluxLim.getPsi(r);
 			}
 			else{
@@ -774,14 +779,12 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			}
 			r = alphal*(rohP - rohW)/(rohE - rohP) + 
 				(1.- alphal)*(rohEE - rohE)/(rohE - rohP);
-			if (std::abs(rohE - rohP) > 1.e-16){
+			if (std::abs(rohE - rohP) > eps){
 				psi = fluxLim.getPsi(r);
 			}
 			else{
 				psi = 0.0;
 			}
-			//std::cout << "east: " << rohE - rohP << " r: " << r << " psi: " << psi << std::endl;
-			dir = cellCon->direction;
 			defCor = 0.5*tran*((1.-alphal)*psi - alphal*psi)*(rohE-rohP);
 			break;
 		}
@@ -826,14 +829,12 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			}
 			r = alphal*(rohW - rohWW)/(rohP - rohW) + 
 				(1. - alphal)*(rohE - rohP)/(rohP - rohW);
-			if (std::abs(rohP - rohW) > 1.e-16){
+			if (std::abs(rohP - rohW) > eps){
 				psi = fluxLim.getPsi(r);
 			}
 			else{
 				psi = 0.0;
 			}
-			//std::cout << "west: " << rohW - rohWW << " r: " << r << " psi: " << psi << std::endl;
-			dir = cellCon->direction;
 			defCor = 0.5*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohW);
 			break;
 		}
