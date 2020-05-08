@@ -6,6 +6,7 @@ add_executable(unitTestIntegratorSolvers testIntegratorSolvers.cpp)
 add_executable(unitTestMesh testMesh.cpp)
 add_executable(unitTestVerification verificationProblems.cpp)
 add_executable(unitTestUtils testUtils.cpp)
+add_executable(unitTestMoleProblems testMoleProblems.cpp)
 
 # Unit test path
 set(TEST_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -34,6 +35,12 @@ if(${MPI_FOUND})
 	target_link_libraries(unitTestUtils PRIVATE liblibowski ${MPI_LIBRARIES})
 	target_compile_definitions(unitTestUtils PRIVATE HAVE_MPI)
 	add_test(test_Utils ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ${TEST_PATH}/unitTestUtils)
+
+	# mole problems
+	target_link_libraries(unitTestMoleProblems PRIVATE liblibowski ${MPI_LIBRARIES})
+	target_compile_definitions(unitTestMoleProblems PRIVATE HAVE_MPI)
+	add_test(test_Mole ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ${TEST_PATH}/unitTestMoleProblems)
+
 else()
 	# Integrator Solver test
 	target_link_libraries(unitTestIntegratorSolvers PRIVATE liblibowski)
@@ -54,4 +61,8 @@ else()
 	# Test Utilities
 	target_link_libraries(unitTestUtils PRIVATE liblibowski)
 	add_test(test_Utils ${TEST_PATH}/unitTestUtils)
+
+	# Mole problems
+	target_link_libraries(unitTestMoleProblems PRIVATE liblibowski)
+	add_test(test_Mole ${TEST_PATH}/unitTestMoleProblems)
 endif()

@@ -44,6 +44,8 @@ class meshCell {
 	double P = -1.;
 	// Vector of cell connections
 	std::vector<connection> connections;
+	// Flag to set if the second order flux is used
+	bool secondOrderFlux = true;
 
 	private:
 	// Vector of the species in the cell

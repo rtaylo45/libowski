@@ -11,7 +11,7 @@
 speciesDriver::speciesDriver(modelMesh* model){
 	modelPtr = model;
 	expSolver = matrixExponentialFactory::getExpSolver("CRAM");
-	intSolver = integratorFactory::getIntegrator("implicit", "BDF4");
+	intSolver = integratorFactory::getIntegrator("implicit", "BDF2");
 }
 
 //*****************************************************************************
@@ -34,6 +34,23 @@ void speciesDriver::setMatrixExpSolver(std::string solverName, bool krylovFlag,
 void speciesDriver::setIntegratorSolver(std::string method, std::string 
 	solverName){
 	intSolver = integratorFactory::getIntegrator(method, solverName);
+}
+
+//*****************************************************************************
+// Sets the flux limiter function
+//
+// @param limiterName	The name of the flux limiter
+//*****************************************************************************
+void speciesDriver::setFluxLimiter(std::string limiterName){
+	int limiterID = -1;	
+	if (limiterName == "superbee"){ limiterID = 0;};
+	if (limiterName == "VanLeer"){ limiterID = 1;};
+	if (limiterName == "Van Albada"){ limiterID = 2;};
+	if (limiterName == "Min-Mod"){ limiterID = 3;};
+	if (limiterName == "Sweby"){ limiterID = 4;};
+	if (limiterName == "First order upwind"){ limiterID = 5;};
+
+	fluxLim.setLimiterFunction(limiterID);
 }
 
 //*****************************************************************************
@@ -125,7 +142,6 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 	int specID, double bc){
 
 	int locID = -1;
-	dummySpec = 1;
 
 	if (loc == "north") {locID = 0;};
 	if (loc == "south") {locID = 1;};
@@ -135,13 +151,18 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 
 	if (BCType == "dirichlet") {
 		setGeneralBoundaryCondition(BCType, locID, specID, bc);
+		dummySpec = 1;
 	}
 	else if (BCType == "newmann"){
 		setGeneralBoundaryCondition(BCType, locID, specID, bc);
+		dummySpec = 1;
 	} 
 	else if (BCType == "periodic"){
 		setPeriodicBoundaryCondition(locID);
 	} 
+	else if (BCType == "free flow"){
+		setGeneralBoundaryCondition(BCType, locID, specID, bc);
+	}
 	else{
 		std::string errorMessage = 
 			" You have selected an invalid boundary condition ";
@@ -290,10 +311,12 @@ void speciesDriver::solve(double solveTime){
 	MatrixD dA;
 	bool augmented = true;
 	double timeStep = solveTime - lastSolveTime;
+	double rtol = 1.e-5, diff;
+	VectorD defSourceOld, defSourceNew;
 
 	if (not matrixInit){
 		A = buildTransMatrix(augmented, 0.0);
-		//dA = Eigen::MatrixXd(A);
+		//dA = Eigen::MatrixXd(A*timeStep);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
 		//outputFile.open("matrix.out", std::ios_base::app);
@@ -304,14 +327,16 @@ void speciesDriver::solve(double solveTime){
 		//std::cout << dA.determinant() << std::endl;
 		//std::cout << dA.norm() << std::endl;
 		//std::cout << N0  << std::endl;
-		matrixInit = true;
+		//matrixInit = true;
 		//N0 = buildInitialConditionVector(augmented);
 	}
+
 	N0 = buildInitialConditionVector(augmented);
 
 	sol = expSolver->apply(A, N0, timeStep);
 	if (mpi.rank == 0){unpackSolution(sol);};
 	lastSolveTime = solveTime;
+	step += 1;
 }
 
 //*****************************************************************************
@@ -321,20 +346,18 @@ void speciesDriver::solveImplicit(double solveTime){
 	VectorD b;
 	VectorD sol;
 	VectorD solOld;
+	MatrixD dA;
 	bool augmented = true;
-	//bool augmented = false;
 	SparseLU<SparseMatrixD, COLAMDOrdering<int> > LinearSolver;
 	double timeStep = solveTime - lastSolveTime;
+	double rtol = 1.e-5, diff = 5.0;
+	VectorD defSourceOld, defSourceNew;
 
 	solOld = buildInitialConditionVector(augmented);
-	//A = buildTransMatrix(augmented, timeStep);
-	//b = -solOld/timeStep + buildbVector();
 	if (not matrixInit){
 		A = buildTransMatrix(augmented, 0.0);
-		matrixInit = true;
+		//matrixInit = true;
 	}
-	//LinearSolver.compute(A);
-	//sol = LinearSolver.solve(b);
 
 	sol = intSolver->integrate(A, solOld, timeStep);
 	
@@ -354,6 +377,7 @@ void speciesDriver::solve(){
 
 	A = buildTransMatrix(augmented, 0.0);
 	b = buildbVector();
+	dA = Eigen::MatrixXd(A);
 
 	LinearSolver.compute(A);
 	sol = LinearSolver.solve(b);
@@ -382,7 +406,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
 	double diffusionCoeff = 0.0;
 	double rCon, psi, a, tran, thisCoeff, conDirection, conDist;
-	double aP, ab, coeff;
+	double aP, ab, coeff, defCor, thisSpecSource;
 	tripletList.reserve(nonZeros);	
 
 	// if the matrix is not augmented then we no longer need to add a dummy
@@ -404,6 +428,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			// Gets the species pointer
 			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
 			diffusionCoeff = thisSpecPtr->D;
+			thisSpecSource = thisSpecPtr->s;
 			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
 			// Sets the ap coeff
@@ -415,6 +440,8 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 
 			// loop over cell connections
 			for (int conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
+				// Sets the deferred correction source
+				defCor = 0.0;
 				// Sets the matrix coefficient to zero
 				a = 0.0;
 				// Sets a variable that holdes if the matrix coeff is used for setting
@@ -435,10 +462,6 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				if (conDist){
 					// Computes the transition coefficient for convection
 					tran = thisCon->connectionFacePtr->vl*thisCon->area/thisCellPtr->volume;
-					// Gets the convective species slope
-					rCon = calcSpecConvectiveSlope(cellID, specID, thisCon->loc, tran);
-					// flux limiter
-					psi = fluxLim.getPsi(rCon);
 					// matrix coefficient
 					a = std::max(conDirection*tran, 0.0) + 
 						diffusionCoeff*thisCon->area/thisCellPtr->volume/conDist;
@@ -447,26 +470,36 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 						j = getAi(otherCellPtr->absIndex, totalCells, specID, 
 							totalSpecs);
 						tripletList.push_back(T(i, j, a));
-					}	
+					}
+					// Sets the deferred correction for second order flux
+					if (thisCellPtr->secondOrderFlux and not thisCon->boundary){
+						// set source for deffered correction
+						defCor = calcDefCor(thisCellPtr, thisCon, specID, tran);
+						thisSpecSource += defCor;
+					}
 				}
 				// Added sthe Dirichlet boundary condition to the sourse term
 				if (thisCon->boundaryType == "dirichlet"){
 					surface* thisSurface = thisCon->getSurface();
    				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
-					thisSpecPtr->s += 2.*a*surfaceSpecPtr->bc;
-					ab = -a;
+					if (tran){
+						thisSpecSource += tran*conDirection*surfaceSpecPtr->bc;
+					}
+					else{
+						thisSpecSource += 2.*a*surfaceSpecPtr->bc;
+						ab = -a;
+					}
 				}
 				// Added sthe Newmann boundary condition to the sourse term
 				else if (thisCon->boundaryType == "newmann"){
 					surface* thisSurface = thisCon->getSurface();
    				species* surfaceSpecPtr = thisSurface->getSpeciesPtr(specID);
-					thisSpecPtr->s -= a*surfaceSpecPtr->bc*conDist;
+					thisSpecSource -= a*surfaceSpecPtr->bc*conDist;
 					ab = a;
 				}
 
 				// aP coefficient
 				aP += (-a + ab);
-				//std::cout << cellID << " " << a << " " << ab << " " << aP << std::endl;
 			}
 			// Sets the coefficients for linear source terms
 			if (thisSpecPtr->coeffs.size()){
@@ -489,7 +522,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 
 			// Sets the constant source terms
 			if (Augmented){
-				tripletList.push_back(T(i, A.cols()-1, thisSpecPtr->s));
+				tripletList.push_back(T(i, A.cols()-1, thisSpecSource));
 			}
 		}
 	}
@@ -574,104 +607,294 @@ void speciesDriver::unpackSolution(const VectorD& sol){
 	}
 }
 //*****************************************************************************
-// Claculatest the convective species slop in a cell
+// Calculates the TVD deferred correction
 //
-// @param cellID	Global cellID
+// @param cellPtr	pointer to cell
+// @param cellCon pointer to cell connection
 // @param specID	Species ID
 // @pram tran		Transton value	[1/s]
-// @param loc		Location of adjacent cell
-//			0 = north
-//			1 = south
-//			2 = east
-//			3 = west
 //*****************************************************************************
-double speciesDriver::calcSpecConvectiveSlope(int cellID, int specID, 
-		int loc, double tran){
-		double alphal = 0.0;
-		double rohP = 0.0, rohN = 0.0, rohE = 0.0, rohS = 0.0, rohW = 0.0;
-		double rohNN, rohSS, rohEE, rohWW;
-		double r = 0.0;
-		if (tran < 0.0) {alphal = 1.0;};
-		if (tran == 0.0) {return 0.0;};
+double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon, 
+	int specID, double tran){
+	int alphal = 1;
+	double rohP = 0.0, rohN = -1.0, rohE = 0.0, rohS = 0.0, rohW = 0.0;
+	double rohNN = 0.0, rohSS = 0.0, rohEE = 0.0, rohWW = 0.0;
+	double rohbc = 0.0, dir = 0.0;
+	double r = 0.0, defCor = 0.0, psi = 0.0;
+	double eps = 1.e-16;
+	meshCell* northCell = nullptr;
+	meshCell* southCell = nullptr;
+	meshCell* eastCell = nullptr;
+	meshCell* westCell = nullptr;
+	meshCell* northNorthCell = nullptr;
+	meshCell* southSouthCell = nullptr;
+	meshCell* eastEastCell = nullptr;
+	meshCell* westWestCell = nullptr;
+	meshCell* otherCell = nullptr;
+	if (tran < 0.0) {alphal = 0;};
+	if (tran == 0.0) {return 0.0;};
 
+	rohP = cellPtr->getSpecCon(specID);
+	otherCell = cellCon->connectionCellPtr;
 
-		/*
-		This section is a work in progress
+	switch(cellCon->loc){
 
-		Commenting all of the second order convection flux stuff out for now
-		This wasn't even working and i need to come back and fix this
-
-
-		// This cell pointer
-		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
-	
-		// Gets pointer to connecting cells
-		meshCell* thisCellNorthCellPtr = thisCellPtr->northCellPtr;
-		meshCell* thisCellSouthCellPtr = thisCellPtr->southCellPtr;
-		meshCell* thisCellEastCellPtr = thisCellPtr->eastCellPtr;
-		meshCell* thisCellWestCellPtr = thisCellPtr->westCellPtr;
-
-		// Gets pointer to conncetions of connections
-		meshCell* thisCellNorthNorthCellPtr = nullptr;
-		meshCell* thisCellSouthSouthCellPtr = nullptr;
-		meshCell* thisCellEastEastCellPtr = nullptr;
-		meshCell* thisCellWestWestCellPtr = nullptr;
-
-		if (thisCellNorthCellPtr){thisCellNorthNorthCellPtr = thisCellNorthCellPtr->northCellPtr;};
-		if (thisCellSouthCellPtr){thisCellSouthSouthCellPtr = thisCellSouthCellPtr->southCellPtr;};
-		if (thisCellEastCellPtr){thisCellEastEastCellPtr = thisCellEastCellPtr->eastCellPtr;};
-		if (thisCellWestCellPtr){thisCellWestWestCellPtr = thisCellWestCellPtr->westCellPtr;};
-
-		if (thisCellNorthCellPtr){rohN = thisCellNorthCellPtr->getSpecCon(specID);};
-		if (thisCellSouthCellPtr){rohS = thisCellSouthCellPtr->getSpecCon(specID);};
-		if (thisCellEastCellPtr){rohE = thisCellEastCellPtr->getSpecCon(specID);};
-		if (thisCellWestCellPtr){rohW = thisCellWestCellPtr->getSpecCon(specID);};
-
-		// Gets this cells species concentration
-		rohP = thisCellPtr->getSpecCon(specID);
-
-		switch(loc){
-
-			// North location
-			case 0: {
-				rohNN = (thisCellNorthNorthCellPtr) ? 
-					thisCellNorthNorthCellPtr->getSpecCon(specID) : 0.0;
-				r = (1.-alphal)*(rohP - rohS)/(rohN - rohP) + 
-					alphal*(rohNN - rohN)/(rohN - rohP);
-				
-				break;
+		// North location
+		case 0: {
+			northCell = cellPtr->getConnection(0)->connectionCellPtr;
+			southCell = cellPtr->getConnection(1)->connectionCellPtr;
+			rohN = northCell->getSpecCon(specID);
+			northNorthCell = northCell->getConnection(0)->connectionCellPtr;
+			// Needed for positive flow
+			if (southCell){
+				rohS = southCell->getSpecCon(specID);
 			}
-
-			// South location
-			case 1: {
-				rohSS = (thisCellSouthSouthCellPtr) ? 
-					thisCellSouthSouthCellPtr->getSpecCon(specID) : 0.0;
-				r = (1.-alphal)*(rohS - rohSS)/(rohP - rohS) + 
-					alphal*(rohN - rohS)/(rohP - rohS);
-				break;
+			else{
+				if (cellPtr->getConnection(1)->boundary){
+					rohbc = cellPtr->getConnection(1)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellPtr->getConnection(1)->boundaryType == "dirichlet"){
+						rohS = 2.*rohbc - rohP;
+					}
+					else if (cellPtr->getConnection(1)->boundaryType == "newmann"){
+						rohS = rohP - rohbc*cellPtr->getConnection(1)->distance;
+					}
+				}	
 			}
-
-			// East location
-			case 2: {
-				rohEE = (thisCellEastEastCellPtr) ? 
-					thisCellEastEastCellPtr->getSpecCon(specID) : 0.0;
-				r = (1.-alphal)*(rohP - rohW)/(rohE - rohP) + 
-					alphal*(rohEE - rohE)/(rohE - rohP);
-				break;
+			// Needed for negative flow
+			if (northNorthCell){
+				rohNN = northNorthCell->getSpecCon(specID);
 			}
-
-			// West location
-			case 3: {
-				rohWW = (thisCellWestWestCellPtr) ? 
-					thisCellWestWestCellPtr->getSpecCon(specID) : 0.0;
-				r = (1.-alphal)*(rohW - rohWW)/(rohP - rohW) + 
-					alphal*(rohE - rohP)/(rohP - rohW);
-				break;
+			else{
+				if (northCell->getConnection(0)->boundary){
+					rohbc = northCell->getConnection(0)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (northCell->getConnection(0)->boundaryType == "dirichlet"){
+						rohNN = 2.*rohbc - rohP;
+					}
+					else if (northCell->getConnection(0)->boundaryType == "newmann"){
+						rohNN = rohP - rohbc*cellCon->distance;
+					}
+				}
 			}
-
+			r = alphal*(rohP - rohS)/(rohN - rohP) + 
+				(1.-alphal)*(rohNN - rohN)/(rohN - rohP);
+			if (std::abs(rohN-rohP) > eps){
+				psi = fluxLim.getPsi(r);
+			}
+			else{
+				psi = 0.0;
+			}
+			defCor = 0.5*tran*((1.-alphal)*psi - alphal*psi)*(rohN-rohP);
+			break;
 		}
-		*/
-		return r;
+
+		// South location
+		case 1: {
+			northCell = cellPtr->getConnection(0)->connectionCellPtr;
+			southCell = cellPtr->getConnection(1)->connectionCellPtr;
+			rohS = southCell->getSpecCon(specID);
+			southSouthCell = southCell->getConnection(1)->connectionCellPtr;
+			// Needed for positive flow
+			if (southSouthCell){
+				rohSS = southSouthCell->getSpecCon(specID);
+			}
+			else{
+				if (southCell->getConnection(1)->boundary){
+					rohbc = southCell->getConnection(1)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if(southCell->getConnection(1)->boundaryType == "dirichlet"){
+						rohSS = 2.*rohbc - rohP;
+					}
+					else if(southCell->getConnection(1)->boundaryType == "newmann"){
+						rohSS = rohP - rohbc*southCell->getConnection(1)->distance;
+					}
+				}
+			}
+			// Needed for negative flow
+			if (northCell){
+				rohN = northCell->getSpecCon(specID);		
+			}
+			else{
+				if (cellPtr->getConnection(0)->boundary){
+					rohbc = cellPtr->getConnection(0)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellPtr->getConnection(0)->boundaryType == "dirichlet"){
+						rohN = 2.*rohbc - rohP;
+					}
+					else if (cellPtr->getConnection(0)->boundaryType == "newmann"){
+						rohN = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			r = alphal*(rohS - rohSS)/(rohP - rohS) + 
+				(1.-alphal)*(rohN - rohS)/(rohP - rohS);
+			if (std::abs(rohP-rohS) > eps){
+				psi = fluxLim.getPsi(r);
+			}
+			else{
+				psi = 0.0;
+			}
+			defCor = 0.5*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohS);
+			break;
+		}
+
+		// East location
+		case 2: {
+			eastCell = cellPtr->getConnection(2)->connectionCellPtr;
+			westCell = cellPtr->getConnection(3)->connectionCellPtr;
+			rohE = eastCell->getSpecCon(specID);
+			eastEastCell = eastCell->getConnection(2)->connectionCellPtr;
+			// Needed for positive flow
+			if(westCell){
+				rohW = westCell->getSpecCon(specID);
+			}
+			else{
+				if (cellPtr->getConnection(3)->boundary){
+					rohbc = cellPtr->getConnection(3)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellPtr->getConnection(3)->boundaryType == "dirichlet"){
+						rohW = (2.*rohbc - rohP);
+					}
+					else if (cellPtr->getConnection(3)->boundaryType == "newmann"){
+						rohW = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			// Needed for negative flow
+			if(eastEastCell){
+				rohEE = eastEastCell->getSpecCon(specID);
+			}
+			else{
+				if (eastCell->getConnection(2)->boundary){
+					rohbc = eastCell->getConnection(2)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (eastCell->getConnection(2)->boundaryType == "dirichlet"){
+						rohEE = (2.*rohbc - rohP);
+					}
+					else if (eastCell->getConnection(2)->boundaryType == "newmann"){
+						rohEE = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			r = alphal*(rohP - rohW)/(rohE - rohP) + 
+				(1.- alphal)*(rohEE - rohE)/(rohE - rohP);
+			if (std::abs(rohE - rohP) > eps){
+				psi = fluxLim.getPsi(r);
+			}
+			else{
+				psi = 0.0;
+			}
+			defCor = 0.5*tran*((1.-alphal)*psi - alphal*psi)*(rohE-rohP);
+			break;
+		}
+
+		// West location
+		case 3: {
+			eastCell = cellPtr->getConnection(2)->connectionCellPtr;
+			westCell = cellPtr->getConnection(3)->connectionCellPtr;
+			rohW = westCell->getSpecCon(specID);
+			westWestCell = westCell->getConnection(3)->connectionCellPtr;
+			// Needed for positive flow
+			if(westWestCell){
+				rohWW = westWestCell->getSpecCon(specID);
+			}
+			else{
+				if (westCell->getConnection(3)->boundary){
+					rohbc = westCell->getConnection(3)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (eastCell->getConnection(3)->boundaryType == "dirichlet"){
+						rohWW = (2.*rohbc - rohP);
+					}
+					else if (eastCell->getConnection(3)->boundaryType == "newmann"){
+						rohWW = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			// Needed for negative flow
+			if(eastCell){
+				rohE = eastCell->getSpecCon(specID);
+			}
+			else{
+				if (cellPtr->getConnection(2)->boundary){
+					rohbc = cellPtr->getConnection(2)->getSurface()
+						->getSpeciesPtr(specID)->bc;
+					if (cellPtr->getConnection(2)->boundaryType == "dirichlet"){
+						rohE = (2.*rohbc - rohP);
+					}
+					else if (cellPtr->getConnection(2)->boundaryType == "newmann"){
+						rohE = rohP - rohbc*cellCon->distance;
+					}
+				}
+			}
+			r = alphal*(rohW - rohWW)/(rohP - rohW) + 
+				(1. - alphal)*(rohE - rohP)/(rohP - rohW);
+			if (std::abs(rohP - rohW) > eps){
+				psi = fluxLim.getPsi(r);
+			}
+			else{
+				psi = 0.0;
+			}
+			defCor = 0.5*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohW);
+			break;
+		}
+
+	}
+	return defCor;
+}
+
+//*****************************************************************************
+// Builds a vector of the deferred correction source 
+//*****************************************************************************
+VectorD speciesDriver::calcDefSourceVector(){
+	int i;
+	double conDist, conDirection, tran, defCor;
+	int totalSpecs = numOfSpecs;
+	int totalCells = modelPtr->numOfTotalCells;
+	VectorD sourceVector(totalSpecs*totalCells*4);
+
+	// Loop over cells
+	i = 0;
+	for (int cellID = 0; cellID < totalCells; cellID++){
+		// Gets cell pointer
+		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
+
+		// Loop over species
+		for (int specID = 0; specID < totalSpecs; specID++){
+			// Gets the species pointer
+			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
+			// Set coefficients to zero
+			tran = 0.0;
+
+			// loop over cell connections
+			for (int conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
+				// Gets cell connection object pointer
+				connection* thisCon = thisCellPtr->getConnection(conCount);
+				// Gets pointer to connected cell
+				meshCell* otherCellPtr = thisCon->connectionCellPtr;
+				// Gets the direction required to multiply by the convection transition
+				conDirection = thisCon->direction;
+				// Gets the distance from this cell center to connection cell center
+				conDist = thisCon->distance;
+
+				// If the connection distance is zero then there is no cell in that 
+				// direction and the transition rate is zero. This will happen 
+				// when modeling 1D cases.
+				if (conDist){
+					// Computes the transition coefficient for convection
+					tran = thisCon->connectionFacePtr->vl*thisCon->area/thisCellPtr->volume;
+					// Sets the deferred correction for second order flux
+					if (thisCellPtr->secondOrderFlux and not thisCon->boundary){
+						// set source for deffered correction
+						defCor = calcDefCor(thisCellPtr, thisCon, specID, tran);
+						sourceVector[i] = defCor;
+						i += 1;
+					}
+				}
+			}
+		}
+	}
+	return sourceVector;
 }
 
 //*****************************************************************************

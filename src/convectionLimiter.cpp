@@ -16,10 +16,28 @@
 //    2 = Van Albada
 //    3 = Min-Mod
 //    4 = Sweby
-//    5 = QUICK
-//    6 = UMIST
+//    5 = First order upwind
+//    6 = QUICK
+//    7 = UMIST
 //*****************************************************************************
 fluxLimiter::fluxLimiter(int limitType){
+	setLimiterFunction(limitType);
+}
+
+//*****************************************************************************
+// Changes the flux limiter function
+//
+// @param limitType	Type of flux limiter
+//    0 = SUPERBEE
+//    1 = VanLeer
+//    2 = Van Albada
+//    3 = Min-Mod
+//    4 = Sweby
+//    5 = First order upwind
+//    6 = QUICK
+//    7 = UMIST
+//*****************************************************************************
+void fluxLimiter::setLimiterFunction(int limitType){
 	assert(limitType <= 6 and limitType >= 0);
 	limiterType = limitType;
 
@@ -29,19 +47,28 @@ fluxLimiter::fluxLimiter(int limitType){
 		case 2: fluxLimiterPtr = &fluxLimiter::vanAlbada; break;
 		case 3: fluxLimiterPtr = &fluxLimiter::minMod; break;
 		case 4: fluxLimiterPtr = &fluxLimiter::sweby; break;
+		case 5: fluxLimiterPtr = &fluxLimiter::firstOrder; break;
 
 	}
 }
-
 
 //*****************************************************************************
 // Gets the Psi(r) function value
 //
 // @param r		Species concentration slope
 //*****************************************************************************
-double fluxLimiter::getPsi(double r){
+double fluxLimiter::getPsi(const double r){
 	double psi = (this->*fluxLimiterPtr)(r);
-	psi = 0.0;
+	return psi;
+}
+
+//*****************************************************************************
+// First order upwind difference
+//
+// @param r		Flux slope
+//*****************************************************************************
+double fluxLimiter::firstOrder(const double r){
+	double psi = 0.0;
 	return psi;
 }
 
@@ -50,7 +77,7 @@ double fluxLimiter::getPsi(double r){
 //
 // @param r		Flux slope
 //*****************************************************************************
-double fluxLimiter::vanLeer(double r){
+double fluxLimiter::vanLeer(const double r){
 	double psi = (r + std::abs(r))/(1. + r);
 	return psi;
 }
@@ -60,8 +87,8 @@ double fluxLimiter::vanLeer(double r){
 //
 // @param r		Flux slope
 //*****************************************************************************
-double fluxLimiter::vanAlbada(double r){
-	double psi = (r + std::pow(r,2.0))/(1. + std::pow(r,2.0));
+double fluxLimiter::vanAlbada(const double r){
+	double psi = (r + std::pow(r, 2.))/(1. + std::pow(r,2.));
 	return psi;
 }
 
@@ -70,10 +97,10 @@ double fluxLimiter::vanAlbada(double r){
 //
 // @param r		Flux slope
 //*****************************************************************************
-double fluxLimiter::minMod(double r){
-	double psi;
-	if (r > 0.0){
-		psi = std::min(r,1.0);
+double fluxLimiter::minMod(const double r){
+	double psi, val1, val2;
+	if (r > 0){
+		psi = std::min(r,1.);
 	}
 	else{
 		psi = 0.0;
@@ -86,8 +113,12 @@ double fluxLimiter::minMod(double r){
 //
 // @param r		Flux slope
 //*****************************************************************************
-double fluxLimiter::superbee(double r){
-	double psi = std::max({0.0, std::min(2.*r,1.), std::min(r, 2.)});
+double fluxLimiter::superbee(const double r){
+	double psi, val1, val2;
+	val1 = std::min(2.*r, 1.);
+	val2 = std::min(r, 2.);
+	psi = std::max(val1, val2);
+	psi = std::max(0., psi);
 	return psi;
 }
 
@@ -96,9 +127,12 @@ double fluxLimiter::superbee(double r){
 //
 // @param r		Flux slope
 //*****************************************************************************
-double fluxLimiter::sweby(double r){
-	double beta = 1.5;
-	double psi = std::max({0.0, std::min(beta*r,1.), std::min(r, beta)});
+double fluxLimiter::sweby(const double r){
+	double beta = 1.5, psi, val1, val2;
+	val1 = std::min(beta*r, 1.);
+	val2 = std::min(r, beta);
+	psi = std::max(val1, val2);
+	psi = std::max(0., psi);
 	return psi;
 }
 
