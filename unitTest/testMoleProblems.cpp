@@ -172,12 +172,12 @@ void moleProblem1(int myid){
 //*****************************************************************************
 void moleProblem2(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{10, 100, 1000};
+	std::vector<int> numOfxCells{1000, 2000, 4000, 8000};
 	//std::vector<double> steps = {5};
-	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
+	std::vector<double> steps = {200};
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
 	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
-	//	"pade-method1", "pade-method2"};
+		//"pade-method1", "pade-method2"};
 	std::vector<std::string> solvers {"hyperbolic"};
 	std::vector<std::string> fluxLimiters {"First order upwind", "superbee", 
 		"VanLeer", "Van Albada", "Min-Mod", "Sweby"};
@@ -890,9 +890,8 @@ int main(){
 	int numprocs = mpi.size;
 
 	//moleProblem1(myid);
-	moleProblem2(myid);
-	std::cout << " " << std::endl;
-	moleProblem2yDirection(myid);
+	//moleProblem2(myid);
+	//moleProblem2yDirection(myid);
 	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);

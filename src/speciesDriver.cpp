@@ -11,7 +11,7 @@
 speciesDriver::speciesDriver(modelMesh* model){
 	modelPtr = model;
 	expSolver = matrixExponentialFactory::getExpSolver("CRAM");
-	intSolver = integratorFactory::getIntegrator("implicit", "BDF4");
+	intSolver = integratorFactory::getIntegrator("implicit", "BDF2");
 }
 
 //*****************************************************************************
@@ -621,7 +621,7 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 	double rohNN = 0.0, rohSS = 0.0, rohEE = 0.0, rohWW = 0.0;
 	double rohbc = 0.0, dir = 0.0;
 	double r = 0.0, defCor = 0.0, psi = 0.0;
-	double eps = 1.e-10;
+	double eps = 1.e-16;
 	meshCell* northCell = nullptr;
 	meshCell* southCell = nullptr;
 	meshCell* eastCell = nullptr;
