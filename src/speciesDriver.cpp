@@ -49,6 +49,7 @@ void speciesDriver::setFluxLimiter(std::string limiterName){
 	if (limiterName == "Min-Mod"){ limiterID = 3;};
 	if (limiterName == "Sweby"){ limiterID = 4;};
 	if (limiterName == "First order upwind"){ limiterID = 5;};
+	if (limiterName == "muscl"){ limiterID = 6;};
 
 	fluxLim.setLimiterFunction(limiterID);
 }
@@ -679,12 +680,7 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			}
 			r = alphal*(rohP - rohS)/(rohN - rohP) + 
 				(1.-alphal)*(rohNN - rohN)/(rohN - rohP);
-			if (std::abs(rohN-rohP) > eps){
-				psi = fluxLim.getPsi(r);
-			}
-			else{
-				psi = 0.0;
-			}
+			psi = fluxLim.getPsi(r);
 			defCor = 0.5*tran*((1.-alphal)*psi - alphal*psi)*(rohN-rohP);
 			break;
 		}
@@ -729,12 +725,7 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			}
 			r = alphal*(rohS - rohSS)/(rohP - rohS) + 
 				(1.-alphal)*(rohN - rohS)/(rohP - rohS);
-			if (std::abs(rohP-rohS) > eps){
-				psi = fluxLim.getPsi(r);
-			}
-			else{
-				psi = 0.0;
-			}
+			psi = fluxLim.getPsi(r);
 			defCor = 0.5*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohS);
 			break;
 		}
@@ -779,12 +770,7 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			}
 			r = alphal*(rohP - rohW)/(rohE - rohP) + 
 				(1.- alphal)*(rohEE - rohE)/(rohE - rohP);
-			if (std::abs(rohE - rohP) > eps){
-				psi = fluxLim.getPsi(r);
-			}
-			else{
-				psi = 0.0;
-			}
+			psi = fluxLim.getPsi(r);
 			defCor = 0.5*tran*((1.-alphal)*psi - alphal*psi)*(rohE-rohP);
 			break;
 		}
@@ -829,12 +815,7 @@ double speciesDriver::calcDefCor(meshCell* cellPtr, connection* cellCon,
 			}
 			r = alphal*(rohW - rohWW)/(rohP - rohW) + 
 				(1. - alphal)*(rohE - rohP)/(rohP - rohW);
-			if (std::abs(rohP - rohW) > eps){
-				psi = fluxLim.getPsi(r);
-			}
-			else{
-				psi = 0.0;
-			}
+			psi = fluxLim.getPsi(r);
 			defCor = 0.5*tran*(alphal*psi - (1.-alphal)*psi)*(rohP-rohW);
 			break;
 		}
