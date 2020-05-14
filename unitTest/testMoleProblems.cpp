@@ -172,15 +172,16 @@ void moleProblem1(int myid){
 //*****************************************************************************
 void moleProblem2(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{1000, 2000, 4000, 8000};
+	std::vector<int> numOfxCells{10, 100, 1000};
 	//std::vector<double> steps = {5};
-	std::vector<double> steps = {200};
+	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
 	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
-		//"pade-method1", "pade-method2"};
-	std::vector<std::string> solvers {"hyperbolic"};
-	std::vector<std::string> fluxLimiters {"First order upwind", "superbee", 
-		"VanLeer", "Van Albada", "Min-Mod", "Sweby"};
+	//	"pade-method1", "pade-method2"};
+	std::vector<std::string> solvers {"pade-method2"};
+	//std::vector<std::string> solvers {"hyperbolic"};
+	//std::vector<std::string> fluxLimiters {"First order upwind", "superbee", 
+	//	"VanLeer", "Van Albada", "Min-Mod", "Sweby"};
 	//std::vector<std::string> solvers {"BDF2"};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
@@ -204,7 +205,6 @@ void moleProblem2(int myid){
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
-	//for (std::string &limiterType : fluxLimiters){
 
 		// loops over number of cells
 		for (int &xCells : numOfxCells){
@@ -219,8 +219,6 @@ void moleProblem2(int myid){
 			model.setConstantXVelocity(velocity);
 			// Sets the species matrix exp solver
 			spec.setMatrixExpSolver(solverType);
-			//spec.setIntegratorSolver("implicit", solverType);
-			//spec.setFluxLimiter(limiterType);
 
 
 			// loops over number of time steps
@@ -229,7 +227,6 @@ void moleProblem2(int myid){
 				rmse = 0.0;
 				dt = tEnd/numofsteps;
 				outputFile << "Solver: " << solverType << "\n";
-				//outputFile << "Solver: " << limiterType << "\n";
 				outputFile << "dx: " << xLength/(double)xCells << "\n";
 				outputFile << "dt: " << dt << "\n";
 				outputFile << "variables " << "x " << "Solution " << "Libowski" << "\n";
@@ -268,7 +265,6 @@ void moleProblem2(int myid){
 					t = step*dt;
 					// solve with cram
 					spec.solve(t);
-					//spec.solveImplicit(t);
 				}
 				auto end = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -283,11 +279,9 @@ void moleProblem2(int myid){
 							xc = cell->x;
 							if (xc < velocity*t){
 								cSol = 1000.*exp(-lambda*(xc)/velocity);
-								//cSol = 1000.;
 							}
 							else{
 								cSol = 1000.*exp(-lambda*t);
-								//cSol = 0.0;
 							}
 
 							// get libowski solution
