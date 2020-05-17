@@ -7,6 +7,7 @@ add_executable(unitTestMesh testMesh.cpp)
 add_executable(unitTestVerification verificationProblems.cpp)
 add_executable(unitTestUtils testUtils.cpp)
 add_executable(unitTestMoleProblems testMoleProblems.cpp)
+add_executable(unitTestFluxConvergence testFluxConvergence.cpp)
 
 # Unit test path
 set(TEST_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -41,6 +42,11 @@ if(${MPI_FOUND})
 	target_compile_definitions(unitTestMoleProblems PRIVATE HAVE_MPI)
 	add_test(test_Mole ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ${TEST_PATH}/unitTestMoleProblems)
 
+	# flux convergence problems
+	target_link_libraries(unitTestFluxConvergence PRIVATE liblibowski ${MPI_LIBRARIES})
+	target_compile_definitions(unitTestFluxConvergence PRIVATE HAVE_MPI)
+	add_test(test_Flux ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ${TEST_PATH}/unitTestFluxConvergence)
+
 else()
 	# Integrator Solver test
 	target_link_libraries(unitTestIntegratorSolvers PRIVATE liblibowski)
@@ -65,4 +71,8 @@ else()
 	# Mole problems
 	target_link_libraries(unitTestMoleProblems PRIVATE liblibowski)
 	add_test(test_Mole ${TEST_PATH}/unitTestMoleProblems)
+
+	# Flux convergence problems
+	target_link_libraries(unitTestFluxConvergence PRIVATE liblibowski)
+	add_test(test_Flux ${TEST_PATH}/unitTestFluxConvergence)
 endif()

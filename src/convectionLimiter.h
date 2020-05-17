@@ -19,8 +19,10 @@ class fluxLimiter {
 	//		2 = Van Albada
 	//		3 = Min-Mod
 	//		4 = Sweby
-	//		5 = QUICK
-	//		6 = UMIST	
+	//		5 = First order upwind
+	//		6 = MUSCL
+	//		7 = QUICK
+	//		8 = UMIST	
 	// REF: An introduction to Computational Fluid Dynamics: The finite Volume 
 	//		  Method Second Edition
 	int limiterType = -1;
@@ -47,6 +49,8 @@ class fluxLimiter {
 	double sweby(const double);	
 	// First order upwind
 	double firstOrder(const double);
+	// MUSCL
+	double muscl(const double);
 	// QUICK limiter
 	//double quick(double);
 	// UMIST limiter

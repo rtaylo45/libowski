@@ -37,7 +37,7 @@ class speciesDriver {
 	// Number of species in the model
 	int numOfSpecs = 0;
 	// Number of dummy species needs to be added. 
-	int dummySpec = 0;
+	int dummySpec = 1;
 	// Logical set after the matrix has been built
 	bool matrixInit = false;
 	// Last solve time 
@@ -47,7 +47,7 @@ class speciesDriver {
 	// Initial condition
 	VectorD N0;
 	// Convection flux limiter type
-	fluxLimiter fluxLim = fluxLimiter(0);
+	fluxLimiter fluxLim = fluxLimiter(6);
 
 	// Class methods
 	public:

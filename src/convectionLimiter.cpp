@@ -48,6 +48,7 @@ void fluxLimiter::setLimiterFunction(int limitType){
 		case 3: fluxLimiterPtr = &fluxLimiter::minMod; break;
 		case 4: fluxLimiterPtr = &fluxLimiter::sweby; break;
 		case 5: fluxLimiterPtr = &fluxLimiter::firstOrder; break;
+		case 6: fluxLimiterPtr = &fluxLimiter::muscl; break;
 
 	}
 }
@@ -133,6 +134,18 @@ double fluxLimiter::sweby(const double r){
 	val2 = std::min(r, beta);
 	psi = std::max(val1, val2);
 	psi = std::max(0., psi);
+	return psi;
+}
+//*****************************************************************************
+// MUSCL limiter
+//
+// @param r		Flux slope
+//*****************************************************************************
+double fluxLimiter::muscl(const double r){
+	double psi, val1, val2;
+	val1 = std::min(2.*r, (r+1.)/2.);
+	val2 = std::min(val1, 2.);
+	psi = std::max(0., val2);
 	return psi;
 }
 
