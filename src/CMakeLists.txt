@@ -19,15 +19,13 @@ add_library(liblibowski STATIC ${PROJECT_SOURCES})
 target_include_directories(liblibowski PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(liblibowski PUBLIC utillibowski)
 
-if(${MPI_FOUND})
-	target_compile_definitions(liblibowski PRIVATE HAVE_MPI)
-endif()
-
 # The main program
 add_executable(libowski main.cpp)
 if(${MPI_FOUND})
+	target_link_libraries(liblibowski PRIVATE ${MPI_LIBRARIES})
 	target_link_libraries(libowski PRIVATE liblibowski ${MPI_LIBRARIES})
 	target_compile_definitions(libowski PRIVATE HAVE_MPI)
+	target_compile_definitions(liblibowski PRIVATE HAVE_MPI)
 else()
 	target_link_libraries(libowski PRIVATE liblibowski)
 endif()
