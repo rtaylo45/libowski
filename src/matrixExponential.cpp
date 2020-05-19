@@ -28,11 +28,20 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type,
 		solver = new method2(krylovBool, krylovDim);
 		return solver;
 	}
+	else if (type == "LPAM"){
+		solver = new LPAM(krylovBool, krylovDim);
+		return solver;
+	}
 	else {
 		std::string errorMessage =
-			" You fucked up and tried to pick a matrix \n"
-			" exponential solver that Zack has not put in. \n"
-			" Please constact Zack at 1 800 eat shit";
+			" You have selected a matrix exponential solver\n"
+			" that is not in libowski. Avaliable solvers are\n\n"
+			" CRAM\n"
+			" parabolic\n"
+			" hyperbolic\n"
+			" pade-method1\n"
+			" pade-method2\n"
+			" LPAM\n";
 		libowskiException::runtimeError(errorMessage);
 		return solver;
 	}
@@ -709,4 +718,159 @@ MatrixCLD hyperbolic::hyperbolicContourCoeffs(int N){
 		coeffs(i,1) = alpha(i);	
 	}
 	return coeffs;
+}
+
+//*****************************************************************************
+// LPAM Methods
+//*****************************************************************************
+
+//*****************************************************************************
+// Initilizer for the LPAM solver
+//*****************************************************************************
+LPAM::LPAM(bool krylovBool, int krylovDim):matrixExponential(krylovBool, 
+	krylovDim){};
+
+//*****************************************************************************
+// Calculates the leading coefficient for the Laguerre Polynomial
+//
+// @param tau	Scaling coefficient for Leguerre Polynomial
+// @param a		Some other factor thing that is used for Leguerre Polynomials
+// @param n		Coefficient of expansion
+//*****************************************************************************
+double LPAM::laguerreCoefficient(double tau, double a, double n){
+	double temp1, temp2;	
+
+	if (n == 0){
+		return 1.;
+	}
+	else if (n == 1){
+		return 1. + a - tau;
+	}
+	else{
+		temp1 = (2.*(n - 1.) + 1. + a - tau)*laguerreCoefficient(tau, a, n-1);
+		temp2 = (n - 1. + a)*laguerreCoefficient(tau, a, n-2);
+		return 1./(n)*(temp1 - temp2);
+	}
+
+}
+
+//*****************************************************************************
+// Calculates the Laguerre Polynomial vector 
+//
+// @param tau		Scaling coefficient for Leguerre Polynomial
+// @param a			Some other factor thing that is used for Leguerre Polynomials
+// @param k			The current sum iteration
+// @param n0		Initial condition
+// @param AScaled	The scaled matrix
+//*****************************************************************************
+VectorD LPAM::laguerrePolynomial(double tau, int a, int k, const VectorD& n0, 
+	const SparseMatrixD& AScaled){
+	double lc = std::pow(-1., k);
+	VectorD solveProduct, vect;
+	SparseMatrixD ident(AScaled.rows(),AScaled.cols());
+	ident.setIdentity();
+
+	vect = 0.*n0;
+	solveProduct = solver.solve(n0);
+
+	// Build the matrix inverse part of the Polynomial
+	for (int n = 0; n < a+k; n++){
+		solveProduct = solver.solve(solveProduct);
+	}
+
+	if (k == 0){ return ident * solveProduct;};
+
+	vect = AScaled * solveProduct;
+
+	for (int n = 0; n < k-1; n++){
+		vect = AScaled * vect;
+	}
+
+	return lc*vect;
+}
+
+//*****************************************************************************
+// Calculates the Laguerre Polynomial matrix
+//
+// @param tau		Scaling coefficient for Leguerre Polynomial
+// @param a			Some other factor thing that is used for Leguerre Polynomials
+// @param k			The current sum iteration
+// @param AScaled	The scaled matrix
+//*****************************************************************************
+SparseMatrixD LPAM::laguerrePolynomial(double tau, int a, int k, const 
+	SparseMatrixD& AScaled){
+	double lc = std::pow(-1., k);
+	SparseMatrixD solveProduct, matrix;
+	SparseMatrixD ident(AScaled.rows(),AScaled.cols());
+	ident.setIdentity();
+
+	matrix = 0.*AScaled;
+	solveProduct = matInverse;
+	if (k == 0){ return ident * solveProduct;};
+
+	// Build the matrix inverse part of the Polynomial
+	for (int n = 0; n < a+k; n++){
+		solveProduct = solveProduct * matInverse;
+	}
+
+	matrix = AScaled * solveProduct;
+
+	for (int n = 0; n < k-1; n++){
+		matrix = AScaled * matrix;
+	}
+
+	return lc*matrix;
+}
+
+//*****************************************************************************
+// Calculates exp(A*t)v. The action of the matrix expoential on a vector
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param v0	Initial condition vector
+// @param t		Time step of the solve
+//*****************************************************************************
+VectorD LPAM::apply(const SparseMatrixD& A, const VectorD& v0, double t){
+	SparseMatrixD AScaled = A*t/tau;
+	SparseMatrixD ident(AScaled.rows(),AScaled.cols());
+	SparseMatrixD tempA;
+	VectorD solution = 0.*v0, lp;
+	double lc;
+	ident.setIdentity();
+	tempA = ident - AScaled;
+
+	// Compute LU decomp
+	solver.compute(tempA);
+
+	for (int n = 0; n < k; n++){
+		lc = laguerreCoefficient(tau, a, n);
+		lp = laguerrePolynomial(tau, (int)a, n, v0, AScaled);
+		solution = solution + lc*lp;
+	}
+	return solution;
+}
+
+//*****************************************************************************
+// Calculates exp(A*t). The matrix expoential
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param t		Time step of the solve
+//*****************************************************************************
+SparseMatrixD LPAM::compute(const SparseMatrixD& A, double t){
+	SparseMatrixD AScaled = A*t/tau;
+	SparseMatrixD ident(AScaled.rows(),AScaled.cols());
+	SparseMatrixD tempA = ident - AScaled;
+	SparseMatrixD matExp = 0.*A, lp;
+	double lc;
+	bool inverse = false;
+	ident.setIdentity();
+
+	// Compute the inverse
+	matInverse = MoorePenroseInv(tempA);
+
+	for (int n = 0; n < k; n++){
+		lc = laguerreCoefficient(tau, a, n);
+		lp = laguerrePolynomial(tau, (int)a, n, AScaled);
+		matExp = matExp + lc*lp;
+	}
+	return matExp;
 }

@@ -281,7 +281,6 @@ void tankProblem(int myid, matrixExponential *expSolver){
     		//std::cout << " " << std::endl;
 			//std::cout << abs(x1-sol(0))/x1 << std::endl;
 			//std::cout << abs(x2-sol(1))/x2 << std::endl;
-			//std::cout << abs(x3-sol(2)) << std::endl;
 			//std::cout << abs(x3-sol(2))/x3 << std::endl;
     		//std::cout << " " << std::endl;
 
@@ -653,6 +652,14 @@ int main(){
 
 	// Test the Krylov subspace solver
 	testKrylovSubspace(myid);
+
+	// Test the LPAM solver
+	expSolver = matrixExponentialFactory::getExpSolver("LPAM");
+	testSolverTime(myid, numprocs, expSolver);
+	tankProblem(myid, expSolver);
+	xenonIodineProblem(myid, expSolver);
+	neutronPrecursorProblem(myid, expSolver);
+
 	mpi.finalize();
 }
 
