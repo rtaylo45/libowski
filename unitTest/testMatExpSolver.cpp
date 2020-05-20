@@ -653,13 +653,6 @@ int main(){
 	// Test the Krylov subspace solver
 	testKrylovSubspace(myid);
 
-	// Test the LPAM solver
-	expSolver = matrixExponentialFactory::getExpSolver("LPAM");
-	testSolverTime(myid, numprocs, expSolver);
-	tankProblem(myid, expSolver);
-	xenonIodineProblem(myid, expSolver);
-	neutronPrecursorProblem(myid, expSolver);
-
 	mpi.finalize();
 }
 

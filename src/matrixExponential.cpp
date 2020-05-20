@@ -861,7 +861,6 @@ SparseMatrixD LPAM::compute(const SparseMatrixD& A, double t){
 	SparseMatrixD tempA = ident - AScaled;
 	SparseMatrixD matExp = 0.*A, lp;
 	double lc;
-	bool inverse = false;
 	ident.setIdentity();
 
 	// Compute the inverse

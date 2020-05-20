@@ -301,14 +301,3 @@ class matrixExponentialFactory{
 	static matrixExponential *getExpSolver(std::string, bool = false, int = 10);
 };
 #endif 
-
-
-
-
-
-
-
-
-
-
-
