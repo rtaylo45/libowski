@@ -244,6 +244,55 @@ class hyperbolic : public cauchy{
 	//**************************************************************************
 	MatrixCLD hyperbolicContourCoeffs(int);
 };
+
+//*****************************************************************************
+// Computes the matrix exponential using Laguerre Polynomials 
+//
+// "Using Generalized Laguerre Polynomials to Compute the Matrix
+// Exponential in Burnup Equations" - Ding She
+//*****************************************************************************
+class LPAM : public matrixExponential{
+	private:
+	// Sparse LU solver
+	Eigen::SparseLU<SparseMatrixD, COLAMDOrdering<int>> solver;
+	// Matrix inverse
+	SparseMatrixD matInverse;
+	// Scaling factor for Laguerre Polynomials
+	double tau = 20.;
+	// Some parameter for Laguerre Polynomials
+	double a = 20.;
+	// Number of expansion polynomials
+	int k = 18;
+	//**************************************************************************
+	// Calculates the leading Laguerre coefficient
+	//**************************************************************************
+	double laguerreCoefficient(double, double, double);
+	//**************************************************************************
+	// Calculates the polynomal for apply
+	//**************************************************************************
+	VectorD laguerrePolynomial(double, int, int, const VectorD&, const 
+		SparseMatrixD&);
+	//**************************************************************************
+	// Calculates the polynomal for compute
+	//**************************************************************************
+	SparseMatrixD laguerrePolynomial(double, int, int, const SparseMatrixD&);
+
+	public:
+	//**************************************************************************
+	// Constructor
+	//**************************************************************************
+	LPAM(bool krylovBool, int krylovDim);
+	//**************************************************************************
+	// Computes the matrix exponential action on a vector. exp(A*t)v
+	//**************************************************************************
+	VectorD apply(const SparseMatrixD&, const VectorD&, double);
+	//**************************************************************************
+	// Computes the matrix exponential. exp(A*t)
+	//**************************************************************************
+	SparseMatrixD compute(const SparseMatrixD&, double);
+};
+
+
 //*****************************************************************************
 // Matrix exponential factory class
 //*****************************************************************************
