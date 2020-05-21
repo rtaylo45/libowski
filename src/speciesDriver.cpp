@@ -315,8 +315,7 @@ void speciesDriver::solve(double solveTime){
 	double rtol = 1.e-5, diff;
 	VectorD defSourceOld, defSourceNew;
 
-	if (not matrixInit){
-		A = buildTransMatrix(augmented, 0.0);
+	if (mpi.rank == 0){
 		//dA = Eigen::MatrixXd(A*timeStep);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
@@ -329,13 +328,11 @@ void speciesDriver::solve(double solveTime){
 		//std::cout << dA.norm() << std::endl;
 		//std::cout << N0  << std::endl;
 		//matrixInit = true;
-		//N0 = buildInitialConditionVector(augmented);
 	}
-
+	A = buildTransMatrix(augmented, 0.0);
 	N0 = buildInitialConditionVector(augmented);
-
 	sol = expSolver->apply(A, N0, timeStep);
-	if (mpi.rank == 0){unpackSolution(sol);};
+	unpackSolution(sol);
 	lastSolveTime = solveTime;
 	step += 1;
 }
@@ -354,15 +351,11 @@ void speciesDriver::solveImplicit(double solveTime){
 	double rtol = 1.e-5, diff = 5.0;
 	VectorD defSourceOld, defSourceNew;
 
+	A = buildTransMatrix(augmented, 0.0);
+	//matrixInit = true;
 	solOld = buildInitialConditionVector(augmented);
-	if (not matrixInit){
-		A = buildTransMatrix(augmented, 0.0);
-		//matrixInit = true;
-	}
-
 	sol = intSolver->integrate(A, solOld, timeStep);
-	
-	if (mpi.rank == 0){unpackSolution(sol);};
+	unpackSolution(sol);
 	lastSolveTime = solveTime;
 }
 
@@ -376,13 +369,15 @@ void speciesDriver::solve(){
 	bool augmented = false;
 	SparseLU<SparseMatrixD, COLAMDOrdering<int> > LinearSolver;
 
-	A = buildTransMatrix(augmented, 0.0);
-	b = buildbVector();
-	dA = Eigen::MatrixXd(A);
+	if (mpi.rank == 0){
+		A = buildTransMatrix(augmented, 0.0);
+		b = buildbVector();
+		dA = Eigen::MatrixXd(A);
 
-	LinearSolver.compute(A);
-	sol = LinearSolver.solve(b);
-	if (mpi.rank == 0){unpackSolution(sol);};
+		LinearSolver.compute(A);
+		sol = LinearSolver.solve(b);
+		unpackSolution(sol);
+	}
 }
 
 //*****************************************************************************

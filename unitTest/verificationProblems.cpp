@@ -1285,8 +1285,8 @@ void testNeutronPrecursorsFlow(int myid){
 //*****************************************************************************
 void testNeutronPrecursorsMultiChanFlow(int myid){
 	double t = 0.0;
-	int steps = 2;
-	double totalTime = 10.0;
+	int steps = 10;
+	double totalTime = 30.0;
 	double dt = totalTime/steps;
 	int xCells = 14, yCells = 32;
 	double xLength = 4.5, yLength = 15.5;
@@ -1418,7 +1418,6 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 			spec.setSpeciesSource(i, j, c6ID, c6Coeffs, s6);
 		}
 	}
-
 	for (int k = 0; k < steps; k++){
 		t = t + dt;
 		// Solve with CRAM
@@ -1428,7 +1427,7 @@ void testNeutronPrecursorsMultiChanFlow(int myid){
 
 		//outputFile.open("precursorsMultiChan.out", std::ios::out | std::ios::trunc);
 		//outputFile << "Time: "+std::to_string(t)+"\n";
-		printf (" %4.6f \n", t);
+		if (myid==0){printf (" %4.6f \n", t);};
 	}
 	std::cout.precision(16);
 		// Gets species Concentrations

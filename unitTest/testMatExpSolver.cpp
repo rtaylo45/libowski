@@ -190,6 +190,7 @@ void testSolverTime(int myid, int numprocs, matrixExponential *expSolver){
 	outputFile.open(fileName);
 
 	for (int n = 10; n <= 10; n = n*10){
+		std::cout << myid << " " << mpi.rank << " " << mpi.size << std::endl;
 		if (myid==0){std::cout << "Size: "+std::to_string(n) << std::endl;};
 		if (myid==0){outputFile << "Size: "+std::to_string(n)+"\n";};
 
@@ -590,22 +591,24 @@ void testKrylovSubspace(int myid){
 	ana1 = anaExpSolverMethod1->apply(A, b, t);
 	ana2 = anaExpSolverMethod2->apply(A, b, t);
 
-	// Runs through different subspace dimensions
-	for (int i= 1; i <= 100; i++){
-		// Get the solvers
-		testExpSolverMethod1 = matrixExponentialFactory::getExpSolver("pade-method1", true, i);
-		testExpSolverMethod2 = matrixExponentialFactory::getExpSolver("pade-method2", true, i);
-		// Generate soltuion
-		approx1 = testExpSolverMethod1->apply(A, b, t);
-		approx2 = testExpSolverMethod2->apply(A, b, t);
-		// Test against the base solution without the krylov subspace
-		error1 = (ana1 - approx1).norm();
-		error2 = (ana2 - approx2).norm();
+	if (myid ==0){
+		// Runs through different subspace dimensions
+		for (int i= 1; i <= 100; i++){
+			// Get the solvers
+			testExpSolverMethod1 = matrixExponentialFactory::getExpSolver("pade-method1", true, i);
+			testExpSolverMethod2 = matrixExponentialFactory::getExpSolver("pade-method2", true, i);
+			// Generate soltuion
+			approx1 = testExpSolverMethod1->apply(A, b, t);
+			approx2 = testExpSolverMethod2->apply(A, b, t);
+			// Test against the base solution without the krylov subspace
+			error1 = (ana1 - approx1).norm();
+			error2 = (ana2 - approx2).norm();
 
-		// Do assertions, After subspace dim 49 the minumal error should be reached
-		if (i > 49) {
-			assert(error1 < 1.e-13);
-			assert(error2 < 1.e-13);
+			// Do assertions, After subspace dim 49 the minumal error should be reached
+			if (i > 49) {
+				assert(error1 < 1.e-13);
+				assert(error2 < 1.e-13);
+			}
 		}
 	}
 }

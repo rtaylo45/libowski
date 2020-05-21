@@ -117,36 +117,39 @@ void problem1x(int myid){
 			//spec.solveImplicit(t);
 		}
 		// Loops to get solution info
-		for (int i = 0; i < xCells; i++){
-			for (int j = 0; j < yCells; j++){
-				cell = model.getCellByLoc(i,j);	
-				xc = cell->x;
-				cSol = exp(-std::pow((xc-velocity*t-30.)/10., 2.));
-				cCon = spec.getSpecies(i, j, cID);
-				relativeError = std::abs(cSol-cCon);
-				l1 += std::abs(cSol-cCon);
-				l2 += l1*l1;
-				linf = std::max(linf, relativeError);
+		if (myid == 0){
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j);	
+					xc = cell->x;
+					cSol = exp(-std::pow((xc-velocity*t-30.)/10., 2.));
+					cCon = spec.getSpecies(i, j, cID);
+					relativeError = std::abs(cSol-cCon);
+					l1 += std::abs(cSol-cCon);
+					l2 += l1*l1;
+					linf = std::max(linf, relativeError);
 
-				outputFile << xc << " " << cSol << " " << cCon << "\n";
+					outputFile << xc << " " << cSol << " " << cCon << "\n";
+				}
 			}
+			printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
+					linf, l1/float(xCells), l2/float(xCells));
+			outputFile << "\n";
+			linfVector.push_back(linf);
+			l1Vector.push_back(l1/float(xCells));
+			l2Vector.push_back(l2/float(xCells));
 		}
-		printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
-				linf, l1/float(xCells), l2/float(xCells));
-		outputFile << "\n";
-		linfVector.push_back(linf);
-		l1Vector.push_back(l1/float(xCells));
-		l2Vector.push_back(l2/float(xCells));
-
 	}
 	outputFile << "end";
 	// Loop through error vectors to check convergence
-	for (int i = 1; i < linfVector.size(); i++){
-		linfRate = round(log2(linfVector[i-1]/linfVector[i]));
-		l1Rate = round(log2(l1Vector[i-1]/l1Vector[i]));
-		l2Rate = round(log2(l2Vector[i-1]/l2Vector[i]));
-		assert(l1Rate == 2);
-		assert(l2Rate == 2);
+	if (myid == 0){
+		for (int i = 1; i < linfVector.size(); i++){
+			linfRate = round(log2(linfVector[i-1]/linfVector[i]));
+			l1Rate = round(log2(l1Vector[i-1]/l1Vector[i]));
+			l2Rate = round(log2(l2Vector[i-1]/l2Vector[i]));
+			assert(l1Rate == 2);
+			assert(l2Rate == 2);
+		}
 	}
 }
 
@@ -235,35 +238,39 @@ void problem1y(int myid){
 			spec.solve(t);
 		}
 		// Loops to get solution info
-		for (int i = 0; i < xCells; i++){
-			for (int j = 0; j < yCells; j++){
-				cell = model.getCellByLoc(i,j);	
-				yc = cell->y;
-				cSol = exp(-std::pow((yc-velocity*t-30.)/10., 2.));
-				cCon = spec.getSpecies(i, j, cID);
-				relativeError = std::abs(cSol-cCon);
-				l1 += std::abs(cSol-cCon);
-				l2 += l1*l1;
-				linf = std::max(linf, relativeError);
+		if (myid == 0){
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j);	
+					yc = cell->y;
+					cSol = exp(-std::pow((yc-velocity*t-30.)/10., 2.));
+					cCon = spec.getSpecies(i, j, cID);
+					relativeError = std::abs(cSol-cCon);
+					l1 += std::abs(cSol-cCon);
+					l2 += l1*l1;
+					linf = std::max(linf, relativeError);
 
-				outputFile << yc << " " << cSol << " " << cCon << "\n";
+					outputFile << yc << " " << cSol << " " << cCon << "\n";
+				}
 			}
+			printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dy, 
+					linf, l1/float(yCells), l2/float(yCells));
+			outputFile << "\n";
+			linfVector.push_back(linf);
+			l1Vector.push_back(l1/float(yCells));
+			l2Vector.push_back(l2/float(yCells));
 		}
-		printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dy, 
-				linf, l1/float(yCells), l2/float(yCells));
-		outputFile << "\n";
-		linfVector.push_back(linf);
-		l1Vector.push_back(l1/float(yCells));
-		l2Vector.push_back(l2/float(yCells));
 	}
 	outputFile << "end";
 	// Loop through error vectors to check convergence
-	for (int i = 1; i < linfVector.size(); i++){
-		linfRate = round(log2(linfVector[i-1]/linfVector[i]));
-		l1Rate = round(log2(l1Vector[i-1]/l1Vector[i]));
-		l2Rate = round(log2(l2Vector[i-1]/l2Vector[i]));
-		assert(l1Rate == 2);
-		assert(l2Rate == 2);
+	if (myid == 0){
+		for (int i = 1; i < linfVector.size(); i++){
+			linfRate = round(log2(linfVector[i-1]/linfVector[i]));
+			l1Rate = round(log2(l1Vector[i-1]/l1Vector[i]));
+			l2Rate = round(log2(l2Vector[i-1]/l2Vector[i]));
+			assert(l1Rate == 2);
+			assert(l2Rate == 2);
+		}
 	}
 }
 //*****************************************************************************
@@ -334,27 +341,29 @@ void problem2(int myid){
 			spec.solve(t);
 		}
 		// Loops to get solution info
-		for (int i = 0; i < xCells; i++){
-			for (int j = 0; j < yCells; j++){
-				cell = model.getCellByLoc(i,j);	
-				xc = cell->x;
-				if (xc < velocity*t){
-					cSol = 1.0;
-				}
-				else {
-					cSol = 0.0;
-				}
-				cCon = spec.getSpecies(i, j, cID);
-				relativeError = std::abs(cSol-cCon);
-				maxRelativeError = std::max(maxRelativeError, relativeError);
-				rmse += std::pow(relativeError,2.);
+		if (myid == 0){
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j);	
+					xc = cell->x;
+					if (xc < velocity*t){
+						cSol = 1.0;
+					}
+					else {
+						cSol = 0.0;
+					}
+					cCon = spec.getSpecies(i, j, cID);
+					relativeError = std::abs(cSol-cCon);
+					maxRelativeError = std::max(maxRelativeError, relativeError);
+					rmse += std::pow(relativeError,2.);
 
-				outputFile << xc << " " << cSol << " " << cCon << "\n";
+					outputFile << xc << " " << cSol << " " << cCon << "\n";
+				}
 			}
+			//printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
+			//		maxRelativeError, std::pow(rmse/float(xCells), 0.5));
+			outputFile << "\n";
 		}
-		printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
-				maxRelativeError, std::pow(rmse/float(xCells), 0.5));
-		outputFile << "\n";
 	}
 	outputFile << "end";
 }
@@ -458,35 +467,37 @@ void problem3(int myid){
 				spec.solve(t);
 			}
 			// Loops to get solution info
-			for (int i = 0; i < xCells; i++){
-				for (int j = 0; j < yCells; j++){
-					cell = model.getCellByLoc(i,j);	
-					xc = cell->x;
+			if (myid == 0){
+				for (int i = 0; i < xCells; i++){
+					for (int j = 0; j < yCells; j++){
+						cell = model.getCellByLoc(i,j);	
+						xc = cell->x;
 
-					if (xc < 20.+velocity*t or xc > 80.+velocity*t){
-						cSol = 0.0;
-					}
-					else if (xc >= 20.+velocity*t and xc <= 40.+velocity*t){
-						cSol = 1.0;
-					}
-					else if (xc >= 60.+velocity*t and xc <= 80.+velocity*t){
-						cSol = 1.0;
-					}
-					else {
-						cSol = 0.5;
-					}
+						if (xc < 20.+velocity*t or xc > 80.+velocity*t){
+							cSol = 0.0;
+						}
+						else if (xc >= 20.+velocity*t and xc <= 40.+velocity*t){
+							cSol = 1.0;
+						}
+						else if (xc >= 60.+velocity*t and xc <= 80.+velocity*t){
+							cSol = 1.0;
+						}
+						else {
+							cSol = 0.5;
+						}
 
-					cCon = spec.getSpecies(i, j, cID);
-					relativeError = std::abs(cSol-cCon);
-					maxRelativeError = std::max(maxRelativeError, relativeError);
-					rmse += std::pow(relativeError,2.);
+						cCon = spec.getSpecies(i, j, cID);
+						relativeError = std::abs(cSol-cCon);
+						maxRelativeError = std::max(maxRelativeError, relativeError);
+						rmse += std::pow(relativeError,2.);
 
-					outputFile << xc << " " << cSol << " " << cCon << "\n";
+						outputFile << xc << " " << cSol << " " << cCon << "\n";
+					}
 				}
+				//printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
+				//		maxRelativeError, std::pow(rmse/float(xCells), 0.5));
+				outputFile << "\n";
 			}
-			printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
-					maxRelativeError, std::pow(rmse/float(xCells), 0.5));
-			outputFile << "\n";
 		}
 	}
 	outputFile << "end";
@@ -582,29 +593,31 @@ void problem4(int myid){
 				//spec.solveImplicit(t);
 			}
 			// Loops to get solution info
-			for (int i = 0; i < xCells; i++){
-				for (int j = 0; j < yCells; j++){
-					cell = model.getCellByLoc(i,j);	
-					xc = cell->x;
+			if (myid == 0){
+				for (int i = 0; i < xCells; i++){
+					for (int j = 0; j < yCells; j++){
+						cell = model.getCellByLoc(i,j);	
+						xc = cell->x;
 
-					if (xc < 20.+velocity*t or xc > 30.+velocity*t){
-						cSol = 0.0;
+						if (xc < 20.+velocity*t or xc > 30.+velocity*t){
+							cSol = 0.0;
+						}
+						else {
+							cSol = 1.0;
+						}
+
+						cCon = spec.getSpecies(i, j, cID);
+						relativeError = std::abs(cSol-cCon);
+						maxRelativeError = std::max(maxRelativeError, relativeError);
+						rmse += std::pow(relativeError,2.);
+
+						outputFile << xc << " " << cSol << " " << cCon << "\n";
 					}
-					else {
-						cSol = 1.0;
-					}
-
-					cCon = spec.getSpecies(i, j, cID);
-					relativeError = std::abs(cSol-cCon);
-					maxRelativeError = std::max(maxRelativeError, relativeError);
-					rmse += std::pow(relativeError,2.);
-
-					outputFile << xc << " " << cSol << " " << cCon << "\n";
 				}
+				//printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
+				//		maxRelativeError, std::pow(rmse/float(xCells), 0.5));
+				outputFile << "\n";
 			}
-			printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
-					maxRelativeError, std::pow(rmse/float(xCells), 0.5));
-			outputFile << "\n";
 		}
 	}
 	outputFile << "end";
@@ -619,4 +632,6 @@ int main(){
 	problem2(myid);
 	problem3(myid);
 	problem4(myid);
+
+	mpi.finalize();
 }

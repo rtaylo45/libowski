@@ -41,7 +41,6 @@ void moleProblem1(int myid){
 	int yCells = 1, xCells = 1000;
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	std::vector<std::string> solvers {"hyperbolic", "pade-method2"};
-	//std::vector<std::string> solvers {"CRAM"};
 	double xLength = 100., yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
 	double lambda = 0.1;	// 1/s
@@ -133,10 +132,10 @@ void moleProblem1(int myid){
 						assert(isApprox(cCon, cSol));
 					}
 				}
+				outputFile << "\n";
+				printf("%15s %4.2f %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, relativeError,
+						std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
 			}
-			outputFile << "\n";
-			printf("%15s %4.2f %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, relativeError,
-					std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
 			// Clean species
 			spec.clean();
 		}
@@ -290,13 +289,13 @@ void moleProblem2(int myid){
 							rmse += std::pow(relativeError,2.);
 						}
 					}
+					outputFile << "\n";
+					//std::cout << solverType << " " << dx << " " << dt 
+					//	<< " " << percentError << "\n";
+					// clean species
+					printf("%15s %2.3f %4.2E %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, dx, 
+							maxRelativeError, std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
 				}
-				outputFile << "\n";
-				//std::cout << solverType << " " << dx << " " << dt 
-				//	<< " " << percentError << "\n";
-				// clean species
-				printf("%15s %2.3f %4.2E %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, dx, 
-						maxRelativeError, std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
 				spec.clean();
 			}
 			spec.clean();

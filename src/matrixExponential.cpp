@@ -1,6 +1,5 @@
 #include "matrixExponential.h"
 #include <unsupported/Eigen/MatrixFunctions>
-#define MTAG1 1
 //*****************************************************************************
 // Methods for MatrixExponential factory class
 //*****************************************************************************
@@ -479,7 +478,6 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 	// MPI stuff
 	const int myid = mpi.rank;			// Processor ID
 	const int numprocs = mpi.size;	// Number of processors
-	const int eleCount = A.rows();	// Number of species in the system
 
 	// Number of poles
 	const int s = theta.rows();	
@@ -487,13 +485,28 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 	SparseMatrixCLD tempA(A.rows(),A.cols());			// Temp variable in solution
 	VectorCLD v, tempB, v0cd, myV; 
 	VectorD solutionVector;									// Solution
-	v0cd = v0.cast<std::complex<long double>>();
 	SparseMatrixCLD ident(A.rows(),A.cols());	// Identity matrix
 
-	myV = 0.*v0cd, v = 0*v0cd;
 	ident.setIdentity();									// Builds matrix
+	v0cd = v0.cast<std::complex<long double>>(); // Change the vector type
+	myV = 0.*v0cd, v = 0.*v0cd;
 	At = A.cast<std::complex<long double>>()*t;	// Change matrix type
 	solver.analyzePattern(At);							// analyze sparsisty pattern
+
+	// Sends the correct matrix and vector to each processor if the processor
+	// isn't the main node
+	if (mpi.rank == 0){ 
+		// Sends data from the slave nodes
+		for (int islave = 1; islave < numprocs; islave++) {
+			mpi.send(At, islave, 100);
+			mpi.send(v0cd, islave, 200);
+		}
+	}
+	else{
+		// Receives the data from the master node
+		mpi.recv(At, 0, 100);
+		mpi.recv(v0cd, 0, 200);
+	}
 
 	// Loops over the imaginary poles. This is a linear solve over 8 lineary 
 	// independent systems. The sum of all the independent solutions is w.
@@ -504,16 +517,17 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 		solver.factorize(tempA);
 
 		myV = myV + solver.solve(tempB);
+
 	}
 	if (myid != 0){
 		// Sends solution data to the master node 
-		mpi.send(myV, eleCount, 0, MTAG1);
+		mpi.send(myV, 0, 300);
 	}
 	else {
 		v = myV;
 		// Receives data from the slave nodes
 		for (int islave = 1; islave < numprocs; islave++) {
-			myV = mpi.recv(myV, eleCount, islave, MTAG1);
+			mpi.recv(myV, islave, 300);
 			v = v + myV;
 		}
 	}
@@ -542,7 +556,6 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 	// MPI stuff
 	const int myid = mpi.rank;
 	const int numprocs = mpi.size;
-	const int eleCount = A.rows()*A.rows();
 
 	// Number of poles
 	const int s = theta.rows();
@@ -559,6 +572,19 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 	expA = 0*A.cast<std::complex<long double>>();
 	At = A.cast<std::complex<long double>>()*t;
 
+	// Sends the correct matrix and vector to each processor if the processor
+	// isn't the main node
+	if (mpi.rank == 0){ 
+		// Sends data from the slave nodes
+		for (int islave = 1; islave < numprocs; islave++) {
+			mpi.send(At, islave, 100);
+		}
+	}
+	else{
+		// Receives the data from the master node
+		mpi.recv(At, 0, 100);
+	}
+
 	// Loops over the imaginary poles to compute the matrix exponential
 	for (int k = myid; k < s; k += numprocs){
 		tempA = At - theta(k)*ident;
@@ -569,13 +595,13 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 	}
 	if (myid != 0){
 		// Sends solution data to the master node 
-		mpi.send(myExpA, eleCount, 0, MTAG1);
+		mpi.send(myExpA, 0, 200);
 	}
 	else {
 		expA = myExpA;
 		// Receives data from the slave nodes
 		for (int islave = 1; islave < numprocs; islave++) {
-			myExpA = mpi.recv(myExpA, eleCount, islave, MTAG1);
+			mpi.recv(myExpA, islave, 200);
 			expA = expA + myExpA;
 		}
 	}
