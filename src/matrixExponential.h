@@ -73,14 +73,29 @@ class taylor : public matrixExponential{
 	//**************************************************************************
 	// Selects the Taylor series degree for the approximation
 	//**************************************************************************
-	void parameters(const SparseMatrixD&, const VectorD&, MatrixD&, MatrixD&, 
-		int = 55, int = 8, bool = true, bool = false);
+	void parameters(const SparseMatrixD&, const VectorD&, MatrixD&, int = 55, 
+		int = 8, bool = true, bool = false);
+	//**************************************************************************
+	// Internal fucntion that computes the action of a matrix exponential on 
+	// a vector. exp(A*t)v
+	//**************************************************************************
+	VectorD expmv(const SparseMatrixD&, const double, const VectorD&, MatrixD&,
+		bool = true, bool = false);
+
 
 	public:
 	//**************************************************************************
 	// Constructor
 	//**************************************************************************
 	taylor(bool, int);
+	//**************************************************************************
+	// Computes the matrix exponential action on a vector. exp(A*t)v
+	//**************************************************************************
+	VectorD apply(const SparseMatrixD&, const VectorD&, double);
+	//**************************************************************************
+	// Computes the matrix exponential. exp(A*t)
+	//**************************************************************************
+	SparseMatrixD compute(const SparseMatrixD&, double);
 	
 };
 

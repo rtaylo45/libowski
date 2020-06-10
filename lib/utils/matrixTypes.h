@@ -18,6 +18,8 @@ typedef Matrix<std::complex<long double>, Dynamic, Dynamic> MatrixCLD;
 typedef Matrix<double, Dynamic, Dynamic> MatrixD;
 // Long double dynamic matrix
 typedef Matrix<long double, Dynamic, Dynamic> MatrixLD;
+// Integer matrix
+typedef Matrix<int, Dynamic, Dynamic> MatrixI;
 
 // Dense Array stuff. Arrays in eigen allow for element wise operations.
 // They are useful for holding values that i can manipulate.
@@ -27,6 +29,8 @@ typedef Array<long double, Dynamic, Dynamic> ArrayXLD;
 typedef Array<std::complex<long double>, Dynamic, Dynamic> ArrayXCLD;
 // Double dynamic array
 typedef Array<double, Dynamic, Dynamic> ArrayD;
+// Integer array
+typedef Array<int, Dynamic, Dynamic> ArrayI;
 
 // Useful type definitions for sparce matrix
 // Complex long double dynamic matrix

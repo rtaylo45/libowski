@@ -71,6 +71,7 @@ taylor::taylor(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
    std::ifstream inFile;
    double x;
    int counter = 0;
+	name = "taylor";
 
    inFile.open(thetaFname);
    if (!inFile) {
@@ -90,17 +91,16 @@ taylor::taylor(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
 // @param A				Sparse transition matrix
 // @param b				Initional condition matrix
 // @param M				Returned matrix M
-// @param alpha		Returned matrix alpha
 // @param m_max		Max order of Taylor series expansion
 // @param p_max		Parameter from paper
 // @param shift		Bool to shift the norm of the matrix
 // @param forceEstm	Bool for the hoice of how to choose m
 //*****************************************************************************
 void taylor::parameters(const SparseMatrixD& A, const VectorD& b, MatrixD& M,
-	MatrixD& alpha, int m_max, int p_max, bool shift, bool forceEstm){
+	int m_max, int p_max, bool shift, bool forceEstm){
 	int n = A.cols();
 	double normA, tempLim, c, mu;
-	MatrixD eta;
+	MatrixD eta, alpha;
 	SparseMatrixD ident(A.rows(), A.cols()), Ai;
 	tempLim = 4.*theta(m_max)*(double)p_max*((double)p_max+3.)/
 		((double)m_max*(double)b.rows());
@@ -131,8 +131,110 @@ void taylor::parameters(const SparseMatrixD& A, const VectorD& b, MatrixD& M,
 			alpha(p-1) = std::max(eta(p-1), eta(p));
 		}
 	}
+	M = MatrixD::Zero(m_max, p_max-1);
+	for (int p = 2; p < p_max+1; p++){
+		for (int m = p*(p-1)-1; m_max+1; m++){
+			M(m-1, p-2) = alpha(p-2)/theta(m-1);
+		}
+	}
+}
+//*****************************************************************************
+// Private version
+// Calculates exp(A*t)v. The action of the matrix expoential on a vector
+//*****************************************************************************
+VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
+	MatrixD& M, bool shift, bool fullTerm){
+	int n = A.cols(), s = 1, m, p, m_max, cost, costi;
+	double tol = std::pow(2.,-53.), tt, mu, eta, c1, c2;
+	SparseMatrixD ident(A.rows(), A.cols()), Ai = A;
+	VectorI diag, U, maxCols;
+	MatrixI C;
+	VectorD f, b = v0;
+	
+	ident.setIdentity();
+	if (shift){
+		mu = Ai.diagonal().sum()/((double)n);
+		Ai = Ai - mu*ident;
+	}
+
+	if (M.size() == 0){
+		tt = 1.;
+		parameters(Ai*t, b, M);
+	}
+	else{
+		tt = t;
+	}
+
+	if (t == 0){
+		m = 0;
+	}
+	else{
+		m_max = M.rows();
+		p = M.cols();
+		diag = VectorI::Zero(m_max);
+		U = MatrixI::Zero(m_max, m_max);
+		for (int i=1; i<m_max+1; i++){ diag(i-1) = i;};
+		U.diagonal() = diag;
+		C = MatrixI((std::abs(tt)*M).array().ceil().cast<int>()).transpose() * U;
+
+		maxCols = C.colwise().maxCoeff();
+		for (int i = 0; i < maxCols.cols(); i++){ 
+			if (maxCols(i) < cost and maxCols(i) != 0){
+				cost = maxCols(i);
+				costi = i;
+			}
+		}
+		s = std::max(cost/m, 1);
+	}
+	if (shift){
+		eta = std::exp(t*mu/(double)s);
+	}
+	else{
+		eta = 1.;
+	}
+	f = v0;
+	for (int i = 1; i < s+1; i++){
+		c1 = b.lpNorm<Infinity>();
+		for (int k = 1; k	< m+1; k++){
+			b = (t/((double)s*(double)k))*(A*b);
+			f = f + b;
+			c2 = b.lpNorm<Infinity>();
+			if (not fullTerm){
+				if (c1 + c2 <= tol*f.lpNorm<Infinity>()){
+					break;
+				}
+			}
+		}
+		f = eta*f;
+		b = f;
+	}
+	return f;		 
 }
 
+//*****************************************************************************
+// Calculates exp(A*t)v. The action of the matrix expoential on a vector
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param v0	Initial condition vector
+// @param t		Time step of the solve
+//*****************************************************************************
+VectorD taylor::apply(const SparseMatrixD& A, const VectorD& v0, double t){
+
+	return v0;
+}
+
+//*****************************************************************************
+// Calculates exp(A*t). The the matrix expoential
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param t		Time step of the solve
+//*****************************************************************************
+SparseMatrixD taylor::compute(const SparseMatrixD& A, double t){
+	std::string errorMessage =
+		" The Taylor series method cannot be used with compute\n";
+	libowskiException::runtimeError(errorMessage);
+	return A;
+}
 
 //*****************************************************************************
 // Methods for Pade Class
