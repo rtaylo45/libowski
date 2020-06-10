@@ -62,6 +62,79 @@ matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
 }
 
 //*****************************************************************************
+// Methods for Taylor series Class
+//
+//*****************************************************************************
+taylor::taylor(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
+	krylovDim){
+	std::string thetaFname = "/data/theta.txt";
+   std::ifstream inFile;
+   double x;
+   int counter = 0;
+
+   inFile.open(thetaFname);
+   if (!inFile) {
+		std::string errorMessage =
+			" Unable to find the Taylor solver theta file\n";
+		libowskiException::runtimeError(errorMessage);
+   }   
+   while (inFile >> x) {
+      theta(counter) = x;
+      counter ++; 
+   }   	
+}
+
+//*****************************************************************************
+// Selects the Taylor series degree for the approximation
+//
+// @param A				Sparse transition matrix
+// @param b				Initional condition matrix
+// @param M				Returned matrix M
+// @param alpha		Returned matrix alpha
+// @param m_max		Max order of Taylor series expansion
+// @param p_max		Parameter from paper
+// @param shift		Bool to shift the norm of the matrix
+// @param forceEstm	Bool for the hoice of how to choose m
+//*****************************************************************************
+void taylor::parameters(const SparseMatrixD& A, const VectorD& b, MatrixD& M,
+	MatrixD& alpha, int m_max, int p_max, bool shift, bool forceEstm){
+	int n = A.cols();
+	double normA, tempLim, c, mu;
+	MatrixD eta;
+	SparseMatrixD ident(A.rows(), A.cols()), Ai;
+	tempLim = 4.*theta(m_max)*(double)p_max*((double)p_max+3.)/
+		((double)m_max*(double)b.rows());
+
+	// A matrix that is internal to the fucntion
+	Ai = A;
+	ident.setIdentity();
+
+	if (shift){
+		mu = A.diagonal().sum()/((double)n);
+		Ai = Ai - mu*ident;
+	}
+	if (not forceEstm){ normA = l1norm(Ai);};
+	if (not forceEstm and normA <= tempLim){
+		c = normA;
+		alpha = c*MatrixD::Ones(p_max-1,1);
+	}
+	else{
+		eta = MatrixD::Zero(p_max,1);
+		alpha = MatrixD::Zero(p_max-1,1);
+		for (int p = 1; p < p_max+1; p++){
+			c = normAm(Ai, p+1);
+			c = std::pow(c, 1./((double)p+1.));
+			eta(p-1) = c;
+		}
+
+		for (int p = 1; p < p_max; p++){
+			alpha(p-1) = std::max(eta(p-1), eta(p));
+		}
+	}
+}
+
+
+//*****************************************************************************
 // Methods for Pade Class
 //
 // The pade functions are taken from the eigen3 unsuported matrix exponential
@@ -333,8 +406,8 @@ void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 
 	// try pade3
 	const SparseMatrixD A2 = A*A;
-	d6 = std::pow(normest(A2,3), 1./6.);
-	eta1 = std::max(std::pow(normest(A2,2), 1./4.), d6);
+	d6 = std::pow(normAm(A2,3), 1./6.);
+	eta1 = std::max(std::pow(normAm(A2,2), 1./4.), d6);
 	if (eta1 < 1.495585217958292e-002 and ell(A,3) == 0){
 		// Calculate U and V using pade3
 		pade3(A, A2, U, V);
@@ -356,7 +429,7 @@ void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 	// try pade 7 and 9
 	const SparseMatrixD A6 = A4*A2;
 	d6 = std::pow(l1norm(A6), 1./6.);
-	d8 = std::pow(normest(A4,2),1./8.);
+	d8 = std::pow(normAm(A4,2),1./8.);
 	eta3 = std::max(d6, d8);
 	if (eta3 < 9.504178996162932e-001 and ell(A,7) == 0){
 		// Calculate U and V using pade7
@@ -373,7 +446,7 @@ void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 	}
 
 	// Do pade 13
-	d10 = std::pow(normest(A4, A6), 1./10.);
+	d10 = std::pow(normAm(A4, A6), 1./10.);
 	eta4 = std::max(d8, d10);
 	eta5 = std::min(eta3, eta4);
 	log2EtaOverTheta = std::log2(eta5/theta13);
@@ -394,41 +467,9 @@ void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 }
 
 //*****************************************************************************
-// Normest
-// Produces the l1norm of A*B. Need to eventually change this to use the 
-// estiment of the norm which is used in the paper.
-//
-// @param A		Sparse matrix
-// @param B		Sparse matrix
-//*****************************************************************************
-double method2::normest(const SparseMatrixD& A, const SparseMatrixD& B){
-	const SparseMatrixD& C = A*B;
-	double C1norm = l1norm(C);
-	return C1norm;
-}
-
-//*****************************************************************************
-// Normest
-// Produces the l1norm of A^m
-//
-// @param A		Sparse matrix
-// @param m		integer, power of the matrix
-//*****************************************************************************
-double method2::normest(const SparseMatrixD& A, const int m){
-	SparseMatrixD C = A;
-	double C1norm;
-
-	// Rises the matrix to power m
-	for (int i; i<m; i++){
-		C = C*A;
-	}
-	C1norm = l1norm(C);
-	return C1norm;
-}
-//*****************************************************************************
 // Ell
 // Returns the integer max((log2(alpha/u)/(2m)), 0), where 
-// alpha = = |c_(2m+1)|normest(|A|, 2m + 1)/l1norm(A1)
+// alpha = = |c_(2m+1)|normAm(|A|, 2m + 1)/l1norm(A1)
 //
 // @param A		Sparse matrix
 // @param m		integer, power of the matrix
@@ -443,7 +484,7 @@ int method2::ell(const SparseMatrixD& A, const int m){
 	// unit round off IEE double
 	u = std::pow(2,-53); 
 	// l1 norm of matrix power
-	A1NormMatrixPower = normest(A.cwiseAbs(), p);
+	A1NormMatrixPower = normAm(A.cwiseAbs(), p);
 	// l1 norm of matrix
 	A1Norm = l1norm(A);
 

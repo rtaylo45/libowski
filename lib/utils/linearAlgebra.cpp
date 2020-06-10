@@ -40,6 +40,37 @@ double l1norm(const SparseMatrixD& A){
 }
 
 //*****************************************************************************
+// Produces the l1norm of A*B. Need to eventually change this to use the 
+// estiment of the norm which is use in the paper. 
+//
+// @param A		Sparse matrix
+// @param B		Sparse matrix
+//*****************************************************************************
+double normAm(const SparseMatrixD& A, const SparseMatrixD& B){
+	SparseMatrixD C = A*B;
+	double C1norm = l1norm(C);
+	return C1norm;
+}
+
+//*****************************************************************************
+// Produces the 1lnorm of A^m
+//
+// @param A		Sparse matrix
+// @param m		inteter, power of the matrix
+//*****************************************************************************
+double normAm(const SparseMatrixD& A, const int m){
+	SparseMatrixD C = A;
+	double C1norm;
+	
+	// Rises the matrix to the power m
+	for (int i; i < m; i++){
+		C = C*A;
+	}
+	C1norm = l1norm(C);
+	return C1norm;	
+}
+
+//*****************************************************************************
 // Arnoldi algorithm
 //
 // Used for generating the Krylov subspace. This process produces and 
