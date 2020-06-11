@@ -72,7 +72,7 @@ matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
 //*****************************************************************************
 taylor::taylor(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
 	krylovDim){
-	std::string thetaFname = "/data/theta.txt";
+	std::string thetaFname = "../../src/data/theta.txt";
    std::ifstream inFile;
    double x;
    int counter = 0;
@@ -138,7 +138,7 @@ void taylor::parameters(const SparseMatrixD& A, const VectorD& b, MatrixD& M,
 	}
 	M = MatrixD::Zero(m_max, p_max-1);
 	for (int p = 2; p < p_max+1; p++){
-		for (int m = p*(p-1)-1; m_max+1; m++){
+		for (int m = p*(p-1)-1; m < m_max+1; m++){
 			M(m-1, p-2) = alpha(p-2)/theta(m-1);
 		}
 	}
@@ -149,19 +149,21 @@ void taylor::parameters(const SparseMatrixD& A, const VectorD& b, MatrixD& M,
 //*****************************************************************************
 VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 	MatrixD& M, bool shift, bool fullTerm){
-	int n = A.cols(), s = 1, m, p, m_max, cost, costi;
+	int n = A.cols(), s = 1, m, p, m_max, cost = 1e5;
 	double tol = std::pow(2.,-53.), tt, mu, eta, c1, c2;
 	SparseMatrixD ident(A.rows(), A.cols()), Ai = A;
-	VectorI diag, U, maxCols;
-	MatrixI C;
+	VectorI diag, minCols;
+	MatrixI C, U;
 	VectorD f, b = v0;
-	
+
+	std::cout << "start" << std::endl;	
 	ident.setIdentity();
 	if (shift){
 		mu = Ai.diagonal().sum()/((double)n);
 		Ai = Ai - mu*ident;
 	}
 
+	std::cout << "getting parameters" << std::endl;	
 	if (M.size() == 0){
 		tt = 1.;
 		parameters(Ai*t, b, M);
@@ -170,6 +172,7 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 		tt = t;
 	}
 
+	std::cout << "Calculating cost" << std::endl;	
 	if (t == 0){
 		m = 0;
 	}
@@ -181,22 +184,29 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 		for (int i=1; i<m_max+1; i++){ diag(i-1) = i;};
 		U.diagonal() = diag;
 		C = MatrixI((std::abs(tt)*M).array().ceil().cast<int>()).transpose() * U;
-
-		maxCols = C.colwise().maxCoeff();
-		for (int i = 0; i < maxCols.cols(); i++){ 
-			if (maxCols(i) < cost and maxCols(i) != 0){
-				cost = maxCols(i);
-				costi = i;
+		minCols = C.colwise().minCoeff();
+		std::cout << minCols << std::endl;
+		std::cout << "finding cost" << std::endl;	
+		for (int i = 0; i < minCols.cols(); i++){ 
+			std::cout << minCols(i) << std::endl;
+			if (std::abs(minCols(i)) < cost and minCols(i) != 0){
+				cost = std::abs(minCols(i));
+				m = i;
 			}
 		}
+		m = m + 1;
+		std::cout << "computing s" << std::endl;	
+		std::cout << cost << " " << m << std::endl;	
 		s = std::max(cost/m, 1);
 	}
 	if (shift){
+		std::cout << "computing eta" << std::endl;	
 		eta = std::exp(t*mu/(double)s);
 	}
 	else{
 		eta = 1.;
 	}
+	std::cout << "computing taylor" << std::endl;	
 	f = v0;
 	for (int i = 1; i < s+1; i++){
 		c1 = b.lpNorm<Infinity>();
