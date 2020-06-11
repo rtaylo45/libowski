@@ -31,6 +31,10 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type,
 		solver = new LPAM(krylovBool, krylovDim);
 		return solver;
 	}
+	else if (type == "taylor"){
+		solver = new taylor(krylovBool, krylovDim);
+		return solver;
+	}
 	else {
 		std::string errorMessage =
 			" You have selected a matrix exponential solver\n"
@@ -40,7 +44,8 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type,
 			" hyperbolic\n"
 			" pade-method1\n"
 			" pade-method2\n"
-			" LPAM\n";
+			" LPAM\n"
+			" Taylor\n";
 		libowskiException::runtimeError(errorMessage);
 		return solver;
 	}
@@ -219,8 +224,11 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 // @param t		Time step of the solve
 //*****************************************************************************
 VectorD taylor::apply(const SparseMatrixD& A, const VectorD& v0, double t){
+	MatrixD M;
+	VectorD sol;
 
-	return v0;
+	sol = expmv(A, t, v0, M);
+	return sol;
 }
 
 //*****************************************************************************
