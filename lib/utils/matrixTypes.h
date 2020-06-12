@@ -20,6 +20,8 @@ typedef Matrix<double, Dynamic, Dynamic> MatrixD;
 typedef Matrix<long double, Dynamic, Dynamic> MatrixLD;
 // Integer matrix
 typedef Matrix<int, Dynamic, Dynamic> MatrixI;
+// Long integer matrix
+typedef Matrix<long int, Dynamic, Dynamic> MatrixLI;
 
 // Dense Array stuff. Arrays in eigen allow for element wise operations.
 // They are useful for holding values that i can manipulate.

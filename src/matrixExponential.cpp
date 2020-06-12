@@ -152,8 +152,8 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 	int n = A.cols(), s = 1, m, p, m_max, cost = 1e5;
 	double tol = std::pow(2.,-53.), tt, mu, eta, c1, c2;
 	SparseMatrixD ident(A.rows(), A.cols()), Ai = A;
-	VectorI diag, minCols;
-	MatrixI C, U;
+	VectorLI diag, minCols;
+	MatrixLI C, U;
 	VectorD f, b = v0;
 
 	std::cout << "start" << std::endl;	
@@ -179,18 +179,21 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 	else{
 		m_max = M.rows();
 		p = M.cols();
-		diag = VectorI::Zero(m_max);
-		U = MatrixI::Zero(m_max, m_max);
+		diag = VectorLI::Zero(m_max);
+		U = MatrixLI::Zero(m_max, m_max);
 		for (int i=1; i<m_max+1; i++){ diag(i-1) = i;};
 		U.diagonal() = diag;
-		C = MatrixI((std::abs(tt)*M).array().ceil().cast<int>()).transpose() * U;
+		C = MatrixLI((std::abs(tt)*M).array().ceil().cast<long int>()).transpose() * U;
+		findReplace(C, 0, 1e5);
 		minCols = C.colwise().minCoeff();
+		std::cout << C << std::endl;
 		std::cout << minCols << std::endl;
 		std::cout << "finding cost" << std::endl;	
 		for (int i = 0; i < minCols.cols(); i++){ 
-			std::cout << minCols(i) << std::endl;
-			if (std::abs(minCols(i)) < cost and minCols(i) != 0){
-				cost = std::abs(minCols(i));
+			std::cout << std::abs(minCols(i)) << std::endl;
+			if (std::abs(minCols(i)) < cost and std::abs(minCols(i)) != 0){
+				cost = std::labs(minCols(i));
+				std::cout << std::abs(minCols(i)) << " was a min" << std::endl;
 				m = i;
 			}
 		}

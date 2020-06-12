@@ -22,6 +22,8 @@ typedef Matrix<double, Dynamic, 1> VectorD;
 typedef Matrix<long double, Dynamic, 1> VectorLD;
 // Integer vector
 typedef Matrix<int, Dynamic, 1> VectorI;
+// Long integer vector
+typedef Matrix<long int, Dynamic, 1> VectorLI;
 
 // Useful type definitions for sparce vector
 // Complex long double dynamic vector
