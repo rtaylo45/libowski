@@ -34,6 +34,8 @@ bool isApprox(derived goalVal, derived testVal, derived rtol, derived atol){
 //*****************************************************************************
 // Find and replaces all coefficients of a given value in a dense matrix.
 //
+// Need to find the more efficient way to do it
+//
 // Right now im only using this for an integer matrix so i don't use a tol for
 // how close the two numbers are.
 //
@@ -44,18 +46,14 @@ bool isApprox(derived goalVal, derived testVal, derived rtol, derived atol){
 template <typename derived>
 void findReplace(Matrix<derived, Dynamic, Dynamic>& A, derived findValue, 
 	derived replaceValue){
-	int col = A.cols();
-	int row = A. rows();
-	Matrix<derived, Dynamic, Dynamic> Aflat = A.reshaped();
 
-	int iter = 0;	
-	for (derived x : Aflat){
-		if (x == findValue){
-			Aflat(iter) = replaceValue;
+	for (int i = 0; i < A.rows(); i++){
+		for (int j = 0; j < A.cols(); j++){
+			if (A(i,j) == findValue){
+				A(i,j) = replaceValue;
+			}				
 		}
-		iter++;
 	}
-	A = Aflat.reshaped(row, col);
 }
 
 //*****************************************************************************
