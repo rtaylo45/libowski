@@ -24,6 +24,17 @@ SparseMatrix<derived> MoorePenroseInv(const SparseMatrix<derived>&);
 double l1norm(const SparseMatrixD&);
 
 //*****************************************************************************
+// Produces the l1norm of A*B. Need to eventually change this to use the 
+// estiment of the norm which is use in the paper. 
+//*****************************************************************************
+double normAm(const SparseMatrixD&, const SparseMatrixD&);
+
+//*****************************************************************************
+// Produces the 1lnorm of A^m
+//*****************************************************************************
+double normAm(const SparseMatrixD&, const int);
+
+//*****************************************************************************
 // Arnoldi algorithm
 //*****************************************************************************
 void arnoldi(const SparseMatrixD& A, const VectorD& b, const int n, 

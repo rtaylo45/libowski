@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <cmath>
 #include <algorithm>
+#include <fstream>
 #include "mpiProcess.h"
 #include "linearAlgebra.h"
 #include "vectorTypes.h"
@@ -56,6 +57,48 @@ class matrixExponential{
 	int krylovSubspaceDim = 10;
 
 };
+
+//*****************************************************************************
+// Class for computing the action of a matrix exponential on a vector using 
+// a Taylor series expansion from the following paper:
+//
+// Al-Mohy, Awad H. and Higham, Nicholas J. (2011) Computing the Action of 
+// the Matrix Exponential, with an Application to Exponential Integrators. 
+// SIAM Journal on Scientific Computing, 33 (2). pp. 488-511. ISSN 1064-8275
+//*****************************************************************************
+class taylor : public matrixExponential{
+	private:
+	// Theta
+	VectorD theta = VectorD::Zero(100);
+	//**************************************************************************
+	// Selects the Taylor series degree for the approximation
+	//**************************************************************************
+	void parameters(const SparseMatrixD&, const VectorD&, MatrixD&, int = 55, 
+		int = 8, bool = true, bool = false);
+	//**************************************************************************
+	// Internal fucntion that computes the action of a matrix exponential on 
+	// a vector. exp(A*t)v
+	//**************************************************************************
+	VectorD expmv(const SparseMatrixD&, const double, const VectorD&, MatrixD&,
+		bool = true, bool = false);
+
+
+	public:
+	//**************************************************************************
+	// Constructor
+	//**************************************************************************
+	taylor(bool, int);
+	//**************************************************************************
+	// Computes the matrix exponential action on a vector. exp(A*t)v
+	//**************************************************************************
+	VectorD apply(const SparseMatrixD&, const VectorD&, double);
+	//**************************************************************************
+	// Computes the matrix exponential. exp(A*t)
+	//**************************************************************************
+	SparseMatrixD compute(const SparseMatrixD&, double);
+	
+};
+
 
 //*****************************************************************************
 // Abstract base class for matrix exponential methods based on the pade
@@ -147,16 +190,6 @@ class method2 : public pade{
 	//**************************************************************************
 	virtual void run(const SparseMatrixD&, SparseMatrixD&, SparseMatrixD&, int&);
 	
-	//**************************************************************************
-	// Normest, some fucntion they define in updated method 
-	//**************************************************************************
-	double normest(const SparseMatrixD&, const SparseMatrixD&);
-	
-	//**************************************************************************
-	// Normest, some fucntion they define in updated method 
-	//**************************************************************************
-	double normest(const SparseMatrixD&, const int);
-
 	//**************************************************************************
 	// ell, some fucntion they define in updated method 
 	//**************************************************************************

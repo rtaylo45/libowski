@@ -14,12 +14,16 @@ using namespace Eigen;
 // Dense matrix stuff
 // Complex long double dynamic vector
 typedef Matrix<std::complex<long double>, Dynamic, 1> VectorCLD;
-// Complex long double dynamic vector
-typedef Matrix<std::complex<long double>, Dynamic, 1> VectorCLD;
+// Complex double dynamic vector
+typedef Matrix<std::complex<double>, Dynamic, 1> VectorCD;
 // Double dynamic vector
 typedef Matrix<double, Dynamic, 1> VectorD;
 // Long double dynamic vector
 typedef Matrix<long double, Dynamic, 1> VectorLD;
+// Integer vector
+typedef Matrix<int, Dynamic, 1> VectorI;
+// Long integer vector
+typedef Matrix<long int, Dynamic, 1> VectorLI;
 
 // Useful type definitions for sparce vector
 // Complex long double dynamic vector

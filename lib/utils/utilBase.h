@@ -19,6 +19,12 @@ template <typename derived>
 bool isApprox(derived, derived, derived = 1e-5, derived = 1e-8);
 
 //*****************************************************************************
+// Finds and repaces all coefficients of a given value in a dense matrix
+//*****************************************************************************
+template <typename derived>
+void findReplace(Matrix<derived, Dynamic, Dynamic>&, derived, derived);
+
+//*****************************************************************************
 // Binomial Coefficient
 //*****************************************************************************
 int binomialCoeff(int, int);

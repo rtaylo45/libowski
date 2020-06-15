@@ -31,6 +31,10 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type,
 		solver = new LPAM(krylovBool, krylovDim);
 		return solver;
 	}
+	else if (type == "taylor"){
+		solver = new taylor(krylovBool, krylovDim);
+		return solver;
+	}
 	else {
 		std::string errorMessage =
 			" You have selected a matrix exponential solver\n"
@@ -40,7 +44,8 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type,
 			" hyperbolic\n"
 			" pade-method1\n"
 			" pade-method2\n"
-			" LPAM\n";
+			" LPAM\n"
+			" Taylor\n";
 		libowskiException::runtimeError(errorMessage);
 		return solver;
 	}
@@ -59,6 +64,187 @@ matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
 
 	useKrylovSubspace = KrylovFlag;
 	krylovSubspaceDim = subspaceDim;
+}
+
+//*****************************************************************************
+// Methods for Taylor series Class
+//
+//*****************************************************************************
+taylor::taylor(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
+	krylovDim){
+	std::string thetaFname = "../src/data/theta.txt";
+   std::ifstream inFile;
+   double x;
+   int counter = 0;
+	name = "taylor";
+
+   inFile.open(thetaFname);
+   if (!inFile){
+		inFile.open("../" + thetaFname);
+		if (!inFile){
+			std::string errorMessage =
+				" Unable to find the Taylor solver theta file\n";
+			libowskiException::runtimeError(errorMessage);
+		}
+   }   
+   while (inFile >> x) {
+      theta(counter) = x;
+      counter ++; 
+   }   	
+}
+
+//*****************************************************************************
+// Selects the Taylor series degree for the approximation
+//
+// @param A				Sparse transition matrix
+// @param b				Initional condition matrix
+// @param M				Returned matrix M
+// @param m_max		Max order of Taylor series expansion
+// @param p_max		Parameter from paper
+// @param shift		Bool to shift the norm of the matrix
+// @param forceEstm	Bool for the hoice of how to choose m
+//*****************************************************************************
+void taylor::parameters(const SparseMatrixD& A, const VectorD& b, MatrixD& M,
+	int m_max, int p_max, bool shift, bool forceEstm){
+	int n = A.cols();
+	double normA, tempLim, c, mu;
+	MatrixD eta, alpha;
+	SparseMatrixD ident(A.rows(), A.cols()), Ai;
+	tempLim = 4.*theta(m_max)*(double)p_max*((double)p_max+3.)/
+		((double)m_max*(double)b.rows());
+
+	// A matrix that is internal to the fucntion
+	Ai = A;
+	ident.setIdentity();
+
+	if (shift){
+		mu = A.diagonal().sum()/((double)n);
+		Ai = Ai - mu*ident;
+	}
+	if (not forceEstm){ normA = l1norm(Ai);};
+	if (not forceEstm and normA <= tempLim){
+		c = normA;
+		alpha = c*MatrixD::Ones(p_max-1,1);
+	}
+	else{
+		eta = MatrixD::Zero(p_max,1);
+		alpha = MatrixD::Zero(p_max-1,1);
+		for (int p = 1; p < p_max+1; p++){
+			c = normAm(Ai, p+1);
+			c = std::pow(c, 1./((double)p+1.));
+			eta(p-1) = c;
+		}
+
+		for (int p = 1; p < p_max; p++){
+			alpha(p-1) = std::max(eta(p-1), eta(p));
+		}
+	}
+	M = MatrixD::Zero(m_max, p_max-1);
+	for (int p = 2; p < p_max+1; p++){
+		for (int m = p*(p-1)-1; m < m_max+1; m++){
+			M(m-1, p-2) = alpha(p-2)/theta(m-1);
+		}
+	}
+}
+//*****************************************************************************
+// Private version
+// Calculates exp(A*t)v. The action of the matrix expoential on a vector
+//*****************************************************************************
+VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
+	MatrixD& M, bool shift, bool fullTerm){
+	int n = A.cols(), m, p, m_max;
+	long int cost = 1e10L, s = 1L;
+	double tol = std::pow(2.,-53.), tt, mu, eta, c1, c2;
+	SparseMatrixD ident(A.rows(), A.cols()), Ai = A;
+	VectorLI diag, minCols;
+	MatrixLI C, U;
+	VectorD f, b = v0;
+
+	ident.setIdentity();
+	if (shift){
+		mu = Ai.diagonal().sum()/((double)n);
+		Ai = Ai - mu*ident;
+	}
+
+	if (M.size() == 0){
+		tt = 1.;
+		parameters(Ai*t, b, M);
+	}
+	else{
+		tt = t;
+	}
+
+	if (t == 0){
+		m = 0;
+	}
+	else{
+		m_max = M.rows();
+		p = M.cols();
+		diag = VectorLI::Zero(m_max);
+		U = MatrixLI::Zero(m_max, m_max);
+		for (int i=1; i<m_max+1; i++){ diag(i-1) = i;};
+		U.diagonal() = diag;
+		C = MatrixLI((std::abs(tt)*M).array().ceil().cast<long int>()).transpose() * U;
+		minCols = C.colwise().minCoeff();
+		for (int i = 1; i < minCols.rows(); i++){ 
+			if (std::labs(minCols(i)) < cost and std::labs(minCols(i)) > 0){
+				cost = std::labs(minCols(i));
+				m = i;
+			}
+		}
+		m = m + 1;
+		s = std::max(cost/m, 1L);
+	}
+	if (shift){
+		eta = std::exp(t*mu/(double)s);
+	}
+	else{
+		eta = 1.;
+	}
+	f = b;
+	for (int i = 1; i < s+1; i++){
+		c1 = b.lpNorm<Infinity>();
+		for (int k = 1; k	< m+1; k++){
+			b = (t/((double)s*(double)k))*(Ai*b);
+			f = f + b;
+			c2 = b.lpNorm<Infinity>();
+			if (not fullTerm){
+				if (c1 + c2 <= tol*f.lpNorm<Infinity>()){
+					break;
+				}
+			}
+		}
+		f = eta*f;
+		b = f;
+	}
+	return f;		 
+}
+
+//*****************************************************************************
+// Calculates exp(A*t)v. The action of the matrix expoential on a vector
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param v0	Initial condition vector
+// @param t		Time step of the solve
+//*****************************************************************************
+VectorD taylor::apply(const SparseMatrixD& A, const VectorD& v0, double t){
+	MatrixD M;
+	VectorD sol;
+	sol = expmv(A, t, v0, M);
+	return sol;
+}
+
+//*****************************************************************************
+// Calculates exp(A*t). The the matrix expoential
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param t		Time step of the solve
+//*****************************************************************************
+SparseMatrixD taylor::compute(const SparseMatrixD& A, double t){
+	std::string errorMessage =
+		" The Taylor series method cannot be used with compute\n";
+	libowskiException::runtimeError(errorMessage);
+	return A;
 }
 
 //*****************************************************************************
@@ -333,8 +519,8 @@ void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 
 	// try pade3
 	const SparseMatrixD A2 = A*A;
-	d6 = std::pow(normest(A2,3), 1./6.);
-	eta1 = std::max(std::pow(normest(A2,2), 1./4.), d6);
+	d6 = std::pow(normAm(A2,3), 1./6.);
+	eta1 = std::max(std::pow(normAm(A2,2), 1./4.), d6);
 	if (eta1 < 1.495585217958292e-002 and ell(A,3) == 0){
 		// Calculate U and V using pade3
 		pade3(A, A2, U, V);
@@ -356,7 +542,7 @@ void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 	// try pade 7 and 9
 	const SparseMatrixD A6 = A4*A2;
 	d6 = std::pow(l1norm(A6), 1./6.);
-	d8 = std::pow(normest(A4,2),1./8.);
+	d8 = std::pow(normAm(A4,2),1./8.);
 	eta3 = std::max(d6, d8);
 	if (eta3 < 9.504178996162932e-001 and ell(A,7) == 0){
 		// Calculate U and V using pade7
@@ -373,7 +559,7 @@ void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 	}
 
 	// Do pade 13
-	d10 = std::pow(normest(A4, A6), 1./10.);
+	d10 = std::pow(normAm(A4, A6), 1./10.);
 	eta4 = std::max(d8, d10);
 	eta5 = std::min(eta3, eta4);
 	log2EtaOverTheta = std::log2(eta5/theta13);
@@ -394,41 +580,9 @@ void method2::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 }
 
 //*****************************************************************************
-// Normest
-// Produces the l1norm of A*B. Need to eventually change this to use the 
-// estiment of the norm which is used in the paper.
-//
-// @param A		Sparse matrix
-// @param B		Sparse matrix
-//*****************************************************************************
-double method2::normest(const SparseMatrixD& A, const SparseMatrixD& B){
-	const SparseMatrixD& C = A*B;
-	double C1norm = l1norm(C);
-	return C1norm;
-}
-
-//*****************************************************************************
-// Normest
-// Produces the l1norm of A^m
-//
-// @param A		Sparse matrix
-// @param m		integer, power of the matrix
-//*****************************************************************************
-double method2::normest(const SparseMatrixD& A, const int m){
-	SparseMatrixD C = A;
-	double C1norm;
-
-	// Rises the matrix to power m
-	for (int i; i<m; i++){
-		C = C*A;
-	}
-	C1norm = l1norm(C);
-	return C1norm;
-}
-//*****************************************************************************
 // Ell
 // Returns the integer max((log2(alpha/u)/(2m)), 0), where 
-// alpha = = |c_(2m+1)|normest(|A|, 2m + 1)/l1norm(A1)
+// alpha = = |c_(2m+1)|normAm(|A|, 2m + 1)/l1norm(A1)
 //
 // @param A		Sparse matrix
 // @param m		integer, power of the matrix
@@ -443,7 +597,7 @@ int method2::ell(const SparseMatrixD& A, const int m){
 	// unit round off IEE double
 	u = std::pow(2,-53); 
 	// l1 norm of matrix power
-	A1NormMatrixPower = normest(A.cwiseAbs(), p);
+	A1NormMatrixPower = normAm(A.cwiseAbs(), p);
 	// l1 norm of matrix
 	A1Norm = l1norm(A);
 
@@ -496,14 +650,14 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 	// Sends the correct matrix and vector to each processor if the processor
 	// isn't the main node
 	if (mpi.rank == 0){ 
-		// Sends data from the slave nodes
-		for (int islave = 1; islave < numprocs; islave++) {
-			mpi.send(At, islave, 100);
-			mpi.send(v0cd, islave, 200);
+		// Sends data from the worker nodes
+		for (int worker = 1; worker < numprocs; worker++) {
+			mpi.send(At, worker, 100);
+			mpi.send(v0cd, worker, 200);
 		}
 	}
 	else{
-		// Receives the data from the master node
+		// Receives the data from the main node
 		mpi.recv(At, 0, 100);
 		mpi.recv(v0cd, 0, 200);
 	}
@@ -520,14 +674,14 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 
 	}
 	if (myid != 0){
-		// Sends solution data to the master node 
+		// Sends solution data to the main node 
 		mpi.send(myV, 0, 300);
 	}
 	else {
 		v = myV;
-		// Receives data from the slave nodes
-		for (int islave = 1; islave < numprocs; islave++) {
-			mpi.recv(myV, islave, 300);
+		// Receives data from the worker nodes
+		for (int worker = 1; worker < numprocs; worker++) {
+			mpi.recv(myV, worker, 300);
 			v = v + myV;
 		}
 	}
@@ -575,13 +729,13 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 	// Sends the correct matrix and vector to each processor if the processor
 	// isn't the main node
 	if (mpi.rank == 0){ 
-		// Sends data from the slave nodes
-		for (int islave = 1; islave < numprocs; islave++) {
-			mpi.send(At, islave, 100);
+		// Sends data from the worker nodes
+		for (int worker = 1; worker < numprocs; worker++) {
+			mpi.send(At, worker, 100);
 		}
 	}
 	else{
-		// Receives the data from the master node
+		// Receives the data from the main node
 		mpi.recv(At, 0, 100);
 	}
 
@@ -594,14 +748,14 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 		myExpA = myExpA + MoorePenroseInv(tempA)*alpha(k);
 	}
 	if (myid != 0){
-		// Sends solution data to the master node 
+		// Sends solution data to the main node 
 		mpi.send(myExpA, 0, 200);
 	}
 	else {
 		expA = myExpA;
-		// Receives data from the slave nodes
-		for (int islave = 1; islave < numprocs; islave++) {
-			mpi.recv(myExpA, islave, 200);
+		// Receives data from the worker nodes
+		for (int worker = 1; worker < numprocs; worker++) {
+			mpi.recv(myExpA, worker, 200);
 			expA = expA + myExpA;
 		}
 	}

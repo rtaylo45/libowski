@@ -39,7 +39,7 @@
 // I.C.	e^-((x-30)/10)^2
 // B.C.	periodic
 //*****************************************************************************
-void problem1x(int myid){
+void problem1x(int myid, std::string solverType){
 	int yCells = 1;
 	std::vector<int> numOfxCells{10, 20, 40, 80, 160, 320};
 	std::vector<double> linfVector, l1Vector, l2Vector;
@@ -56,11 +56,10 @@ void problem1x(int myid){
 	double velocity = 2.0;
 	double relativeError = 0.0;
 	double linfRate, l2Rate, l1Rate;
-	std::string outputFileName, solverType = "hyperbolic";
 	meshCell* cell = nullptr;
 	// Sets the ouput file name
 	std::ofstream outputFile;
-	outputFileName = "fluxProblem1x.out";
+	std::string outputFileName = "fluxProblem1x.out";
 	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 	outputFile << "Total problem time: " << tEnd << "\n";
 	outputFile << "Total problem length: " << xLength << "\n";
@@ -161,7 +160,7 @@ void problem1x(int myid){
 // IC.	e^-((x-30)/10)^2
 // B.C.	periodic
 //*****************************************************************************
-void problem1y(int myid){
+void problem1y(int myid, std::string solverType){
 	int xCells = 1;
 	std::vector<int> numOfyCells{10, 20, 40, 80, 160, 320};
 	std::vector<double> linfVector, l1Vector, l2Vector;
@@ -178,11 +177,10 @@ void problem1y(int myid){
 	double velocity = 2.0;
 	double relativeError = 0.0;
 	double linfRate, l2Rate, l1Rate;
-	std::string outputFileName, solverType = "hyperbolic";
 	meshCell* cell = nullptr;
 	// Sets the ouput file name
 	std::ofstream outputFile;
-	outputFileName = "fluxProblem1y.out";
+	std::string outputFileName = "fluxProblem1y.out";
 	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 	outputFile << "Total problem time: " << tEnd << "\n";
 	outputFile << "Total problem length: " << yLength << "\n";
@@ -626,12 +624,15 @@ int main(){
 
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
+	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
+		"pade-method1", "pade-method2", "taylor"};
 
-	problem1x(myid);
-	problem1y(myid);
-	problem2(myid);
-	problem3(myid);
-	problem4(myid);
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
+		problem1x(myid, solverType);
+		problem1y(myid, solverType);
+	}
+	problem2(myid); problem3(myid); problem4(myid);
 
 	mpi.finalize();
 }

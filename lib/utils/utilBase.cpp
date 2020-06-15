@@ -32,6 +32,31 @@ bool isApprox(derived goalVal, derived testVal, derived rtol, derived atol){
 }
 
 //*****************************************************************************
+// Find and replaces all coefficients of a given value in a dense matrix.
+//
+// Need to find the more efficient way to do it
+//
+// Right now im only using this for an integer matrix so i don't use a tol for
+// how close the two numbers are.
+//
+// @param A					Dense matrix with the values 
+// @param findValue		Value to find
+// @param replaceValue	Value to replace
+//*****************************************************************************
+template <typename derived>
+void findReplace(Matrix<derived, Dynamic, Dynamic>& A, derived findValue, 
+	derived replaceValue){
+
+	for (int i = 0; i < A.rows(); i++){
+		for (int j = 0; j < A.cols(); j++){
+			if (A(i,j) == findValue){
+				A(i,j) = replaceValue;
+			}				
+		}
+	}
+}
+
+//*****************************************************************************
 // Binomial coefficient. N choose k
 // Taken from:
 // https://www.geeksforgeeks.org/space-and-time-efficient-binomial-coefficient/
@@ -94,3 +119,5 @@ template bool isApprox(double goalVal, double testVal, double rtol, double atol)
 template bool isApprox(float goalVal, float testVal, float rtol, float atol);
 template std::vector<double> lineSpace(double start, double end, std::size_t N);
 template std::vector<int> lineSpace(int start, int end, std::size_t N);
+template void findReplace(MatrixLI& A, long int findValue, long int replaceValue);
+template void findReplace(MatrixI& A, int findValue, int replaceValue);

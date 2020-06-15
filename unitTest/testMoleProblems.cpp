@@ -40,7 +40,7 @@
 void moleProblem1(int myid){
 	int yCells = 1, xCells = 1000;
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
-	std::vector<std::string> solvers {"hyperbolic", "pade-method2"};
+	std::vector<std::string> solvers {"hyperbolic", "pade-method2", "taylor"};
 	double xLength = 100., yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
 	double lambda = 0.1;	// 1/s
@@ -172,7 +172,7 @@ void moleProblem2(int myid){
 	//std::vector<double> steps = {5};
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
-	std::vector<std::string> solvers {"hyperbolic","pade-method2"};
+	std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
 	//std::vector<std::string> solvers {"hyperbolic"};
 	double xLength = 100, yLength = 0.0; // cm
 	double tEnd = 20.0;	// seconds
@@ -708,8 +708,7 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	moleProblem1(myid);
-	moleProblem2(myid);
+	moleProblem1(myid); moleProblem2(myid);
 	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);
