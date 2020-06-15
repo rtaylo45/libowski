@@ -72,17 +72,20 @@ matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
 //*****************************************************************************
 taylor::taylor(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
 	krylovDim){
-	std::string thetaFname = "../../src/data/theta.txt";
+	std::string thetaFname = "../src/data/theta.txt";
    std::ifstream inFile;
    double x;
    int counter = 0;
 	name = "taylor";
 
    inFile.open(thetaFname);
-   if (!inFile) {
-		std::string errorMessage =
-			" Unable to find the Taylor solver theta file\n";
-		libowskiException::runtimeError(errorMessage);
+   if (!inFile){
+		inFile.open("../" + thetaFname);
+		if (!inFile){
+			std::string errorMessage =
+				" Unable to find the Taylor solver theta file\n";
+			libowskiException::runtimeError(errorMessage);
+		}
    }   
    while (inFile >> x) {
       theta(counter) = x;
@@ -149,7 +152,8 @@ void taylor::parameters(const SparseMatrixD& A, const VectorD& b, MatrixD& M,
 //*****************************************************************************
 VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 	MatrixD& M, bool shift, bool fullTerm){
-	int n = A.cols(), s = 1, m, p, m_max, cost = 1e5;
+	int n = A.cols(), m, p, m_max;
+	long int cost = 1e10L, s = 1L;
 	double tol = std::pow(2.,-53.), tt, mu, eta, c1, c2;
 	SparseMatrixD ident(A.rows(), A.cols()), Ai = A;
 	VectorLI diag, minCols;
@@ -181,16 +185,15 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 		for (int i=1; i<m_max+1; i++){ diag(i-1) = i;};
 		U.diagonal() = diag;
 		C = MatrixLI((std::abs(tt)*M).array().ceil().cast<long int>()).transpose() * U;
-		findReplace(C, 0L, (long int)1e5L);
 		minCols = C.colwise().minCoeff();
-		for (int i = 0; i < minCols.rows(); i++){ 
-			if (std::abs(minCols(i)) < cost and std::abs(minCols(i)) != 0){
+		for (int i = 1; i < minCols.rows(); i++){ 
+			if (std::labs(minCols(i)) < cost and std::labs(minCols(i)) > 0){
 				cost = std::labs(minCols(i));
 				m = i;
 			}
 		}
 		m = m + 1;
-		s = std::max(cost/m, 1);
+		s = std::max(cost/m, 1L);
 	}
 	if (shift){
 		eta = std::exp(t*mu/(double)s);
@@ -198,6 +201,7 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 	else{
 		eta = 1.;
 	}
+	std::cout << "taylor: " << m << " " << s << " " << eta << std::endl;
 	f = b;
 	for (int i = 1; i < s+1; i++){
 		c1 = b.lpNorm<Infinity>();
@@ -647,14 +651,14 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 	// Sends the correct matrix and vector to each processor if the processor
 	// isn't the main node
 	if (mpi.rank == 0){ 
-		// Sends data from the slave nodes
-		for (int islave = 1; islave < numprocs; islave++) {
-			mpi.send(At, islave, 100);
-			mpi.send(v0cd, islave, 200);
+		// Sends data from the worker nodes
+		for (int worker = 1; worker < numprocs; worker++) {
+			mpi.send(At, worker, 100);
+			mpi.send(v0cd, worker, 200);
 		}
 	}
 	else{
-		// Receives the data from the master node
+		// Receives the data from the main node
 		mpi.recv(At, 0, 100);
 		mpi.recv(v0cd, 0, 200);
 	}
@@ -671,14 +675,14 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 
 	}
 	if (myid != 0){
-		// Sends solution data to the master node 
+		// Sends solution data to the main node 
 		mpi.send(myV, 0, 300);
 	}
 	else {
 		v = myV;
-		// Receives data from the slave nodes
-		for (int islave = 1; islave < numprocs; islave++) {
-			mpi.recv(myV, islave, 300);
+		// Receives data from the worker nodes
+		for (int worker = 1; worker < numprocs; worker++) {
+			mpi.recv(myV, worker, 300);
 			v = v + myV;
 		}
 	}
@@ -726,13 +730,13 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 	// Sends the correct matrix and vector to each processor if the processor
 	// isn't the main node
 	if (mpi.rank == 0){ 
-		// Sends data from the slave nodes
-		for (int islave = 1; islave < numprocs; islave++) {
-			mpi.send(At, islave, 100);
+		// Sends data from the worker nodes
+		for (int worker = 1; worker < numprocs; worker++) {
+			mpi.send(At, worker, 100);
 		}
 	}
 	else{
-		// Receives the data from the master node
+		// Receives the data from the main node
 		mpi.recv(At, 0, 100);
 	}
 
@@ -745,14 +749,14 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 		myExpA = myExpA + MoorePenroseInv(tempA)*alpha(k);
 	}
 	if (myid != 0){
-		// Sends solution data to the master node 
+		// Sends solution data to the main node 
 		mpi.send(myExpA, 0, 200);
 	}
 	else {
 		expA = myExpA;
-		// Receives data from the slave nodes
-		for (int islave = 1; islave < numprocs; islave++) {
-			mpi.recv(myExpA, islave, 200);
+		// Receives data from the worker nodes
+		for (int worker = 1; worker < numprocs; worker++) {
+			mpi.recv(myExpA, worker, 200);
 			expA = expA + myExpA;
 		}
 	}
