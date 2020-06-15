@@ -708,8 +708,7 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	moleProblem1(myid);
-	moleProblem2(myid);
+	moleProblem1(myid); moleProblem2(myid);
 	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);
