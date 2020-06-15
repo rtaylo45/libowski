@@ -201,7 +201,6 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 	else{
 		eta = 1.;
 	}
-	std::cout << "taylor: " << m << " " << s << " " << eta << std::endl;
 	f = b;
 	for (int i = 1; i < s+1; i++){
 		c1 = b.lpNorm<Infinity>();

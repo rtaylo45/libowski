@@ -474,8 +474,8 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 //****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double t = 0.0, tnew = 0.0; 
-	int steps = 1;
-	double totalTime = 1000000.0;
+	int steps = 100;
+	double totalTime = 100.0;
 	double dt = totalTime/steps;
 	int numOfSpecs = 6;
 	int numOfLvls = 16;
@@ -539,7 +539,6 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 	coeff(12,6) = 0.0, coeff(13,6) = 0.0, coeff(14,6) = 0.0, coeff(15,6) = 0.0; 
 
 	A = BuildSpeciesMatrix(coeff, varCoeff, numOfSpecs, numOfLvls, flux);
-	std::cout << l1norm(A*totalTime) << std::endl;
 	N0(A.cols()-1) = 1.0;
 	//std::cout << A;
 
@@ -549,24 +548,22 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 		t = t + dt;
 
 		sol = expSolver->apply(A, N0, t);
-		std::cout << expSolver->name << std::endl;	
-		std::cout << sol << std::endl;
 		if (myid==0){ writePrecursorSolution(sol, t);}
 	}
 
-	//flux = 0.08;
-	//N0 = sol;
-	//A = BuildSpeciesMatrix(0.8*coeff, varCoeff, numOfSpecs, numOfLvls, 
-	//	flux);
+	flux = 0.08;
+	N0 = sol;
+	A = BuildSpeciesMatrix(0.8*coeff, varCoeff, numOfSpecs, numOfLvls, 
+		flux);
 
-	//for (int i = 80; i < steps; i++){
+	for (int i = 80; i < steps; i++){
 
-	//	t = t + dt;
-	//	tnew = tnew + dt;
-	//
-	//	sol = expSolver->apply(A, N0, tnew);
-	//	if (myid==0){ writePrecursorSolution(sol, t);}
-	//}
+		t = t + dt;
+		tnew = tnew + dt;
+	
+		sol = expSolver->apply(A, N0, tnew);
+		if (myid==0){ writePrecursorSolution(sol, t);}
+	}
 	//auto end = high_resolution_clock::now();
 	//auto duration = duration_cast<microseconds>(end - start);
 	//std::cout << myid << " " << duration.count()/1.e6 << std::endl;
