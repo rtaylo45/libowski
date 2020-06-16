@@ -4,11 +4,14 @@
 #include <Eigen/QR>
 #include <iostream>
 #include <vector>
+#include <assert.h>
 #include "linearAlgebra.h"
 #include "mpiProcess.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
 #include "utilBase.h"
+#include "matrixExponential.h"
+
 
 //*****************************************************************************
 // Prints vector
@@ -303,7 +306,43 @@ void testlineSpace(int myid){
 
 }
 
+//*****************************************************************************
+// Test the balance function
+// 
+// This test is taken from the paper:
+//
+// James, Rodney & Langou, Julien & Lowery, Bradley. (2014). 
+// On matrix balancing and eigenvector computation.
+//*****************************************************************************
+void testBalance(int myid){
 
+	matrixExponential *expSolver = matrixExponentialFactory::getExpSolver("pade-method2");
+	MatrixD A = MatrixD::Random(4,4);
+	SparseMatrixD As, D, Aprime, Dinv;
+	MatrixD matExp, matExpBal;
+	bool isApprox;
+
+	double coeff1 = 1.;
+	double coeff2 = 1.;
+
+	// build the badly scaled matrix
+	for (int i = 0; i < A.cols(); i++){
+		coeff1 = A(i,i)*coeff1*10.;
+		coeff2 = A(i,A.cols()-1)*coeff2*10.;
+		A(i,i) = coeff1;
+		A(A.cols()-i-1,A.cols()-1) = coeff2;
+	}	
+	As = A.sparseView();	
+	balance(As, Aprime, D);
+	Dinv = MatrixD(D).inverse().sparseView();
+	matExp = MatrixD(expSolver->compute(As, 1.0));
+	matExpBal = MatrixD(D*expSolver->compute(Aprime, 1.0)*Dinv);
+
+	assert(MatrixD(As).lpNorm<1>() > MatrixD(Aprime).lpNorm<1>());
+	assert(matExp.isApprox(matExpBal));
+
+
+}
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
@@ -313,6 +352,21 @@ int main(){
 	testBinomialCoeff(myid);
 	testArnoldi(myid);
 	testlineSpace(myid);
+	testBalance(myid);
 
 	mpi.finalize();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

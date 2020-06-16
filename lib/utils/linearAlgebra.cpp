@@ -42,12 +42,12 @@ template <typename derived>
 void balance(const SparseMatrix<derived>& A, SparseMatrix<derived>& Aprime, 
 	SparseMatrix<derived>& D){
 	const int p = 2;
-	double beta = 2.;
-	derived c, r, s, f;
+	derived c, r, s, f, testValue, beta = 10.;
 	bool converged = false;	
 	SparseMatrix<derived> I(A.rows(),A.cols()); I.setIdentity();
 	Matrix<derived, Dynamic, 1> vectCol, vectRow;
 	Aprime = A;
+	D = I;
 
 	do{
 		converged = true;
@@ -58,12 +58,12 @@ void balance(const SparseMatrix<derived>& A, SparseMatrix<derived>& Aprime,
 			r = vectRow.template lpNorm<p>();
 			s = std::pow(c, p) + std::pow(r, p);
 			f = 1.;
-			while (c < r / beta){
+			while (c < (r/beta)){
 				c *= beta;
 				r /= beta;
 				f *= beta;
 			}
-			while (c >= r*beta){
+			while (c >= (r*beta)){
 				c /= beta;
 				r *= beta;
 				f /= beta;
@@ -73,6 +73,8 @@ void balance(const SparseMatrix<derived>& A, SparseMatrix<derived>& Aprime,
 				D.coeffRef(i,i) *= f;
 				Aprime.col(i) *= f;
 				Aprime.row(i) /= f;
+				vectCol = Aprime.col(i)*f;
+				vectRow = Aprime.row(i)/f;
 			}
 		}
 	} while (!converged);
