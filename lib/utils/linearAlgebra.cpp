@@ -4,7 +4,6 @@
 // Linear algebra utilities that Eigen doesn't provide
 //*****************************************************************************
 #include "linearAlgebra.h"
-#include <iostream>
 
 //*****************************************************************************
 // Implements the Moore-Penrose pseudo inverse for a eigen sparse matrix

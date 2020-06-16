@@ -75,8 +75,8 @@ matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim, bool
 // Methods for Taylor series Class
 //
 //*****************************************************************************
-taylor::taylor(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
-	krylovDim){
+taylor::taylor(bool krylovBool, int krylovDim, bool balance):
+	matrixExponential(krylovBool, krylovDim, balance){
 	std::string thetaFname = "../src/data/theta.txt";
    std::ifstream inFile;
    double x;
@@ -234,7 +234,18 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 //*****************************************************************************
 VectorD taylor::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 	MatrixD M;
-	VectorD sol;
+	Eigen::SparseLU<SparseMatrixD, COLAMDOrdering<int> > solver;
+	SparseMatrixD Aprime, D;
+	VectorD sol, n0;
+
+	if (useBalance){
+		n0 = v0;
+		balance(A, Aprime, D);
+		solver.factorize(D);
+		n0 = solver.solve(v0);
+		sol = expmv(Aprime, t, n0, M);
+		return D*sol;
+	}
 	sol = expmv(A, t, v0, M);
 	return sol;
 }
@@ -247,7 +258,7 @@ VectorD taylor::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 //*****************************************************************************
 SparseMatrixD taylor::compute(const SparseMatrixD& A, double t){
 	std::string errorMessage =
-		" The Taylor series method cannot be used with compute\n";
+		" The Taylor series solver cannot be used with compute method\n";
 	libowskiException::runtimeError(errorMessage);
 	return A;
 }
@@ -263,8 +274,8 @@ SparseMatrixD taylor::compute(const SparseMatrixD& A, double t){
 //*****************************************************************************
 // Constructer for pade class
 //*****************************************************************************
-pade::pade(bool krylovBool, int krylovDim):matrixExponential(krylovBool, 
-	krylovDim){};
+pade::pade(bool krylovBool, int krylovDim, bool balance):
+	matrixExponential(krylovBool, krylovDim, balance){};
 
 //*****************************************************************************
 // Pade approximation for order (3,3)
@@ -443,7 +454,8 @@ SparseMatrixD pade::compute(const SparseMatrixD& A, double t){
 //*****************************************************************************
 // Constructor for method1
 //*****************************************************************************
-method1::method1(bool krylovBool, int krylovDim):pade(krylovBool, krylovDim){
+method1::method1(bool krylovBool, int krylovDim, bool balance):
+	pade(krylovBool, krylovDim, balance){
 	name = "pade-method1";
 };
 
@@ -501,7 +513,8 @@ void method1::run(const SparseMatrixD& A, SparseMatrixD& U, SparseMatrixD& V,
 //*****************************************************************************
 // Constructor for method2
 //*****************************************************************************
-method2::method2(bool krylovBool, int krylovDim):pade(krylovBool, krylovDim){
+method2::method2(bool krylovBool, int krylovDim, bool balance):
+	pade(krylovBool, krylovDim, balance){
 	name = "pade-method2";
 };
 
@@ -619,8 +632,8 @@ int method2::ell(const SparseMatrixD& A, const int m){
 //*****************************************************************************
 // Cauchy constructor
 //*****************************************************************************
-cauchy::cauchy(bool krylovBool, int krylovDim):matrixExponential(krylovBool, 
-	krylovDim){};
+cauchy::cauchy(bool krylovBool, int krylovDim, bool balance):
+	matrixExponential(krylovBool, krylovDim, balance){};
 
 //*****************************************************************************
 // Calculates exp(A*t)v. The action of the matrix expoential on a vector
@@ -777,8 +790,8 @@ SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 //*****************************************************************************
 // Initilizer for the CRAM solver
 //*****************************************************************************
-CRAM::CRAM(bool krylovBool, int krylovDim):cauchy(krylovBool, krylovDim
-	){
+CRAM::CRAM(bool krylovBool, int krylovDim, bool balance):
+	cauchy(krylovBool, krylovDim, balance){
 
 	name = "CRAM";
 	MatrixCLD thetaCRAM(8,1);
@@ -823,8 +836,8 @@ CRAM::CRAM(bool krylovBool, int krylovDim):cauchy(krylovBool, krylovDim
 //*****************************************************************************
 // Initilizer for the parabolic solver
 //*****************************************************************************
-parabolic::parabolic(bool krylovBool, int krylovDim):cauchy(krylovBool, 
-	krylovDim){
+parabolic::parabolic(bool krylovBool, int krylovDim, bool balance):
+	cauchy(krylovBool, krylovDim, balance){
 
 	name = "parabolic";
 	// Gets the coefficients for the contour integral
@@ -867,8 +880,8 @@ MatrixCLD parabolic::parabolicContourCoeffs(int N){
 //*****************************************************************************
 // Initilizer for the hyperbolic solver
 //*****************************************************************************
-hyperbolic::hyperbolic(bool krylovBool, int krylovDim):cauchy(krylovBool, 
-	krylovDim){
+hyperbolic::hyperbolic(bool krylovBool, int krylovDim, bool balance):
+	cauchy(krylovBool, krylovDim, balance){
 
 	name = "hyperbolic";
 	// Gets the coefficients for the contour integral
@@ -912,8 +925,8 @@ MatrixCLD hyperbolic::hyperbolicContourCoeffs(int N){
 //*****************************************************************************
 // Initilizer for the LPAM solver
 //*****************************************************************************
-LPAM::LPAM(bool krylovBool, int krylovDim):matrixExponential(krylovBool, 
-	krylovDim){};
+LPAM::LPAM(bool krylovBool, int krylovDim, bool balance):
+	matrixExponential(krylovBool, krylovDim, balance){};
 
 //*****************************************************************************
 // Calculates the leading coefficient for the Laguerre Polynomial
