@@ -55,7 +55,12 @@ class matrixExponential{
 	// Krylov subspace dimension
 	//**************************************************************************
 	int krylovSubspaceDim = 10;
-
+	//**************************************************************************
+	// Logic to se if you want to balance the matrix (can help to reduce the 
+	// matrix norm... use with caution) This is needed to methods whoes 
+	// accuracy deponds on the matrix norm.
+	//**************************************************************************
+	bool useBalance = false;
 };
 
 //*****************************************************************************
@@ -87,7 +92,7 @@ class taylor : public matrixExponential{
 	//**************************************************************************
 	// Constructor
 	//**************************************************************************
-	taylor(bool, int);
+	taylor(bool, int, bool);
 	//**************************************************************************
 	// Computes the matrix exponential action on a vector. exp(A*t)v
 	//**************************************************************************
@@ -140,7 +145,7 @@ class pade : public matrixExponential{
 	//**************************************************************************
 	// Constructor
 	//**************************************************************************
-	pade(bool, int);
+	pade(bool, int, bool);
 	//**************************************************************************
 	// Computes the matrix exponential action on a vector. exp(A*t)v
 	//**************************************************************************
@@ -163,7 +168,7 @@ class method1 : public pade{
 	//**************************************************************************
 	// Constructor
 	//**************************************************************************
-	method1(bool, int);
+	method1(bool, int, bool);
 	private:
 	//**************************************************************************
 	// Runs the algorithm
@@ -182,7 +187,7 @@ class method2 : public pade{
 	//**************************************************************************
 	// Constructor
 	//**************************************************************************
-	method2(bool, int);
+	method2(bool, int, bool);
 	
 	private:
 	//**************************************************************************
@@ -213,7 +218,7 @@ class cauchy : public matrixExponential{
 	//**************************************************************************
 	// Constructer
 	//**************************************************************************
-	cauchy(bool, int);
+	cauchy(bool, int, bool);
 	//**************************************************************************
 	// Computes the matrix exponential action on a vector. exp(A*t)v
 	//**************************************************************************
@@ -233,7 +238,7 @@ class CRAM : public cauchy{
 	//**************************************************************************
 	// Constructor for the CRAM class
 	//**************************************************************************
-	CRAM(bool krylovBool, int krylovDim);
+	CRAM(bool, int, bool);
 };
 
 //*****************************************************************************
@@ -246,7 +251,7 @@ class parabolic : public cauchy{
 	//**************************************************************************
 	// Constructor for the parabolic class
 	//**************************************************************************
-	parabolic(bool krylovBool, int krylovDim);
+	parabolic(bool, int, bool);
 
 	private:
 	// Order of the approximation
@@ -267,7 +272,7 @@ class hyperbolic : public cauchy{
 	//**************************************************************************
 	// Constructor for the hyperbolic class
 	//**************************************************************************
-	hyperbolic(bool krylovBool, int krylovDim);
+	hyperbolic(bool, int, bool);
 
 	private:
 	// Order of the approximation
@@ -314,7 +319,7 @@ class LPAM : public matrixExponential{
 	//**************************************************************************
 	// Constructor
 	//**************************************************************************
-	LPAM(bool krylovBool, int krylovDim);
+	LPAM(bool, int, bool);
 	//**************************************************************************
 	// Computes the matrix exponential action on a vector. exp(A*t)v
 	//**************************************************************************
@@ -325,12 +330,12 @@ class LPAM : public matrixExponential{
 	SparseMatrixD compute(const SparseMatrixD&, double);
 };
 
-
 //*****************************************************************************
 // Matrix exponential factory class
 //*****************************************************************************
 class matrixExponentialFactory{
 	public:
-	static matrixExponential *getExpSolver(std::string, bool = false, int = 10);
+	static matrixExponential *getExpSolver(std::string, bool = false, int = 10, 
+		bool = false);
 };
 #endif 

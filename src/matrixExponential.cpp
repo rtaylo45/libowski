@@ -4,35 +4,35 @@
 // Methods for MatrixExponential factory class
 //*****************************************************************************
 matrixExponential *matrixExponentialFactory::getExpSolver(std::string type,
-	bool krylovBool, int krylovDim){
+	bool krylovBool, int krylovDim, bool balance){
 	matrixExponential *solver = nullptr;
 
 	if (type == "CRAM"){
-		solver = new CRAM(krylovBool, krylovDim);
+		solver = new CRAM(krylovBool, krylovDim, balance);
 		return solver;
 	}
 	else if (type == "parabolic"){
-		solver = new parabolic(krylovBool, krylovDim);
+		solver = new parabolic(krylovBool, krylovDim, balance);
 		return solver;
 	}
 	else if (type == "hyperbolic"){
-		solver = new hyperbolic(krylovBool, krylovDim);
+		solver = new hyperbolic(krylovBool, krylovDim, balance);
 		return solver;
 	}
 	else if (type == "pade-method1"){
-		solver = new method1(krylovBool, krylovDim);
+		solver = new method1(krylovBool, krylovDim, balance);
 		return solver;
 	}
 	else if (type == "pade-method2"){
-		solver = new method2(krylovBool, krylovDim);
+		solver = new method2(krylovBool, krylovDim, balance);
 		return solver;
 	}
 	else if (type == "LPAM"){
-		solver = new LPAM(krylovBool, krylovDim);
+		solver = new LPAM(krylovBool, krylovDim, balance);
 		return solver;
 	}
 	else if (type == "taylor"){
-		solver = new taylor(krylovBool, krylovDim);
+		solver = new taylor(krylovBool, krylovDim, balance);
 		return solver;
 	}
 	else {
@@ -59,11 +59,16 @@ matrixExponential *matrixExponentialFactory::getExpSolver(std::string type,
 //								in the calculation. WARNING THIS CAN ONLY BE USED WITH
 //								THE APPLY FUNCTION
 //	@param subspaceDim	The dimension of the krylov subspace
+//	@param balance			Set to true if you want to balance your matrix before
+//								you compute the exponential. This helps to reduce the
+//								matrix norm
 //*****************************************************************************
-matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
+matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim, bool
+	balance){
 
 	useKrylovSubspace = KrylovFlag;
 	krylovSubspaceDim = subspaceDim;
+	useBalance = balance;
 }
 
 //*****************************************************************************
