@@ -28,6 +28,57 @@ SparseMatrix<derived> MoorePenroseInv(const SparseMatrix<derived>& A){
 }
 
 //*****************************************************************************
+// Compute the balance of a sparse matrix. 
+//
+// Aprime = D^-1 A D
+//
+// James, Rodney & Langou, Julien & Lowery, Bradley. (2014). 
+// On matrix balancing and eigenvector computation.
+//
+// The code is based off of the Eigen dense matrix implemntation shown on
+// stackoverflow.com/questions/43151853/eigen-balancing-matrix-for-eigenvalue
+//*****************************************************************************
+template <typename derived>
+void balance(const SparseMatrix<derived>& A, SparseMatrix<derived>& Aprime, 
+	SparseMatrix<derived>& D){
+	const int p = 2;
+	double beta = 2.;
+	derived c, r, s, f;
+	bool converged = false;	
+	SparseMatrix<derived> I(A.rows(),A.cols()); I.setIdentity();
+	Matrix<derived, Dynamic, 1> vectCol, vectRow;
+	Aprime = A;
+
+	do{
+		converged = true;
+		for (int i = 0; i < A.rows(); i++){
+			vectCol = Aprime.col(i);
+			vectRow = Aprime.row(i);
+			c = vectCol.template lpNorm<p>();
+			r = vectRow.template lpNorm<p>();
+			s = std::pow(c, p) + std::pow(r, p);
+			f = 1.;
+			while (c < r / beta){
+				c *= beta;
+				r /= beta;
+				f *= beta;
+			}
+			while (c >= r*beta){
+				c /= beta;
+				r *= beta;
+				f /= beta;
+			}
+			if (std::pow(c, p) + std::pow(r, p) < 0.95*s){
+				converged = false;
+				D.coeffRef(i,i) *= f;
+				Aprime.col(i) *= f;
+				Aprime.row(i) /= f;
+			}
+		}
+	} while (!converged);
+}
+
+//*****************************************************************************
 // l1 norm of a sparse matrix
 //
 // @param A		Sparse matrix
@@ -150,4 +201,9 @@ template SparseMatrixLD MoorePenroseInv(const SparseMatrixLD& A);
 template SparseMatrixD MoorePenroseInv(const SparseMatrixD& A);
 template SparseMatrixCLD MoorePenroseInv(const SparseMatrixCLD& A);
 template SparseMatrixCD MoorePenroseInv(const SparseMatrixCD& A);
+
+
+template void balance(const SparseMatrixLD& A, SparseMatrixLD& Aprime, SparseMatrixLD& D);
+template void balance(const SparseMatrixD& A, SparseMatrixD& Aprime, SparseMatrixD& D);
+
 

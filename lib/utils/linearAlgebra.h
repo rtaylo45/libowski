@@ -17,6 +17,12 @@ using namespace Eigen;
 template <typename derived>
 SparseMatrix<derived> MoorePenroseInv(const SparseMatrix<derived>&);
 
+//*****************************************************************************
+// Compute the balance of a sparse matrix
+//*****************************************************************************
+template <typename derived>
+void balance(const SparseMatrix<derived>&, SparseMatrix<derived>&, 
+	SparseMatrix<derived>&);
 
 //*****************************************************************************
 // l1 norm sparse matrix
@@ -37,7 +43,7 @@ double normAm(const SparseMatrixD&, const int);
 //*****************************************************************************
 // Arnoldi algorithm
 //*****************************************************************************
-void arnoldi(const SparseMatrixD& A, const VectorD& b, const int n, 
-	MatrixD& V, SparseMatrixD& H);
+void arnoldi(const SparseMatrixD&, const VectorD&, const int, 
+	MatrixD&, SparseMatrixD&);
 
 #endif
