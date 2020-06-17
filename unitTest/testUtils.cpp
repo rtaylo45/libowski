@@ -317,30 +317,26 @@ void testlineSpace(int myid){
 void testBalance(int myid){
 
 	matrixExponential *expSolver = matrixExponentialFactory::getExpSolver("pade-method2");
-	MatrixD A = MatrixD::Random(4,4);
+	MatrixD A(4,4);
 	SparseMatrixD As, D, Aprime, Dinv;
 	MatrixD matExp, matExpBal;
 	bool isApprox;
+	A << -0.01, 1.0, 0.0, 2000.0,
+		   0.0, -10.0, 1.0, 1000.0,
+			0.0, 0.0, -1.0, 500.,
+			0.0, 0.0, 1.0, -100.;
 
 	double coeff1 = 1.;
 	double coeff2 = 1.;
 
-	// build the badly scaled matrix
-	for (int i = 0; i < A.cols(); i++){
-		coeff1 = A(i,i)*coeff1*10.;
-		coeff2 = A(i,A.cols()-1)*coeff2*10.;
-		A(i,i) = coeff1;
-		A(A.cols()-i-1,A.cols()-1) = coeff2;
-	}	
 	As = A.sparseView();	
 	balance(As, Aprime, D);
 	Dinv = MatrixD(D).inverse().sparseView();
 	matExp = MatrixD(expSolver->compute(As, 1.0));
 	matExpBal = MatrixD(D*expSolver->compute(Aprime, 1.0)*Dinv);
 
-	assert(MatrixD(As).lpNorm<1>() > MatrixD(Aprime).lpNorm<1>());
+	assert(l1norm(As) > l1norm(Aprime));
 	assert(matExp.isApprox(matExpBal));
-
 
 }
 int main(){

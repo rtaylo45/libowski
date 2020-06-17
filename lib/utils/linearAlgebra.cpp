@@ -86,7 +86,7 @@ void balance(const SparseMatrix<derived>& A, SparseMatrix<derived>& Aprime,
 //*****************************************************************************
 double l1norm(const SparseMatrixD& A){
 	double norm;
-	norm = (A.cwiseAbs()*VectorD::Ones(A.cols())).maxCoeff();
+	norm = (Eigen::RowVectorXd::Ones(A.rows()) * A.cwiseAbs()).maxCoeff();
 	return norm;
 
 }
