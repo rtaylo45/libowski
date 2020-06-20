@@ -474,8 +474,8 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 //****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double t = 0.0, tnew = 0.0; 
-	int steps = 100;
-	double totalTime = 100.0;
+	int steps = 1;
+	double totalTime = 10000.0;
 	double dt = totalTime/steps;
 	int numOfSpecs = 6;
 	int numOfLvls = 16;
@@ -551,19 +551,19 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 		if (myid==0){ writePrecursorSolution(sol, t);}
 	}
 
-	flux = 0.08;
-	N0 = sol;
-	A = BuildSpeciesMatrix(0.8*coeff, varCoeff, numOfSpecs, numOfLvls, 
-		flux);
+	//flux = 0.08;
+	//N0 = sol;
+	//A = BuildSpeciesMatrix(0.8*coeff, varCoeff, numOfSpecs, numOfLvls, 
+	//	flux);
 
-	for (int i = 80; i < steps; i++){
+	//for (int i = 80; i < steps; i++){
 
-		t = t + dt;
-		tnew = tnew + dt;
-	
-		sol = expSolver->apply(A, N0, tnew);
-		if (myid==0){ writePrecursorSolution(sol, t);}
-	}
+	//	t = t + dt;
+	//	tnew = tnew + dt;
+	//
+	//	sol = expSolver->apply(A, N0, tnew);
+	//	if (myid==0){ writePrecursorSolution(sol, t);}
+	//}
 	//auto end = high_resolution_clock::now();
 	//auto duration = duration_cast<microseconds>(end - start);
 	//std::cout << myid << " " << duration.count()/1.e6 << std::endl;
@@ -622,50 +622,50 @@ int main(){
 	int numprocs = mpi.size;
 	matrixExponential *expSolver;
 
-	// Test the CRAM solver
-	expSolver = matrixExponentialFactory::getExpSolver("CRAM");
-	testSolverTime(myid, numprocs, expSolver);
-	tankProblem(myid, expSolver, true);
-	xenonIodineProblem(myid, expSolver, true);
-	neutronPrecursorProblem(myid, expSolver);
+	//// Test the CRAM solver
+	//expSolver = matrixExponentialFactory::getExpSolver("CRAM");
+	//testSolverTime(myid, numprocs, expSolver);
+	//tankProblem(myid, expSolver, true);
+	//xenonIodineProblem(myid, expSolver, true);
+	//neutronPrecursorProblem(myid, expSolver);
 
-	// Test the parabolic solver
-	expSolver = matrixExponentialFactory::getExpSolver("parabolic");
-	testSolverTime(myid, numprocs, expSolver);
-	tankProblem(myid, expSolver, true);
-	xenonIodineProblem(myid, expSolver, true);
-	neutronPrecursorProblem(myid, expSolver);
+	//// Test the parabolic solver
+	//expSolver = matrixExponentialFactory::getExpSolver("parabolic");
+	//testSolverTime(myid, numprocs, expSolver);
+	//tankProblem(myid, expSolver, true);
+	//xenonIodineProblem(myid, expSolver, true);
+	//neutronPrecursorProblem(myid, expSolver);
 
-	// Test the hyperbolic solver
-	expSolver = matrixExponentialFactory::getExpSolver("hyperbolic");
-	testSolverTime(myid, numprocs, expSolver);
-	tankProblem(myid, expSolver, true);
-	xenonIodineProblem(myid, expSolver, true);
-	neutronPrecursorProblem(myid, expSolver);
+	//// Test the hyperbolic solver
+	//expSolver = matrixExponentialFactory::getExpSolver("hyperbolic");
+	//testSolverTime(myid, numprocs, expSolver);
+	//tankProblem(myid, expSolver, true);
+	//xenonIodineProblem(myid, expSolver, true);
+	//neutronPrecursorProblem(myid, expSolver);
 
-	// Test the pade method 1 solver
-	expSolver = matrixExponentialFactory::getExpSolver("pade-method1");
-	testSolverTime(myid, numprocs, expSolver);
-	tankProblem(myid, expSolver, true);
-	xenonIodineProblem(myid, expSolver, true);
-	neutronPrecursorProblem(myid, expSolver);
+	//// Test the pade method 1 solver
+	//expSolver = matrixExponentialFactory::getExpSolver("pade-method1");
+	//testSolverTime(myid, numprocs, expSolver);
+	//tankProblem(myid, expSolver, true);
+	//xenonIodineProblem(myid, expSolver, true);
+	//neutronPrecursorProblem(myid, expSolver);
 
-	// Test the pade method 2 solver
-	expSolver = matrixExponentialFactory::getExpSolver("pade-method2");
-	testSolverTime(myid, numprocs, expSolver);
-	tankProblem(myid, expSolver, true);
-	xenonIodineProblem(myid, expSolver, true);
-	neutronPrecursorProblem(myid, expSolver);
+	//// Test the pade method 2 solver
+	//expSolver = matrixExponentialFactory::getExpSolver("pade-method2");
+	//testSolverTime(myid, numprocs, expSolver);
+	//tankProblem(myid, expSolver, true);
+	//xenonIodineProblem(myid, expSolver, true);
+	//neutronPrecursorProblem(myid, expSolver);
 
 	// Test the Taylor solver
 	expSolver = matrixExponentialFactory::getExpSolver("taylor");
-	testSolverTime(myid, numprocs, expSolver);
-	tankProblem(myid, expSolver, false);
-	xenonIodineProblem(myid, expSolver, false);
+	//testSolverTime(myid, numprocs, expSolver);
+	//tankProblem(myid, expSolver, false);
+	//xenonIodineProblem(myid, expSolver, false);
 	neutronPrecursorProblem(myid, expSolver);
 
 	// Test the Krylov subspace solver
-	testKrylovSubspace(myid);
+	//testKrylovSubspace(myid);
 
 	mpi.finalize();
 }

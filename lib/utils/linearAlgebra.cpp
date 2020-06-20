@@ -57,6 +57,10 @@ void balance(const SparseMatrix<derived>& A, SparseMatrix<derived>& Aprime,
 			r = vectRow.template lpNorm<p>();
 			s = std::pow(c, p) + std::pow(r, p);
 			f = 1.;
+			// Kills it if r or c are zero (Note: the last row 
+			// will always be zero because of how i set up 
+			// constant source terms)
+			if (c == 0. or r == 0.){return;};
 			while (c < (r/beta)){
 				c *= beta;
 				r /= beta;
