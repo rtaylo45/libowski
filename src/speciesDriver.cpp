@@ -133,7 +133,6 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
    species* spec = getSpeciesPtr(i, j, specID);
    spec->coeffs = coeffs;
 	spec->transCoeffs = transCoeffs;
-	if (s != 0.0){dummySpec = 1;};
    spec->s = s;
 }
 //*****************************************************************************
