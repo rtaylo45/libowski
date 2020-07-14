@@ -108,6 +108,16 @@ void meshCell::setPressure(double pressure){
 void meshCell::setTemperature(double temp){
 	T = temp;
 }
+
+//*****************************************************************************
+// Sets the cells scalar neutron flux
+//
+// @param phi_		Neutron flux in 1/ft^2/s
+//*****************************************************************************
+void meshCell::setNeutronFlux(double phi_){
+	phi = phi_;
+}
+
 //*****************************************************************************
 // Gets a pointer to a cell connection
 //

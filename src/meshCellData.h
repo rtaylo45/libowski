@@ -42,6 +42,8 @@ class meshCell {
 	double T = -1.;
 	// Presure in lbf/in^2
 	double P = -1.;
+	// Scalar neutron flux 1/ft^2/s
+	double phi  = 0.0;
 	// Vector of cell connections
 	std::vector<connection> connections;
 	// Flag to set if the second order flux is used
@@ -66,6 +68,8 @@ class meshCell {
 	void setTemperature(double);
 	// Sets the cells pressure
 	void setPressure(double);
+	// Sets the cells scalar neutron flux
+	void setNeutronFlux(double);
 	// Gets a pointer to the connection
 	connection* getConnection(int);
 	// Adds a surface 
