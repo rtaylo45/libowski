@@ -60,19 +60,48 @@ void speciesDriver::setFluxLimiter(std::string limiterName){
 // @param molarMass  Molar mass of species [lbm/mol]
 // @param [initCon]  Initial concentration [lbm/ft^3]
 // @param [diffCoef]	Diffusion coefficient [ft^2/s]
+// @param name			Name of the species
 //*****************************************************************************
 int speciesDriver::addSpecies(double molarMass, double initCon,
-	double diffCoeff){
+	double diffCoeff, std::string name){
    for (int i = 0; i < modelPtr->numOfxCells; i++){
       for (int j = 0; j < modelPtr->numOfyCells; j++){
          meshCell* cell = modelPtr->getCellByLoc(i,j);
 
-         cell->addSpecies(molarMass, initCon, diffCoeff);
+         cell->addSpecies(molarMass, initCon, diffCoeff, name);
       }
    }
    int specID = numOfSpecs;
    numOfSpecs++;
    return specID;
+}
+
+//*****************************************************************************
+// Add species from a file generated from pyLibowski. Returns a vector of species
+// IDs
+//
+// @param fname	File location
+//*****************************************************************************
+std::vector<int> speciesDriver::addSpeciesFromFile(std::string fname){
+   std::ifstream infile(fname);
+	std::vector<int> specIDs;
+	int i;
+   double mm, initCon, D;
+   std::string name;
+
+	// Loop though lines
+   for (std::string line; getline(infile, line);){
+      std::istringstream iss(line);
+      std::vector<std::string> result;
+		i = 0;
+		// Split line and loop though it
+      for (std::string s; iss >> s;){
+         result.push_back(s);
+			i++;
+      }
+		name = result.at(0); mm = stod(result.at(1)); initCon = stod(result.at(2)); 
+		D = stod(result.at(3));
+   }
 }
 
 //*****************************************************************************
@@ -135,6 +164,8 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 	spec->transCoeffs = transCoeffs;
    spec->s = s;
 }
+
+
 //*****************************************************************************
 // Sets a boundary condition in a cell
 //
