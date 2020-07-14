@@ -98,7 +98,7 @@ void moleProblem1(int myid){
 					spec.setSpeciesCon(i, j, cID, initCon);
 
 					// Sets the sources
-					spec.setSpeciesSource(i, j, cID, cCoeffs, 0.0);
+					spec.setSpeciesSource(i, j, cID, cCoeffs);
 				}
 			}
 			t = 0.0;
@@ -246,7 +246,7 @@ void moleProblem2(int myid){
 						spec.setSpeciesCon(i, j, cID, initCon);
 
 						// sets the sources
-						spec.setSpeciesSource(i, j, cID, ccoeffs, 0.0);
+						spec.setSpeciesSource(i, j, cID, ccoeffs);
 					}
 				}
 				t = 0.0;

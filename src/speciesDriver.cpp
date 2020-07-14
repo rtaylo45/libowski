@@ -61,8 +61,8 @@ void speciesDriver::setFluxLimiter(std::string limiterName){
 // @param [initCon]  Initial concentration [lbm/ft^3]
 // @param [diffCoef]	Diffusion coefficient [ft^2/s]
 //*****************************************************************************
-int speciesDriver::addSpecies(double molarMass, double initCon = 0.0, 
-	double diffCoeff = 0.0){
+int speciesDriver::addSpecies(double molarMass, double initCon,
+	double diffCoeff){
    for (int i = 0; i < modelPtr->numOfxCells; i++){
       for (int j = 0; j < modelPtr->numOfyCells; j++){
          meshCell* cell = modelPtr->getCellByLoc(i,j);
@@ -117,18 +117,22 @@ void speciesDriver::setSpeciesCon(int i, int j, int specID, double specCon){
 //*****************************************************************************
 // Sets the source terms for a species in a cell
 //
-// @param i       x index
-// @param j       y index
-// @param specID  Species ID
-// @param coeffs  A vector of species coefficients size of number of species
-//                [lbm/s]
-// @param s       Constant source in cell [lbm/ft^3/s]
+// @param i					x index
+// @param j					y index
+// @param specID			Species ID
+// @param coeffs			A vector of species source coefficients
+//								[1/s]
+// @param transcoeffs	A vector of species souce coefficients for transmutation
+//								[ft^2]
+// @param s					Constant source in cell [lbm/ft^3/s]
 //*****************************************************************************
 void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<double>
-      coeffs, double s = 0.0){
+      coeffs, double s, std::vector<double> transCoeffs){
    assert(coeffs.size() == numOfSpecs);
+	if (not transCoeffs.empty()){ assert(transCoeffs.size() == numOfSpecs);};
    species* spec = getSpeciesPtr(i, j, specID);
    spec->coeffs = coeffs;
+	spec->transCoeffs = transCoeffs;
 	if (s != 0.0){dummySpec = 1;};
    spec->s = s;
 }
@@ -501,6 +505,9 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			if (thisSpecPtr->coeffs.size()){
 				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
 					coeff = thisSpecPtr->coeffs[specCounter];
+					if (not thisSpecPtr->transCoeffs.empty()){ 
+						coeff += thisSpecPtr->transCoeffs[specCounter]*thisCellPtr->phi;
+					}
 					if (specCounter == specID){
 						thisCoeff += coeff;
 					}

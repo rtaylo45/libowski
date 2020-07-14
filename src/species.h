@@ -26,6 +26,10 @@ class species {
 	double D = 0.0;
 	// Vector of linear source term coefficients in order of species IDs [1/s]
 	std::vector<double> coeffs;
+	// Vector of linear source terms for neturon induces reactions in order of 
+	// species IDs [ft^2]. These values need to be multiplied by the scalar 
+	// neutron flux in the cell.
+	std::vector<double> transCoeffs;
 
 	// Class methods
 	public:

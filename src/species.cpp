@@ -24,4 +24,5 @@ void species::clean(){
 	D = 0.0;
 	name = "None";
 	coeffs.clear();
+	transCoeffs.clear();
 }

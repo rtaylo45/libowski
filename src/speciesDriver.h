@@ -62,7 +62,8 @@ class speciesDriver {
 	// Sets the species concentration
 	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms
-	void setSpeciesSource(int, int, int, std::vector<double>, double);
+	void setSpeciesSource(int, int, int, std::vector<double>, double = 0.0,
+		std::vector<double> = std::vector<double>());
 	// Sets a boundary condition in a cell
 	void setBoundaryCondition(std::string, std::string, int, double = 0);
 	// Call to make solver rebuild the A matrix before the next solve
