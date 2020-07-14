@@ -6,11 +6,14 @@
 #ifndef SPECIES_H
 #define SPECIES_H
 #include <vector>
+#include <string>
 
 class species {
 
 	// class attributes
 	public:
+	// Name of the species
+	std::string name = "None";
 	// Concentration [lbm/ft^3]
 	double c = 0.0;
 	// molar mass [lbm/mol]
@@ -27,7 +30,7 @@ class species {
 	// Class methods
 	public:
 	// Constructor
-	species(double, double, double);
+	species(double, double = 0.0, double = 0.0, std::string = "None");
 
 	// Clean
 	void clean();
