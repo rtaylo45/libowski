@@ -20,10 +20,12 @@ void surface::set(){
 // @param molarMass	Molar mass of species [lbm/mol]
 // @param initCon		Initial concentration [lbm/ft^3]
 // @param diffCoeff	Diffusion coefficient [ft^2/s]
+// @param name			Species name
 //*****************************************************************************
-void surface::addSpecies(double molarMass, double initCon, double diffCoeff){
+void surface::addSpecies(double molarMass, double initCon, double diffCoeff,
+	std::string name){
 
-	species spec(molarMass, initCon, diffCoeff);
+	species spec(molarMass, initCon, diffCoeff, name);
 	speciesVector.push_back(spec);
 }
 

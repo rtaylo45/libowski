@@ -1,5 +1,4 @@
 #include "matrixExponential.h"
-#include <unsupported/Eigen/MatrixFunctions>
 //*****************************************************************************
 // Methods for MatrixExponential factory class
 //*****************************************************************************
@@ -72,7 +71,7 @@ matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
 //*****************************************************************************
 taylor::taylor(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
 	krylovDim){
-	std::string thetaFname = "../src/data/theta.txt";
+	std::string thetaFname = getDataPath() + "theta.txt";
    std::ifstream inFile;
    double x;
    int counter = 0;
@@ -80,12 +79,9 @@ taylor::taylor(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
 
    inFile.open(thetaFname);
    if (!inFile){
-		inFile.open("../" + thetaFname);
-		if (!inFile){
-			std::string errorMessage =
-				" Unable to find the Taylor solver theta file\n";
-			libowskiException::runtimeError(errorMessage);
-		}
+		std::string errorMessage =
+			" Unable to find the Taylor solver theta file\n";
+		libowskiException::runtimeError(errorMessage);
    }   
    while (inFile >> x) {
       theta(counter) = x;

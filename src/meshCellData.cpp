@@ -43,10 +43,12 @@ meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor,
 // @param molarMass	Molar mass of species [lbm/mol]
 // @param initCon		Initial concentration [lbm/ft^3]
 // @param diffCoeff	Diffusion coefficient [ft^2/s]
+// @param name			Species name
 //*****************************************************************************
-void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff){
+void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff,
+	std::string name){
 
-	species spec(molarMass, initCon, diffCoeff);
+	species spec(molarMass, initCon, diffCoeff, name);
 	// loop over connections to see if the species needs to be added
 	// to a surface
 	for (int conCount = 0; conCount < connections.size(); conCount ++){
@@ -54,7 +56,7 @@ void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff){
 		surface* conSurface = thisCon->getSurface();
 		// if the pointer is not null then add species to that surface
 		if(conSurface->isInit){
-			conSurface->addSpecies(molarMass, initCon, diffCoeff);
+			conSurface->addSpecies(molarMass, initCon, diffCoeff, name);
 		}
 	}
 	speciesVector.push_back(spec);
@@ -108,6 +110,16 @@ void meshCell::setPressure(double pressure){
 void meshCell::setTemperature(double temp){
 	T = temp;
 }
+
+//*****************************************************************************
+// Sets the cells scalar neutron flux
+//
+// @param phi_		Neutron flux in 1/ft^2/s
+//*****************************************************************************
+void meshCell::setNeutronFlux(double phi_){
+	phi = phi_;
+}
+
 //*****************************************************************************
 // Gets a pointer to a cell connection
 //

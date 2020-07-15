@@ -23,6 +23,7 @@
 #include "matrixTypes.h"
 #include "exception.h"
 #include "utilBase.h"
+#include "sys.h"
 
 //*****************************************************************************
 // Abstract base matrix exponential class

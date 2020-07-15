@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <string>
 #include <fstream>
+#include <istream>
+#include <filesystem>
 #include "modelMesh.h"
 #include "meshCellData.h"
 #include "meshCellFace.h"
@@ -54,7 +56,9 @@ class speciesDriver {
 	// Constructor
 	speciesDriver(modelMesh* model);
 	// Adds a species to the system
-	int addSpecies(double, double, double);
+	int addSpecies(double, double = 0.0, double = 0.0, std::string = "None");
+	// Adds species from a file generated from pyLibowski
+	std::vector<int> addSpeciesFromFile(std::string);
 	// Gets a pointer to the species object
 	species* getSpeciesPtr(int, int, int);
 	// Gets the species concentration
@@ -62,7 +66,10 @@ class speciesDriver {
 	// Sets the species concentration
 	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms
-	void setSpeciesSource(int, int, int, std::vector<double>, double);
+	void setSpeciesSource(int, int, int, std::vector<double>, double = 0.0,
+		std::vector<double> = std::vector<double>());
+	// Sets the species source terms from files
+	void setSpeciesSourceFromFile(std::string, std::string = "None");
 	// Sets a boundary condition in a cell
 	void setBoundaryCondition(std::string, std::string, int, double = 0);
 	// Call to make solver rebuild the A matrix before the next solve
@@ -83,6 +90,10 @@ class speciesDriver {
 	void clean();
 
 	private:
+	// Sets the decay coefficients
+	void setDecaySource(int i, int j, int specID, std::string, std::vector<double>);
+	// Sets the transmutation coefficients
+	void setTransSource(int i, int j, int specID, std::string, std::vector<double>);
 	// Solver step
 	int step = 0;
 	// Exponential solver

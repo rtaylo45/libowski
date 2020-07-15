@@ -104,9 +104,9 @@ void testProblem1(int myid){
 			// Set source
 			for (int i = 0; i < xCells; i++){
 				for (int j = 0; j < yCells; j++){
-					spec.setSpeciesSource(i, j, N1ID, N1Coeffs, 0.0);
-					spec.setSpeciesSource(i, j, N2ID, N2Coeffs, 0.0);
-					spec.setSpeciesSource(i, j, N3ID, N3Coeffs, 0.0);
+					spec.setSpeciesSource(i, j, N1ID, N1Coeffs);
+					spec.setSpeciesSource(i, j, N2ID, N2Coeffs);
+					spec.setSpeciesSource(i, j, N3ID, N3Coeffs);
 				}
 			}
 			
@@ -230,8 +230,8 @@ void testProblem2(int myid){
 					spec.setSpeciesCon(i,j,VID, (a-b)*initCon);
 
 					// Sets the sourses
-					spec.setSpeciesSource(i, j, UID, Ucoeffs, 0.0);
-					spec.setSpeciesSource(i, j, VID, Vcoeffs, 0.0);
+					spec.setSpeciesSource(i, j, UID, Ucoeffs);
+					spec.setSpeciesSource(i, j, VID, Vcoeffs);
 				}
 			}
 
@@ -368,8 +368,8 @@ void testProblem2Krylov(int myid){
 					spec.setSpeciesCon(i,j,VID, (a-b)*initCon);
 
 					// Sets the sourses
-					spec.setSpeciesSource(i, j, UID, Ucoeffs, 0.0);
-					spec.setSpeciesSource(i, j, VID, Vcoeffs, 0.0);
+					spec.setSpeciesSource(i, j, UID, Ucoeffs);
+					spec.setSpeciesSource(i, j, VID, Vcoeffs);
 				}
 			}
 
@@ -508,8 +508,8 @@ void testProblem2IntegratorMethods(int myid){
 					spec.setSpeciesCon(i,j,VID, (a-b)*initCon);
 
 					// Sets the sourses
-					spec.setSpeciesSource(i, j, UID, Ucoeffs, 0.0);
-					spec.setSpeciesSource(i, j, VID, Vcoeffs, 0.0);
+					spec.setSpeciesSource(i, j, UID, Ucoeffs);
+					spec.setSpeciesSource(i, j, VID, Vcoeffs);
 				}
 			}
 

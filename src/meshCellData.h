@@ -42,6 +42,8 @@ class meshCell {
 	double T = -1.;
 	// Presure in lbf/in^2
 	double P = -1.;
+	// Scalar neutron flux 1/ft^2/s
+	double phi  = 0.0;
 	// Vector of cell connections
 	std::vector<connection> connections;
 	// Flag to set if the second order flux is used
@@ -55,7 +57,7 @@ class meshCell {
 	// Constructor
 	meshCell(int, int, int, double, double, double, double);
 	// Add species
-	void addSpecies(double, double, double);
+	void addSpecies(double, double = 0.0, double = 0.0, std::string = "None");
 	// Gets a pointer to the species
 	species* getSpecies(int);
 	// Gets this cells species concentration
@@ -66,6 +68,8 @@ class meshCell {
 	void setTemperature(double);
 	// Sets the cells pressure
 	void setPressure(double);
+	// Sets the cells scalar neutron flux
+	void setNeutronFlux(double);
 	// Gets a pointer to the connection
 	connection* getConnection(int);
 	// Adds a surface 

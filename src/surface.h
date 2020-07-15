@@ -18,7 +18,7 @@ class surface {
 	// Initilizes the surface
 	void set();
 	// Add species
-	void addSpecies(double, double, double);
+	void addSpecies(double, double = 0.0, double = 0.0, std::string = "None");
 	// Gets a pointer to the species
 	species* getSpeciesPtr(int);
 	// Clean
