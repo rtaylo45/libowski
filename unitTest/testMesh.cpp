@@ -127,8 +127,8 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	//testInit();
-	//testSpeciesDriver();
+	testInit();
+	testSpeciesDriver();
 	testAddSpeciesFromFile();
 
 	mpi.finalize();
