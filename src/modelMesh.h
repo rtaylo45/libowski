@@ -56,10 +56,14 @@ class modelMesh {
 	void setSystemTemperature(double);
 	// Sets a pressure in the whole system
 	void setSystemPressure(double);
+	// Sets a neutron flux in the whole system
+	void setSystemNeutronFlux(double);
 	// Set temperature in a cell
 	void setCellTemperature(int, int, double);
 	// Set pressure in a cell
 	void setCellPressure(int, int, double);
+	// Set neutron flux in a cell
+	void setCellNeutronFlux(int, int, double);
 	// Adds a physical surface to a cell
 	void addSurface(int, int, std::string);
 	// Adds a physical surface along a boundary

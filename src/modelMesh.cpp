@@ -302,6 +302,19 @@ void modelMesh::setSystemPressure(double pressure){
 }
 
 //*****************************************************************************
+// Sets the neutron flux in the whole problem
+//
+// @param phi		Neutron flux in 1/ft^2/s
+//*****************************************************************************
+void modelMesh::setSystemNeutronFlux(double phi){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setNeutronFlux(phi);
+		}
+	}
+}
+//*****************************************************************************
 // Set cell temperature
 //
 // @param i			x cell index
@@ -323,6 +336,18 @@ void modelMesh::setCellTemperature(int i, int j, double temp){
 void modelMesh::setCellPressure(int i, int j, double pressure){
 	meshCell* cell = getCellByLoc(i,j);
 	cell->setPressure(pressure);
+}
+
+//*****************************************************************************
+// Set cell neutron flux
+//
+// @param i				x cell index
+// @param j				y cell index
+// @param phi			Neutron flux in 1/ft^2/s
+//*****************************************************************************
+void modelMesh::setCellNeutronFlux(int i, int j, double phi){
+	meshCell* cell = getCellByLoc(i,j);
+	cell->setNeutronFlux(phi);
 }
 
 //*****************************************************************************

@@ -63,6 +63,8 @@ class speciesDriver {
 	species* getSpeciesPtr(int, int, int);
 	// Gets the species concentration
 	double getSpecies(int, int, int);
+	// Gets the species name
+	std::string getSpeciesName(int, int , int);
 	// Sets the species concentration
 	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms

@@ -147,6 +147,18 @@ void speciesDriver::setSpeciesCon(int i, int j, int specID, double specCon){
 }
 
 //*****************************************************************************
+// Gets the species name
+//
+// @param i       x index
+// @param j       y index
+// @param specID  Species ID
+//*****************************************************************************
+std::string speciesDriver::getSpeciesName(int i, int j, int specID){
+   species* spec = getSpeciesPtr(i, j, specID);
+   return spec->name;
+}
+
+//*****************************************************************************
 // Sets the source terms for a species in a cell
 //
 // @param i					x index
@@ -456,8 +468,9 @@ void speciesDriver::solve(double solveTime){
 	double rtol = 1.e-5, diff;
 	VectorD defSourceOld, defSourceNew;
 
+	A = buildTransMatrix(augmented, 0.0);
 	if (mpi.rank == 0){
-		//dA = Eigen::MatrixXd(A*timeStep);
+		//dA = Eigen::MatrixXd(A);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
 		//outputFile.open("matrix.out", std::ios_base::app);
@@ -470,7 +483,6 @@ void speciesDriver::solve(double solveTime){
 		//std::cout << N0  << std::endl;
 		//matrixInit = true;
 	}
-	A = buildTransMatrix(augmented, 0.0);
 	N0 = buildInitialConditionVector(augmented);
 	sol = expSolver->apply(A, N0, timeStep);
 	unpackSolution(sol);
