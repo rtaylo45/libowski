@@ -8,8 +8,20 @@
 #include "speciesDriver.h"
 #include "meshCellData.h"
 #include "species.h"
+#include "sys.h"
 
 using namespace Eigen;
+
+//*****************************************************************************
+//*****************************************************************************
+void print(std::vector<double> const &a) {
+
+   for(int i=0; i < a.size(); i++){
+      std::cout << a.at(i) << ' ';
+   }
+   std::cout << '\n';
+
+}
 //*****************************************************************************
 // test the init of the mesh class. For now i kinda just test to make sure
 // the function run.
@@ -79,14 +91,45 @@ void testSpeciesDriver(){
 }
 
 //*****************************************************************************
+// Test adding species from file
+//*****************************************************************************
+void testAddSpeciesFromFile(){
+	int xCells = 1, yCells = 1;
+	double xLength = 1.0, yLength = 1.0;
+	std::vector<int> ids;
+	std::vector<std::string> testName = {"U-235", "Xe-135m", "Xe-135", "I-135"};
+	std::vector<double> testMM = {235.0439, 134.9072, 134.9072, 134.91};
+	
+	std::string speciesNamesFile = getDataPath() + "speciesInputNamesSmall.txt";
+	std::string speciesDecayFile = getDataPath() + "speciesInputDecaySmall.txt";
+	std::string speciesTransFile = getDataPath() + "speciesInputTransSmall.txt";
+	
+	modelMesh model(xCells, yCells, xLength, yLength);
+	speciesDriver spec = speciesDriver(&model);
+
+	ids = spec.addSpeciesFromFile(speciesNamesFile);
+	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
+
+	for (int i = 0; i < ids.size(); i++){
+		species* thisSpec = spec.getSpeciesPtr(0, 0, ids[i]);
+		assert(thisSpec->name == testName[i]);
+		assert(thisSpec->MM == testMM[i]);
+		std::cout << thisSpec->name << std::endl;
+		print(thisSpec->coeffs);
+		print(thisSpec->transCoeffs);
+	}
+}
+
+//*****************************************************************************
 // Main test
 //*****************************************************************************
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	testInit();
-	testSpeciesDriver();
+	//testInit();
+	//testSpeciesDriver();
+	testAddSpeciesFromFile();
 
 	mpi.finalize();
 }

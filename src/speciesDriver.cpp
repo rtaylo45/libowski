@@ -85,23 +85,26 @@ int speciesDriver::addSpecies(double molarMass, double initCon,
 std::vector<int> speciesDriver::addSpeciesFromFile(std::string fname){
    std::ifstream infile(fname);
 	std::vector<int> specIDs;
-	int i;
    double mm, initCon, D;
    std::string name;
 
+	// Checks to see if the file exists. throws error if not
+	checkFileExists(fname);
+		
 	// Loop though lines
    for (std::string line; getline(infile, line);){
       std::istringstream iss(line);
       std::vector<std::string> result;
-		i = 0;
 		// Split line and loop though it
       for (std::string s; iss >> s;){
          result.push_back(s);
-			i++;
       }
 		name = result.at(0); mm = stod(result.at(1)); initCon = stod(result.at(2)); 
 		D = stod(result.at(3));
+		// Adds the species
+		specIDs.push_back(addSpecies(mm, initCon, D, name));
    }
+	return specIDs;
 }
 
 //*****************************************************************************
@@ -165,6 +168,100 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
    spec->s = s;
 }
 
+//*****************************************************************************
+// Internal function that sets the decay source terms for a species in a cell
+//
+// @param i					x index
+// @param j					y index
+// @param specID			Species ID
+// @param coeffs			A vector of species source coefficients
+//								[1/s]
+//*****************************************************************************
+void speciesDriver::setDecaySource(int i, int j, int specID, std::vector<double>
+      coeffs){
+   assert(coeffs.size() == numOfSpecs);
+   species* spec = getSpeciesPtr(i, j, specID);
+   spec->coeffs = coeffs;
+}
+
+//*****************************************************************************
+// Internal function that sets the trans source terms for a species in a cell
+//
+// @param i					x index
+// @param j					y index
+// @param specID			Species ID
+// @param coeffs			A vector of species source coefficients
+//								[ft^2]
+//*****************************************************************************
+void speciesDriver::setTransSource(int i, int j, int specID, std::vector<double>
+      coeffs){
+   assert(coeffs.size() == numOfSpecs);
+   species* spec = getSpeciesPtr(i, j, specID);
+   spec->transCoeffs = coeffs;
+}
+
+//*****************************************************************************
+// Sets the source terms for a species in the entire problem domain
+//
+// @param decayfname		File location of the decay file
+// @param transfname		File location of the trans file (optional)
+//*****************************************************************************
+void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string transfname){
+	std::vector<std::string> fileVect;
+	std::string name;
+	int specID;
+	// the trans file is not required and has the default name None
+	if (transfname == "None"){ 
+		// Checks to see if the file exists. throws error if not
+		checkFileExists(decayfname);
+		// Adds the file to the fname vector
+		fileVect.push_back(decayfname);
+	}
+	// Both files are entered
+	else{
+		// Checks to see if the files exists. throws error if not
+		checkFileExists(decayfname);
+		checkFileExists(transfname);
+		// Adds the file to the fname vector
+		fileVect.push_back(decayfname);
+		fileVect.push_back(transfname);
+	}
+	
+	// Loops though the files	
+	for(int findex = 0; findex < fileVect.size(); findex++){
+		std::ifstream infile(fileVect[findex]);	
+		// Loops thought the lines of the file
+		for (std::string line; getline(infile, line);){
+   	   std::istringstream iss(line);
+   	   std::vector<double> coeffVect;
+   	   int l = 0;
+			// Loops though each line to split the string
+   	   for (std::string s; iss >> s;){
+				// specID is the first entry
+   	      if (l == 0){specID = stoi(s);};
+				// name is the second entry
+   	      if (l == 1){name = s;};
+				// the rest of the entries are the source terms
+   	      if (l > 1){
+   	         coeffVect.push_back(stod(s));
+   	      }
+   	      l++;
+   	   }
+
+			// Loop over cells
+			for (int i = 0; i < modelPtr->numOfxCells; i++){
+				for (int j = 0; j < modelPtr->numOfyCells; j++){
+					if (findex == 0){ 
+						setDecaySource(i, j, specID, coeffVect);
+					}
+					else{
+						setTransSource(i, j, specID, coeffVect);
+					}
+				}
+			}
+   	}
+	}
+}
 
 //*****************************************************************************
 // Sets a boundary condition in a cell

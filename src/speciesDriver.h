@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <string>
 #include <fstream>
+#include <istream>
+#include <filesystem>
 #include "modelMesh.h"
 #include "meshCellData.h"
 #include "meshCellFace.h"
@@ -66,6 +68,8 @@ class speciesDriver {
 	// Sets the species source terms
 	void setSpeciesSource(int, int, int, std::vector<double>, double = 0.0,
 		std::vector<double> = std::vector<double>());
+	// Sets the species source terms from files
+	void setSpeciesSourceFromFile(std::string, std::string = "None");
 	// Sets a boundary condition in a cell
 	void setBoundaryCondition(std::string, std::string, int, double = 0);
 	// Call to make solver rebuild the A matrix before the next solve
@@ -86,6 +90,10 @@ class speciesDriver {
 	void clean();
 
 	private:
+	// Sets the decay coefficients
+	void setDecaySource(int i, int j, int specID, std::vector<double>);
+	// Sets the transmutation coefficients
+	void setTransSource(int i, int j, int specID, std::vector<double>);
 	// Solver step
 	int step = 0;
 	// Exponential solver
