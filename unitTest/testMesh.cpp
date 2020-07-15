@@ -103,7 +103,7 @@ void testAddSpeciesFromFile(){
 	std::string speciesNamesFile = getDataPath() + "speciesInputNamesSmall.txt";
 	std::string speciesDecayFile = getDataPath() + "speciesInputDecaySmall.txt";
 	std::string speciesTransFile = getDataPath() + "speciesInputTransSmall.txt";
-	
+
 	modelMesh model(xCells, yCells, xLength, yLength);
 	speciesDriver spec = speciesDriver(&model);
 

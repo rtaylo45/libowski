@@ -91,9 +91,9 @@ class speciesDriver {
 
 	private:
 	// Sets the decay coefficients
-	void setDecaySource(int i, int j, int specID, std::vector<double>);
+	void setDecaySource(int i, int j, int specID, std::string, std::vector<double>);
 	// Sets the transmutation coefficients
-	void setTransSource(int i, int j, int specID, std::vector<double>);
+	void setTransSource(int i, int j, int specID, std::string, std::vector<double>);
 	// Solver step
 	int step = 0;
 	// Exponential solver

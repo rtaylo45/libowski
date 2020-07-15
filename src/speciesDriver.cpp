@@ -171,32 +171,42 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 //*****************************************************************************
 // Internal function that sets the decay source terms for a species in a cell
 //
+// The name is passed in so that an assertion is made that the species name 
+// equals the name in the file
+//
 // @param i					x index
 // @param j					y index
 // @param specID			Species ID
+// @param name				Species name
 // @param coeffs			A vector of species source coefficients
 //								[1/s]
 //*****************************************************************************
-void speciesDriver::setDecaySource(int i, int j, int specID, std::vector<double>
-      coeffs){
+void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
+		std::vector<double> coeffs){
    assert(coeffs.size() == numOfSpecs);
    species* spec = getSpeciesPtr(i, j, specID);
+	assert(spec->name == name);
    spec->coeffs = coeffs;
 }
 
 //*****************************************************************************
 // Internal function that sets the trans source terms for a species in a cell
 //
+// The name is passed in so that an assertion is made that the species name 
+// equals the name in the file
+//
 // @param i					x index
 // @param j					y index
 // @param specID			Species ID
+// @param name				Species name
 // @param coeffs			A vector of species source coefficients
 //								[ft^2]
 //*****************************************************************************
-void speciesDriver::setTransSource(int i, int j, int specID, std::vector<double>
-      coeffs){
+void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
+		std::vector<double> coeffs){
    assert(coeffs.size() == numOfSpecs);
    species* spec = getSpeciesPtr(i, j, specID);
+	assert(spec->name == name);
    spec->transCoeffs = coeffs;
 }
 
@@ -252,10 +262,10 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				for (int j = 0; j < modelPtr->numOfyCells; j++){
 					if (findex == 0){ 
-						setDecaySource(i, j, specID, coeffVect);
+						setDecaySource(i, j, specID, name, coeffVect);
 					}
 					else{
-						setTransSource(i, j, specID, coeffVect);
+						setTransSource(i, j, specID, name, coeffVect);
 					}
 				}
 			}
