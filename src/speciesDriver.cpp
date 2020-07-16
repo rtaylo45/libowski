@@ -326,6 +326,68 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 }
 
 //*****************************************************************************
+// Sets a boundary condition in a cell for a vector of species
+//
+//	@param Loc		Location 
+// @param ids		vector of species ids
+// @param bcs		vecto of BC values [lbm/ft^3]
+//*****************************************************************************
+void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc, 
+	std::vector<int> ids, std::vector<double> bcs){
+	int specID;
+	double bc;
+
+	// Check to make sure that both vectors are of equal size. 
+	// The default arg for bcs is an empty vector. If it is empty is does not
+	// do this check
+	if (not bcs.empty()){
+		assert(ids.size() == bcs.size());
+	}
+
+	int locID = -1;
+
+	if (loc == "north") {locID = 0;};
+	if (loc == "south") {locID = 1;};
+	if (loc == "east") {locID = 2;};
+	if (loc == "west") {locID = 3;};
+	assert(locID != -1);
+
+	if (BCType == "dirichlet") {
+		for (int index = 0; index < ids.size(); index++){
+			bc = 0.0;
+			specID = ids[index];
+			if (not bcs.empty()){ bc = bcs[index];};
+			setGeneralBoundaryCondition(BCType, locID, specID, bc);
+		}
+	}
+	else if (BCType == "newmann"){
+		for (int index = 0; index < ids.size(); index++){
+			bc = 0.0;
+			specID = ids[index];
+			if (not bcs.empty()){ bc = bcs[index];};
+			setGeneralBoundaryCondition(BCType, locID, specID, bc);
+		}
+	} 
+	else if (BCType == "periodic"){
+		setPeriodicBoundaryCondition(locID);
+	} 
+	else if (BCType == "free flow"){
+		for (int index = 0; index < ids.size(); index++){
+			bc = 0.0;
+			specID = ids[index];
+			if (not bcs.empty()){ bc = bcs[index];};
+			setGeneralBoundaryCondition(BCType, locID, specID, bc);
+		}
+	}
+	else{
+		std::string errorMessage = 
+			" You have selected an invalid boundary condition ";
+		libowskiException::runtimeError(errorMessage);
+	}
+	
+}
+
+//*****************************************************************************
 // Sets a dirichlet or Newmann boundary condition in a cell
 //
 // @param type		BC type

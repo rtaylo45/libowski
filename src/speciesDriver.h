@@ -74,6 +74,9 @@ class speciesDriver {
 	void setSpeciesSourceFromFile(std::string, std::string = "None");
 	// Sets a boundary condition in a cell
 	void setBoundaryCondition(std::string, std::string, int, double = 0);
+	// Sets a boundary condition in a cell for a list of isotopes
+	void setBoundaryCondition(std::string, std::string, std::vector<int>,
+		std::vector<double> = std::vector<double>());
 	// Call to make solver rebuild the A matrix before the next solve
 	void resetMatrix();
 	// Solves the transient species transport equation with matrix exp
