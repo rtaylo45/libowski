@@ -25,13 +25,13 @@
 //			dC/dt = -lambda*C(x,t)
 //
 //	Domaine:
-//			x = [0, 100]
-//			t = [0, 20]
-//			lambda = 0.01
+//			x = [0, 100]	cm
+//			t = [0, 20]		s
+//			lambda = 0.01	1/s
 //
 //	Initial conditions and BC's:
-//			C(x, 0) = 1000.(x + 1)
-//			C(0,t) = C(100,t)
+//			C(x, 0) = 1000.(x + 1)	kg/m^3
+//			C(0,t) = C(100,t)			kg/m^3
 //
 //	Solution:
 //			C(x,t) = C(x,0)*e^(-lambda*t)
@@ -41,7 +41,9 @@ void moleProblem1(int myid){
 	int yCells = 1, xCells = 1000;
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	std::vector<std::string> solvers {"hyperbolic", "pade-method2", "taylor"};
-	double xLength = 100., yLength = 0.0; // cm
+	// convert cm to m
+	double xLength = 100./100.; // m
+	double yLength = 0.0; // m
 	double tEnd = 20.0;	// seconds
 	double lambda = 0.1;	// 1/s
 	double cSol, cCon;
@@ -128,7 +130,8 @@ void moleProblem1(int myid){
 						relativeError = std::abs(cSol-cCon)/cSol;
 						maxRelativeError = std::max(maxRelativeError, relativeError);
 						rmse += std::pow(relativeError,2.);
-						outputFile << xc << " " << cCon << "\n";
+						// xc is converted from m to cm
+						outputFile << xc*100. << " " << cCon << "\n";
 						assert(isApprox(cCon, cSol));
 					}
 				}
@@ -153,14 +156,14 @@ void moleProblem1(int myid){
 //			dC/dt = -vdC/dx -lambda*C(x,t)
 //
 //	Domaine:
-//			x = [0, 100]
-//			t = [0, 20]
-//			v = 2.0
-//			lambda = 0.01
+//			x = [0, 100]	cm
+//			t = [0, 20]		s
+//			v = 2.0			cm/s
+//			lambda = 0.01	1/s
 //
 //	Initial conditions and BC's:
-//			C(x, 0) = 1000.0
-//			C(0,t) = 1000.0
+//			C(x, 0) = 1000.0	kg/m^3
+//			C(0,t) = 1000.0	kg/m^3
 //
 //	Solution:
 //			C(x,t) = TBD
@@ -174,11 +177,11 @@ void moleProblem2(int myid){
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
 	std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
 	//std::vector<std::string> solvers {"hyperbolic"};
-	double xLength = 100, yLength = 0.0; // cm
+	double xLength = 100./100.; // m
+	double yLength = 0.0; // m
 	double tEnd = 20.0;	// seconds
 	double lambda = 0.01;	// 1/s
-	//double lambda = 0.0;	// 1/s
-	double velocity = 2.0; // cm/s
+	double velocity = 2.0/100.; // m/s
 	double cSol, cCon;
 	int cID;
 	double x1, x2, initCon, dx, xc, dt, t;
@@ -292,8 +295,7 @@ void moleProblem2(int myid){
 					outputFile << "\n";
 					//std::cout << solverType << " " << dx << " " << dt 
 					//	<< " " << percentError << "\n";
-					// clean species
-					printf("%15s %2.3f %4.2E %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, dx, 
+					printf("%15s %2.3f %4.2E %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, dx*100.,
 							maxRelativeError, std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
 				}
 				spec.clean();

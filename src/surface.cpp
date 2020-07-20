@@ -17,9 +17,9 @@ void surface::set(){
 //*****************************************************************************
 // Adds a species to the surface
 //
-// @param molarMass	Molar mass of species [lbm/mol]
-// @param initCon		Initial concentration [lbm/ft^3]
-// @param diffCoeff	Diffusion coefficient [ft^2/s]
+// @param molarMass	Molar mass of species [g/mol]
+// @param initCon		Initial concentration [kg/m^3]
+// @param diffCoeff	Diffusion coefficient [m^2/s]
 // @param name			Species name
 //*****************************************************************************
 void surface::addSpecies(double molarMass, double initCon, double diffCoeff,

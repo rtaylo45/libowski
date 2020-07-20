@@ -24,9 +24,9 @@ class meshCellFace {
 	int absIndex;
 	// Velocity component normal to the surface
 	double vl = 0.0;
-	// x direction length
+	// x direction length [m]
 	double dx = 0.0;
-	// y direction length
+	// y direction length [m]
 	double dy = 0.0;
 	// Surface object
 	surface mySurface = surface();

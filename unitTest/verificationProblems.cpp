@@ -56,6 +56,10 @@ double precursorAnalitical(double y, double vel, double a, double length,
 // dN1/dt = -lambda1*N1 + lambda3*N3
 // dN2/dt = -lambda2*N2 + lambda1*N1
 // dN3/dt = -lambda3*N3 + lambda2*N2
+//
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. The solution is check by a python script
 //*****************************************************************************
 void testProblem1(int myid){
 	int xCells = 1, yCells = 1;
@@ -158,6 +162,10 @@ void testProblem1(int myid){
 //
 //	BC's:
 //		Ux(0,t) = 0, Uv(0.t) = 0, U(pi/2,t) = 0, V(pi/2,t) = 0
+//
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units.
 //*****************************************************************************
 void testProblem2(int myid){
 	int yCells = 1;
@@ -299,6 +307,10 @@ void testProblem2(int myid){
 //
 //	BC's:
 //		Ux(0,t) = 0, Uv(0.t) = 0, U(pi/2,t) = 0, V(pi/2,t) = 0
+//
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units.
 //*****************************************************************************
 void testProblem2Krylov(int myid){
 	int yCells = 1;
@@ -437,6 +449,10 @@ void testProblem2Krylov(int myid){
 //
 //	BC's:
 //		Ux(0,t) = 0, Uv(0.t) = 0, U(pi/2,t) = 0, V(pi/2,t) = 0
+//
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units.
 //*****************************************************************************
 void testProblem2IntegratorMethods(int myid){
 	int yCells = 1;
@@ -571,10 +587,14 @@ void testProblem2IntegratorMethods(int myid){
 //		C = 0
 //
 //	Solution:
+//
+//	Note: The source terms were taken from a problem that Aaron Grahm built.
+//	They should be in g/cm^3/s for the constant source terms. Need to convert 
+//	this value.
 //*****************************************************************************
 void testProblem3(int myid){
 	int xCells = 1, yCells = 50;
-	double xLength = 0.0, yLength = 1.0;
+	double xLength = 0.0, yLength = 1.0; // m
 	double v = 0.;
 	//std::vector<double> steps = lineSpace(1.,300.,300);
 	std::vector<double> steps = {1};
@@ -582,8 +602,8 @@ void testProblem3(int myid){
 	double t;
 	double dt;
 	double cCon1, cCon2, initCon;
-	// need to convert g/s/cm^3 to lbm/s/ft^3 by 62.427961
-	double conversion = 62.427861;
+	// need to convert g/s/cm^3 to kg/s/m^3 by 1000.
+	double conversion = 1000.;
 	double x, xc, dx, x1, x2, s;
 	int c1ID, c2ID, c3ID, c4ID, c5ID, c6ID;
 	double c1Con, c2Con, c3Con, c4Con, c5Con, c6Con;
@@ -676,7 +696,7 @@ void testProblem3(int myid){
 					spec.setSpeciesCon(i,j,c6ID, initCon);
 
 					// Sets the sourses
-					// need to convert g/s/cm^3 to lbm/s/ft^3 by 62.427961
+					// need to convert g/s/cm^3 to kg/s/m^3
 					spec.setSpeciesSource(i, j, c1ID, c1Coeffs, s*a1*conversion);
 					spec.setSpeciesSource(i, j, c2ID, c2Coeffs, s*a2*conversion);
 					spec.setSpeciesSource(i, j, c3ID, c3Coeffs, s*a3*conversion);
@@ -715,6 +735,10 @@ void testProblem3(int myid){
 //*****************************************************************************
 // Test that the species driver sets up the problem right and solves the 
 // system right. 
+//
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. 
 //*****************************************************************************
 void testXenonIodineNoFlow(int myid){
 	int xCells = 1, yCells = 1;
@@ -795,6 +819,10 @@ void testXenonIodineNoFlow(int myid){
 }
 //*****************************************************************************
 // Test Xenon iodine flow problem in the y direction
+//
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. 
 //*****************************************************************************
 void testXenonIodineYFlow(int myid){
 	int xCells = 1, yCells = 500;
@@ -879,6 +907,10 @@ void testXenonIodineYFlow(int myid){
 
 //*****************************************************************************
 // Test Xenon iodine flow problem in the x direction
+//
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. 
 //*****************************************************************************
 void testXenonIodineXFlow(int myid){
 	int xCells = 500, yCells = 1;
@@ -966,6 +998,10 @@ void testXenonIodineXFlow(int myid){
 }
 //*****************************************************************************
 // Test 2D diffusion
+//
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. 
 //*****************************************************************************
 void testDiffusion2D(int myid){
 	int xCells = 50, yCells = 50;
@@ -1053,6 +1089,10 @@ void testDiffusion2D(int myid){
 }
 //*****************************************************************************
 // Test neutron precursors for sinlge channel
+//
+//	Note: The source terms were taken from a problem that Aaron Grahm built.
+//	They should be in g/cm^3/s for the constant source terms. Need to convert 
+//	this value.
 //*****************************************************************************
 void testNeutronPrecursorsFlow(int myid){
 	double t = 0.0;
@@ -1282,6 +1322,10 @@ void testNeutronPrecursorsFlow(int myid){
 }
 //*****************************************************************************
 // Test neutron precursors for multi chans
+//
+//	Note: The source terms were taken from a problem that Aaron Grahm built.
+//	They should be in g/cm^3/s for the constant source terms. Need to convert 
+//	this value.
 //*****************************************************************************
 void testNeutronPrecursorsMultiChanFlow(int myid){
 	double t = 0.0;
