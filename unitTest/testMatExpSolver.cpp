@@ -245,6 +245,9 @@ void tankProblem(int myid, matrixExponential *expSolver, bool runCompute){
 //		x2_0 = 0.0
 //		x3_0 = 0.0
 //
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. 
 //*****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double x1_0 = 1000.0, x2_0 = 0.0, x3_0 = 0.0;
@@ -340,6 +343,9 @@ void xenonIodineProblem(int myid, matrixExponential *expSolver, bool runCompute)
 //		dN_d/dt = 0.0
 //		d_0 = 1.0
 //	
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. 
 //*****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double N_xe_0 = 0.0, N_I_0 = 0.0, N_d_0 = 1.0;
@@ -471,6 +477,9 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 //	To add the constant source terms we need to add a dummy species to hold the
 //	coefficients. 
 //	
+//	Note: The source terms were taken from a problem that Aaron Grahm built.
+//	They should be in g/cm^3/s for the constant source terms. Need to convert 
+//	this value.
 //****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double t = 0.0, tnew = 0.0; 

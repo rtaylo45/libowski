@@ -28,6 +28,9 @@
 // ftp ejde.math.txstate.edu
 //
 // TOTAL VARIATION STABILITY AND SECOND-ORDER ACCURACY AT EXTREMA
+//
+// The units for these test are arbritrary as the problems are taken directly
+// from papers
 //*****************************************************************************
 
 
