@@ -9,10 +9,10 @@
 // @param iIndex			Index of cell in x direction
 // @param jIndex			Index of cell in y direction
 // @param absoluteIndex	Absolute index of the cell
-// @param xCor				Location of cell center in x direction
-// @param yCor				Location of cell center in y direction
-// @param dx				dx of cell
-// @param dy				dy of cell
+// @param xCor				Location of cell center in x direction [m]
+// @param yCor				Location of cell center in y direction [m]
+// @param dx				dx of cell [m]
+// @param dy				dy of cell [m]
 //**************************************************************************
 meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor, 
 		double yCor, double dx_, double dy_){
@@ -40,9 +40,9 @@ meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor,
 //*****************************************************************************
 // Adds a species to the cell
 //
-// @param molarMass	Molar mass of species [lbm/mol]
-// @param initCon		Initial concentration [lbm/ft^3]
-// @param diffCoeff	Diffusion coefficient [ft^2/s]
+// @param molarMass	Molar mass of species [g/mol]
+// @param initCon		Initial concentration [kg/m^3]
+// @param diffCoeff	Diffusion coefficient [m^2/s]
 // @param name			Species name
 //*****************************************************************************
 void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff,
@@ -74,7 +74,7 @@ species* meshCell::getSpecies(int specID){
 	return &speciesVector[specID];
 }
 //*****************************************************************************
-// Gets species concentration
+// Gets species concentration [kg/m^3]
 //*****************************************************************************
 double meshCell::getSpecCon(int specID){
 	assert(specID <= speciesVector.size() and specID>= 0);
@@ -85,7 +85,7 @@ double meshCell::getSpecCon(int specID){
 //*****************************************************************************
 // Sets the species concentration
 //
-// @param con		Concentration [lbm/ft^3]
+// @param con		Concentration [kg/m^3]
 // @param specID	ID of the species
 //*****************************************************************************
 void meshCell::setSpeciesConcentration(double con, int specID){
@@ -96,7 +96,7 @@ void meshCell::setSpeciesConcentration(double con, int specID){
 //*****************************************************************************
 // Sets the cells pressure
 //
-// @param pressure	Pressure in lbf/in^2
+// @param pressure	Pressure in Pa
 //*****************************************************************************
 void meshCell::setPressure(double pressure){
 	P = pressure;
@@ -114,7 +114,7 @@ void meshCell::setTemperature(double temp){
 //*****************************************************************************
 // Sets the cells scalar neutron flux
 //
-// @param phi_		Neutron flux in 1/ft^2/s
+// @param phi_		Neutron flux in 1/cm^2/s
 //*****************************************************************************
 void meshCell::setNeutronFlux(double phi_){
 	phi = phi_;

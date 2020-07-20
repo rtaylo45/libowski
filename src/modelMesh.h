@@ -14,9 +14,9 @@
 class modelMesh {
 
 	public:
-	// Total length in x direction
+	// Total length in x direction [m]
 	double xLength = 0.0;
-	// Total length in y direction
+	// Total length in y direction [m]
 	double yLength = 0.0;
 	// Number of cells in the x direction
 	int numOfxCells = 0;
@@ -30,9 +30,9 @@ class modelMesh {
 	std::vector<meshCellFace> meshCellFaces;
 	// Vector of cell surfaces
 	std::vector<surface> surfaces;
-	// Change in x direction
+	// Change in x direction [m]
 	double dx = 0.0;
-	// Change in y direction
+	// Change in y direction [m]
 	double dy = 0.0;
 	
 	public:

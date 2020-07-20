@@ -28,25 +28,25 @@ class meshCell {
 	int j = -1;
 	// Absolut index
 	int absIndex = -1;
-	// X position defined at the center of the cell
+	// X position defined at the center of the cell [m]
 	double x = -1.;
-	// Y position defined at the cent of the cell
+	// Y position defined at the cent of the cell [m]
 	double y = -1. ;
-	// dx of cell
+	// dx of cell [m]
 	double dx = -1.;
-	// dy of cell
+	// dy of cell [m]
 	double dy = -1.;
-	// cell volume
+	// cell volume [m^2] because its 2D
 	double volume = 0.0;
 	// Temperature of cell in kelvin
 	double T = -1.;
-	// Presure in lbf/in^2
+	// Presure in Pa
 	double P = -1.;
-	// Scalar neutron flux 1/ft^2/s
+	// Scalar neutron flux 1/cm^2/s
 	double phi  = 0.0;
 	// Vector of cell connections
 	std::vector<connection> connections;
-	// Flag to set if the second order flux is used
+	// Flag to set if the second order convective upwind flux is used
 	bool secondOrderFlux = true;
 
 	private:

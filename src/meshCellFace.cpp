@@ -2,6 +2,10 @@
 
 //**************************************************************************
 // Constructor
+//
+// @param iIndex			x-direction mesh index
+// @param jIndex			y-direction mesh index
+// @param absoluteIndex	Total mesh index
 //**************************************************************************
 meshCellFace::meshCellFace(int iIndex, int jIndex, int absoluteIndex){
 	i = iIndex;	

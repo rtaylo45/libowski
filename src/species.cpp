@@ -2,9 +2,9 @@
 //**************************************************************************
 // Constructor
 //
-// @param molarMass	Molar mass of species [lbm/mol]
-// @param initCon		Initial concentration [lbm/ft^3]
-// @param diffCoeff	Diffusion coefficient [ft^2/s]
+// @param molarMass	Molar mass of species [g/mol]
+// @param initCon		Initial concentration [kg/m^3]
+// @param diffCoeff	Diffusion coefficient [m^2/s]
 // @param name			String of the species name
 //**************************************************************************
 species::species(double molarMass, double initCon, double diffCoeff, std::string name_){

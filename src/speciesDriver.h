@@ -42,7 +42,7 @@ class speciesDriver {
 	int dummySpec = 1;
 	// Logical set after the matrix has been built
 	bool matrixInit = false;
-	// Last solve time 
+	// Last solve time [s]
 	double lastSolveTime = 0.0;
 	// Transition matrix
 	SparseMatrixD A;

@@ -57,9 +57,9 @@ void speciesDriver::setFluxLimiter(std::string limiterName){
 //*****************************************************************************
 // Adds a species to the model
 //
-// @param molarMass  Molar mass of species [lbm/mol]
-// @param [initCon]  Initial concentration [lbm/ft^3]
-// @param [diffCoef]	Diffusion coefficient [ft^2/s]
+// @param molarMass  Molar mass of species [g/mol]
+// @param [initCon]  Initial concentration [kg/m^3]
+// @param [diffCoef]	Diffusion coefficient [m^2/s]
 // @param name			Name of the species
 //*****************************************************************************
 int speciesDriver::addSpecies(double molarMass, double initCon,
@@ -139,7 +139,7 @@ double speciesDriver::getSpecies(int i, int j, int specID){
 // @param i       x index
 // @param j       y index
 // @param specID  Species ID
-// @param specCon	Concentration [lbm/ft^3]
+// @param specCon	Concentration [kg/m^3]
 //*****************************************************************************
 void speciesDriver::setSpeciesCon(int i, int j, int specID, double specCon){
    species* spec = getSpeciesPtr(i, j, specID);
@@ -167,8 +167,8 @@ std::string speciesDriver::getSpeciesName(int i, int j, int specID){
 // @param coeffs			A vector of species source coefficients
 //								[1/s]
 // @param transcoeffs	A vector of species souce coefficients for transmutation
-//								[ft^2]
-// @param s					Constant source in cell [lbm/ft^3/s]
+//								[cm^2]
+// @param s					Constant source in cell [kg/m^3/s]
 //*****************************************************************************
 void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<double>
       coeffs, double s, std::vector<double> transCoeffs){
@@ -212,7 +212,7 @@ void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
 // @param specID			Species ID
 // @param name				Species name
 // @param coeffs			A vector of species source coefficients
-//								[ft^2]
+//								[m^2]
 //*****************************************************************************
 void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
 		std::vector<double> coeffs){
@@ -290,7 +290,7 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
 //
 //	@param Loc		Location 
 // @param specID  Species ID
-// @param bc		BC value [lbm/ft^3]
+// @param bc		BC value [kg/m^3] or [kg/m^2]
 //*****************************************************************************
 void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc, 
 	int specID, double bc){
@@ -330,7 +330,7 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 //
 //	@param Loc		Location 
 // @param ids		vector of species ids
-// @param bcs		vecto of BC values [lbm/ft^3]
+// @param bcs		vector of BC values [kg/m^3] or [kg/m^2]
 //*****************************************************************************
 void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc, 
 	std::vector<int> ids, std::vector<double> bcs){
@@ -393,7 +393,7 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 // @param type		BC type
 //	@param LocID	Location ID
 // @param specID  Species ID
-// @param bc		BC value [lbm/ft^3]
+// @param bc		BC value [kg/m^3] or [kg/m^2]
 //*****************************************************************************
 void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID, 
 	int specID, double bc){
