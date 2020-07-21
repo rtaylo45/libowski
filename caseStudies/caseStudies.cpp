@@ -4,31 +4,35 @@
 #include "meshCellData.h"
 #include "species.h"
 
-void singleCellDepletion(int myid){
+void singleCellDepletion(int myid, std::string solverType){
 	double t = 0.0;
 	int steps = 10;
-	double depletionTime = 100.; // Days
+	double depletionTime = 5.*365.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 1;
 	double xLength = 1.0, yLength = 1.0;
 	std::vector<int> ids;
+	std::string fname = "moleProblems";
+	std::string path = getDataPath() + fname;
 	
-	//std::string speciesNamesFile = getDataPath() + "speciesInputNamesSmall.txt";
-	//std::string speciesDecayFile = getDataPath() + "speciesInputDecaySmall.txt";
-	//std::string speciesTransFile = getDataPath() + "speciesInputTransSmall.txt";
-	std::string speciesNamesFile = getDataPath() + "speciesInputNames.dat";
-	std::string speciesDecayFile = getDataPath() + "speciesInputDecay.dat";
-	std::string speciesTransFile = getDataPath() + "speciesInputTrans.dat";
+	std::string speciesNamesFile = path + "SpeciesInputNames.dat";
+	std::string speciesDecayFile = path + "SpeciesInputDecay.dat";
+	std::string speciesTransFile = path + "SpeciesInputTrans.dat";
 
 	modelMesh model(xCells, yCells, xLength, yLength);
 	speciesDriver spec = speciesDriver(&model);
+
+	// Sets the matrix exp solver
+	spec.setMatrixExpSolver(solverType);
 
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
 
 	// Sets the neutron flux
 	model.setSystemNeutronFlux(1.e13);
+	std::cout.precision(16);
+	std::cout << "solverName: " << solverType << std::endl;
 
 	for (int k = 0; k < steps; k++){
 		t = t + dt;
@@ -39,6 +43,7 @@ void singleCellDepletion(int myid){
 		double con = spec.getSpecies(0, 0, ids[id]);
 		std::cout << name << " " << con << std::endl;
 	}
+	std::cout << " " << std::endl;
 }
 
 void pipeDepletion(int myid){
@@ -117,9 +122,16 @@ void pipeDepletion(int myid){
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
+	std::vector<std::string> solvers {"hyperbolic"};
+	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
+	//	"pade-method2", "taylor", "LPAM"};
+	matrixExponential *expSolver;
 
-	//singleCellDepletion(myid);
-	pipeDepletion(myid);
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
+		singleCellDepletion(myid, solverType);
+	}
+	//pipeDepletion(myid);
 
 	mpi.finalize();
 }

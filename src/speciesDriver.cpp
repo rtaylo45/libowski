@@ -529,14 +529,18 @@ void speciesDriver::solve(double solveTime){
 	double timeStep = solveTime - lastSolveTime;
 	double rtol = 1.e-5, diff;
 	VectorD defSourceOld, defSourceNew;
+	std::ofstream outputFile;
 
 	A = buildTransMatrix(augmented, 0.0);
 	if (mpi.rank == 0){
-		//dA = Eigen::MatrixXd(A);
+		dA = Eigen::MatrixXd(A);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
-		//outputFile.open("matrix.out", std::ios_base::app);
-		//outputFile << dA << std::endl;
+		outputFile.open("matrix.out");
+		outputFile.precision(10);
+		//outputFile.setf(ios::fixed);
+		//outputFile.setf(ios::showpoint);
+		outputFile << dA << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << " "  << std::endl;
 		//std::cout << dA  << std::endl;
