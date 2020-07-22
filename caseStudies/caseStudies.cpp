@@ -16,8 +16,12 @@ void singleCellDepletion(int myid, std::string solverType){
 	std::string fname = "moleProblems";
 	std::string path = getDataPath() + fname;
 	std::string outputFileName = "caseStudyOne.out";
-	std::ofstream outputFile;
+	std::string outputFileNameMatlab = "caseStudyOneMatlab.csv";
+	std::ofstream outputFile, outputFileMatlab;
 	outputFile.open(outputFileName, std::ios_base::app);
+	outputFileMatlab.open(outputFileNameMatlab);
+	MatrixD solData = MatrixD::Zero(10,10);
+	const static IOFormat CSVFormat(StreamPrecision, DontAlignCols, ", ", "\n");
 	
 	std::string speciesNamesFile = path + "SpeciesInputNames.dat";
 	std::string speciesDecayFile = path + "SpeciesInputDecay.dat";
@@ -35,7 +39,7 @@ void singleCellDepletion(int myid, std::string solverType){
 	// Sets the neutron flux
 	model.setSystemNeutronFlux(1.e13);
 	outputFile << "solverName: " << solverType << std::endl;
-	outputFile.precision(16);
+	outputFile.precision(16); outputFileMatlab.precision(16);
 
 	for (int k = 0; k < steps; k++){
 		t = t + dt;
@@ -45,9 +49,12 @@ void singleCellDepletion(int myid, std::string solverType){
 			std::string name = spec.getSpeciesName(0, 0, ids[id]);
 			double con = spec.getSpecies(0, 0, ids[id]);
 			outputFile << name << " " << con << std::endl;
+			solData(id, k) = con;
+
 		}
 	}
-	std::cout << " " << std::endl;
+	outputFile << " " << std::endl;
+	outputFileMatlab << solData.format(CSVFormat);
 }
 
 void pipeDepletion(int myid){
