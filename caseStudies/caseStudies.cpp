@@ -7,7 +7,7 @@
 void singleCellDepletion(int myid, std::string solverType){
 	double t = 0.0;
 	int steps = 10;
-	double depletionTime = 5.*365.; // Days
+	double depletionTime = 10.*365.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 1;
@@ -15,6 +15,9 @@ void singleCellDepletion(int myid, std::string solverType){
 	std::vector<int> ids;
 	std::string fname = "moleProblems";
 	std::string path = getDataPath() + fname;
+	std::string outputFileName = "caseStudyOne.out";
+	std::ofstream outputFile;
+	outputFile.open(outputFileName, std::ios_base::app);
 	
 	std::string speciesNamesFile = path + "SpeciesInputNames.dat";
 	std::string speciesDecayFile = path + "SpeciesInputDecay.dat";
@@ -31,17 +34,18 @@ void singleCellDepletion(int myid, std::string solverType){
 
 	// Sets the neutron flux
 	model.setSystemNeutronFlux(1.e13);
-	std::cout.precision(16);
-	std::cout << "solverName: " << solverType << std::endl;
+	outputFile << "solverName: " << solverType << std::endl;
+	outputFile.precision(16);
 
 	for (int k = 0; k < steps; k++){
 		t = t + dt;
 		spec.solve(t);
-	}
-	for (int id = 0; id < ids.size(); id++){
-		std::string name = spec.getSpeciesName(0, 0, ids[id]);
-		double con = spec.getSpecies(0, 0, ids[id]);
-		std::cout << name << " " << con << std::endl;
+		outputFile << "Time: " << t << std::endl;
+		for (int id = 0; id < ids.size(); id++){
+			std::string name = spec.getSpeciesName(0, 0, ids[id]);
+			double con = spec.getSpecies(0, 0, ids[id]);
+			outputFile << name << " " << con << std::endl;
+		}
 	}
 	std::cout << " " << std::endl;
 }

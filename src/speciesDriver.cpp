@@ -530,17 +530,18 @@ void speciesDriver::solve(double solveTime){
 	double rtol = 1.e-5, diff;
 	VectorD defSourceOld, defSourceNew;
 	std::ofstream outputFile;
+	const static IOFormat CSVFormat(StreamPrecision, DontAlignCols, ", ", "\n");
 
 	A = buildTransMatrix(augmented, 0.0);
 	if (mpi.rank == 0){
-		dA = Eigen::MatrixXd(A);
+		//dA = Eigen::MatrixXd(A);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
-		outputFile.open("matrix.out");
-		outputFile.precision(10);
+		//outputFile.open("matrix.csv");
+		//outputFile.precision(16);
 		//outputFile.setf(ios::fixed);
 		//outputFile.setf(ios::showpoint);
-		outputFile << dA << std::endl;
+		//outputFile << dA.format(CSVFormat) << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << " "  << std::endl;
 		//std::cout << dA  << std::endl;
