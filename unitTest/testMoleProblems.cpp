@@ -461,15 +461,98 @@ void moleProblem9(int myid){
 // moving.
 //
 //	Problem equations:
+//		dCi/dt = sum^{9}_{j=1} A_{i,j}*C_{j}
+//
+//		i = 1, U-233
+//			 2, U-234
+//			 3, U-235
+//			 4, U-236
+//			 5, U-237
+//			 6, U-238
+//			 7, U-239
+//			 8, Pu-239
+//			 9, Np-239
 //
 //	Domaine:
+//		x = [0, 400cm]
+//		t = [0, 10y]
 //
 //	Initial conditions and BC's:
+//		Ci(x, 0) = 1e10
 //
 //	Solution: 
 //
 //*****************************************************************************
 void moleProblem10(int myid){
+	double t;
+	int steps = 10;
+	double depletionTime = 10.*365.; // Days
+	double totalTime = depletionTime*24.*60.*60.;
+	double dt = totalTime/steps;
+	int xCells = 1, yCells = 1;
+	double xLength = 1.0, yLength = 4.0;
+	std::vector<int> ids;
+	std::string path = getDataPath();
+	std::string outputFileName = "moleProblem10.out";
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", 
+	"pade-method1", "pade-method2", "taylor"};
+	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
+
+	// File names for setting up problems
+	std::string speciesNamesFile = path + "MoleP10SpeciesInputNames.dat";
+	std::string speciesDecayFile = path + "MoleP10SpeciesInputDecay.dat";
+
+	// Builds the mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+	// Builds species object
+	speciesDriver spec = speciesDriver(&model);
+	// Sets the neutron flux
+	model.setSystemNeutronFlux(1.e13);
+
+	// Loop over matrix exp solvers
+	for (std::string &solverType : solvers){
+		std::ofstream outputFile, outputFileCSV;
+		// Adds the species 
+		ids = spec.addSpeciesFromFile(speciesNamesFile);
+		// Set source terms
+		spec.setSpeciesSourceFromFile(speciesDecayFile);
+		// Write transition matrix to file
+		spec.writeTransitionMatrixToFile("transitionMatrixMoleP10.csv");
+		// Opens outputfile
+		outputFile.open(outputFileName, std::ios_base::app);
+		outputFile.precision(16); 
+		// Write solver name
+		outputFile << "solverName: " << solverType << std::endl;
+		// name of the csv solution output file
+		std::string outputFileNameCSV = "moleProblem10"+solverType+".csv";
+		// Opens file
+		outputFileCSV.open(outputFileNameCSV);
+		// Sets the matrix exp solver
+		spec.setMatrixExpSolver(solverType);
+		// sets init time
+		t = 0.0;
+		// sets the soltuion data array
+		MatrixD solData = MatrixD::Zero(10,10);
+
+		// Loop over the solve tiems
+		for (int k = 0; k < steps; k++){
+			t = t + dt;
+			spec.solve(t);
+			outputFile << "Time: " << t << std::endl;
+			// Loop over species to print solution
+			for (int id = 0; id < ids.size(); id++){
+				std::string name = spec.getSpeciesName(0, 0, ids[id]);
+				double con = spec.getSpecies(0, 0, ids[id]);
+				outputFile << name << " " << con << std::endl;
+				solData(id, k) = con;
+			}
+		}
+		outputFile << " " << std::endl;
+		// Write out solution to matrix 
+		outputFileCSV << solData.format(CSVFormat);
+		// Cleans species
+		spec.clean();
+	}
 }
 
 //*****************************************************************************
@@ -495,18 +578,104 @@ void moleProblem11(int myid){
 //
 // This problem is the same as Problem 10, but includes additional transitions 
 // due to a coupled neutron flux. The transition matrix was built using the 
-// neutron flux shown below.
+// neutron flux shown below, in pyLibowski.
 //
 //	Problem equations:
+//		dCi/dt = sum^{9}_{j=1} A_{i,j}*C_{j}
+//
+//		i = 1, U-233
+//			 2, U-234
+//			 3, U-235
+//			 4, U-236
+//			 5, U-237
+//			 6, U-238
+//			 7, U-239
+//			 8, Pu-239
+//			 9, Np-239
 //
 //	Domaine:
+//		x = [0, 400cm]
+//		t = [0, 10y]
+//		phi = 1e13	1/cm^2/s
 //
 //	Initial conditions and BC's:
+//		Ci(x, 0) = 1e10
 //
 //	Solution: 
+//		Computed using matlab
 //
 //*****************************************************************************
 void moleProblem12(int myid){
+	double t;
+	int steps = 10;
+	double depletionTime = 10.*365.; // Days
+	double totalTime = depletionTime*24.*60.*60.;
+	double dt = totalTime/steps;
+	int xCells = 1, yCells = 1;
+	double xLength = 1.0, yLength = 4.0;
+	std::vector<int> ids;
+	std::string path = getDataPath();
+	std::string outputFileName = "moleProblem12.out";
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", 
+	"pade-method1", "pade-method2", "taylor"};
+	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
+
+	// File names for setting up problems
+	std::string speciesNamesFile = path + "MoleP12SpeciesInputNames.dat";
+	std::string speciesDecayFile = path + "MoleP12SpeciesInputDecay.dat";
+	std::string speciesTransFile = path + "MoleP12SpeciesInputTrans.dat";
+
+	// Builds the mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+	// Builds species object
+	speciesDriver spec = speciesDriver(&model);
+	// Sets the neutron flux
+	model.setSystemNeutronFlux(1.e13);
+
+	// Loop over matrix exp solvers
+	for (std::string &solverType : solvers){
+		std::ofstream outputFile, outputFileCSV;
+		// Adds the species 
+		ids = spec.addSpeciesFromFile(speciesNamesFile);
+		// Set source terms
+		spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
+		// Write transition matrix to file
+		spec.writeTransitionMatrixToFile("transitionMatrixMoleP12.csv");
+		// Opens outputfile
+		outputFile.open(outputFileName, std::ios_base::app);
+		outputFile.precision(16); 
+		// Write solver name
+		outputFile << "solverName: " << solverType << std::endl;
+		// name of the csv solution output file
+		std::string outputFileNameCSV = "moleProblem12"+solverType+".csv";
+		// Opens file
+		outputFileCSV.open(outputFileNameCSV);
+		// Sets the matrix exp solver
+		spec.setMatrixExpSolver(solverType);
+		// sets init time
+		t = 0.0;
+		// sets the soltuion data array
+		MatrixD solData = MatrixD::Zero(10,10);
+
+		// Loop over the solve tiems
+		for (int k = 0; k < steps; k++){
+			t = t + dt;
+			spec.solve(t);
+			outputFile << "Time: " << t << std::endl;
+			// Loop over species to print solution
+			for (int id = 0; id < ids.size(); id++){
+				std::string name = spec.getSpeciesName(0, 0, ids[id]);
+				double con = spec.getSpecies(0, 0, ids[id]);
+				outputFile << name << " " << con << std::endl;
+				solData(id, k) = con;
+			}
+		}
+		outputFile << " " << std::endl;
+		// Write out solution to matrix 
+		outputFileCSV << solData.format(CSVFormat);
+		// Cleans species
+		spec.clean();
+	}
 }
 
 //*****************************************************************************
@@ -531,7 +700,8 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	moleProblem1(myid); moleProblem2(myid);
+	//moleProblem1(myid); 
+	//moleProblem2(myid);
 	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);
@@ -539,9 +709,9 @@ int main(){
 	//moleProblem7(myid);
 	//moleProblem8(myid);
 	//moleProblem9(myid);
-	//moleProblem10(myid);
+	moleProblem10(myid);
 	//moleProblem11(myid);
-	//moleProblem12(myid);
+	moleProblem12(myid);
 	//moleProblem13(myid);
 
 	mpi.finalize();
