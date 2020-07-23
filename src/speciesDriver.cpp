@@ -37,6 +37,29 @@ void speciesDriver::setIntegratorSolver(std::string method, std::string
 }
 
 //*****************************************************************************
+// Writes out the base line transition matrix to a csv file. This matrix
+// is not multiplied by the time step size. This function must be called
+// After all of the speices source terms are set and all mesh parameters 
+// are set. Call this right before you call the solve method
+//
+// @param fname	The name of the file to write the matrix to. This file will
+//						be in the csv format
+//*****************************************************************************
+void speciesDriver::writeTransitionMatrixToFile(std::string fname){
+	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
+	MatrixD dA;
+	bool augmented = true;
+
+	if (mpi.rank == 0){
+	A = buildTransMatrix(augmented, 0.0);
+		dA = Eigen::MatrixXd(A);
+		std::ofstream outputFile;
+		outputFile.open(fname);
+		outputFile << dA.format(CSVFormat) << std::endl;
+	}	
+}
+
+//*****************************************************************************
 // Sets the flux limiter function
 //
 // @param limiterName	The name of the flux limiter

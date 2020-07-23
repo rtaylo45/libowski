@@ -91,6 +91,11 @@ class speciesDriver {
 	void setIntegratorSolver(std::string, std::string);
 	// Gives ability to set the flux limiter function
 	void setFluxLimiter(std::string);
+	// Writes out the base line transition matrix to a csv file. This matrix
+	// is not multiplied by the time step size. This function must be called
+	// After all of the speices source terms are set and all mesh parameters 
+	// are set. Call this right before you call the solve method
+	void writeTransitionMatrixToFile(std::string);
 	// Cleans species
 	void clean();
 
