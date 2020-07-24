@@ -614,13 +614,36 @@ cauchy::cauchy(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
 	krylovDim){};
 
 //*****************************************************************************
-// Calculates exp(A*t)v. The action of the matrix expoential on a vector
+// Calculates exp(A*t)v. The action of the matrix 
+// expoential on a vector
 //
 // @param A		The coefficient matrix for the system of ODE's
 // @param v0	Initial condition vector
 // @param t		Time step of the solve
 //*****************************************************************************
 VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
+	return expmv(A, v0, t);
+}
+
+//*****************************************************************************
+// Calculates exp(A*t). The matrix exponential
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param t		Time step of the solve
+//*****************************************************************************
+SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
+	return expm(A, t);
+}
+
+//*****************************************************************************
+// Internal function that calculates exp(A*t)v. The action of the matrix 
+// expoential on a vector
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param v0	Initial condition vector
+// @param t		Time step of the solve
+//*****************************************************************************
+VectorD cauchy::expmv(const SparseMatrixD& A, const VectorD& v0, double t){
 
 	// The sparse LU solver object
 	Eigen::SparseLU<SparseMatrixCLD, COLAMDOrdering<int> > solver;
@@ -689,12 +712,12 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 }
 
 //*****************************************************************************
-// Calculates exp(A*t). The matrix exponential
+// Internal function that calculates exp(A*t). The matrix exponential
 //
 // @param A		The coefficient matrix for the system of ODE's
 // @param t		Time step of the solve
 //*****************************************************************************
-SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
+SparseMatrixD cauchy::expm(const SparseMatrixD& A, double t){
 
 	// If the Krylov subspace flag is true kill the program
 	if (useKrylovSubspace){
