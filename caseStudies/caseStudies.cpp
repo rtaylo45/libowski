@@ -13,38 +13,47 @@ void singleCellDepletion(int myid, std::string solverType){
 	int xCells = 1, yCells = 1;
 	double xLength = 1.0, yLength = 1.0;
 	std::vector<int> ids;
-	std::string fname = "moleProblems";
-	std::string path = getDataPath() + fname;
+	std::string path = getDataPath();
 	std::string outputFileName = "caseStudyOne.out";
-	std::string outputFileNameMatlab = "caseStudyOneMatlab.csv";
+	std::string outputFileNameMatlab = "caseStudyOne"+solverType+".csv";
 	std::ofstream outputFile, outputFileMatlab;
 	outputFile.open(outputFileName, std::ios_base::app);
 	outputFileMatlab.open(outputFileNameMatlab);
-	MatrixD solData = MatrixD::Zero(10,10);
-	const static IOFormat CSVFormat(StreamPrecision, DontAlignCols, ", ", "\n");
-	
-	std::string speciesNamesFile = path + "SpeciesInputNames.dat";
-	std::string speciesDecayFile = path + "SpeciesInputDecay.dat";
-	std::string speciesTransFile = path + "SpeciesInputTrans.dat";
+	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
 
+	// Sets file paths for the input data	
+	std::string speciesNamesFile = path + "speciesInputNames.dat";
+	std::string speciesDecayFile = path + "speciesInputDecay.dat";
+	std::string speciesTransFile = path + "speciesInputTrans.dat";
+
+	// Builds the model
 	modelMesh model(xCells, yCells, xLength, yLength);
+	// Builds the species object
 	speciesDriver spec = speciesDriver(&model);
+
+	// Sets the neutron flux
+	model.setSystemNeutronFlux(1.e13);
 
 	// Sets the matrix exp solver
 	spec.setMatrixExpSolver(solverType);
 
+	// Adds the speices
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
+	// Sets the species sources
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
 
-	// Sets the neutron flux
-	model.setSystemNeutronFlux(1.e13);
 	outputFile << "solverName: " << solverType << std::endl;
-	outputFile.precision(16); outputFileMatlab.precision(16);
+	outputFile.precision(16); 
 
+	spec.writeTransitionMatrixToFile("transitionMatrixCaseStudyOne.csv");
+
+	MatrixD solData = MatrixD::Zero(ids.size(),10);
 	for (int k = 0; k < steps; k++){
 		t = t + dt;
 		spec.solve(t);
+		std::cout << "solved" << std::endl;
 		outputFile << "Time: " << t << std::endl;
+		std::cout << "Time: " << t << std::endl;
 		for (int id = 0; id < ids.size(); id++){
 			std::string name = spec.getSpeciesName(0, 0, ids[id]);
 			double con = spec.getSpecies(0, 0, ids[id]);
@@ -133,13 +142,13 @@ void pipeDepletion(int myid){
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
-	std::vector<std::string> solvers {"hyperbolic"};
-	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
-	//	"pade-method2", "taylor", "LPAM"};
-	matrixExponential *expSolver;
+	//std::vector<std::string> solvers {"taylor"};
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
+	"pade-method2", "taylor"};
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
+		std::cout << solverType << std::endl;
 		singleCellDepletion(myid, solverType);
 	}
 	//pipeDepletion(myid);
