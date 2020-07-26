@@ -622,7 +622,18 @@ cauchy::cauchy(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
 // @param t		Time step of the solve
 //*****************************************************************************
 VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
-	return expmv(A, v0, t);
+	VectorD sol, n0;
+	// Calc new time step size
+	t = t/(double)(substeps+1);
+	// Initial condition
+	n0 = v0;
+
+	// Loop over substeps
+	for (int substep = 0; substep <= substeps; substep++){
+		sol = expmv(A, n0, t);
+		n0 = sol;
+	}
+	return sol;
 }
 
 //*****************************************************************************
@@ -632,7 +643,9 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 // @param t		Time step of the solve
 //*****************************************************************************
 SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
-	return expm(A, t);
+	SparseMatrixD matExp;
+	matExp = expm(A, t);
+	return matExp;
 }
 
 //*****************************************************************************

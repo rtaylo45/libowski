@@ -47,19 +47,20 @@ void singleCellDepletion(int myid, std::string solverType){
 
 	spec.writeTransitionMatrixToFile("transitionMatrixCaseStudyOne.csv");
 
-	MatrixD solData = MatrixD::Zero(ids.size(),10);
+	MatrixD solData = MatrixD::Zero(ids.size()+1,10);
 	for (int k = 0; k < steps; k++){
 		t = t + dt;
 		spec.solve(t);
-		std::cout << "solved" << std::endl;
-		outputFile << "Time: " << t << std::endl;
-		std::cout << "Time: " << t << std::endl;
-		for (int id = 0; id < ids.size(); id++){
-			std::string name = spec.getSpeciesName(0, 0, ids[id]);
-			double con = spec.getSpecies(0, 0, ids[id]);
-			outputFile << name << " " << con << std::endl;
-			solData(id, k) = con;
-
+		if (myid == 0){
+			std::cout << "solved" << std::endl;
+			outputFile << "Time: " << t << std::endl;
+			std::cout << "Time: " << t << std::endl;
+			for (int id = 0; id < ids.size(); id++){
+				std::string name = spec.getSpeciesName(0, 0, ids[id]);
+				double con = spec.getSpecies(0, 0, ids[id]);
+				outputFile << name << " " << con << std::endl;
+				solData(id, k) = con;
+			}
 		}
 	}
 	outputFile << " " << std::endl;
@@ -148,7 +149,7 @@ int main(){
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
-		std::cout << solverType << std::endl;
+		if(myid == 0){std::cout << solverType << std::endl;};
 		singleCellDepletion(myid, solverType);
 	}
 	//pipeDepletion(myid);

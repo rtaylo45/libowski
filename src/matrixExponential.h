@@ -209,9 +209,8 @@ class cauchy : public matrixExponential{
 	MatrixCLD alpha;
 	// Limit of r at infinity
 	long double alpha_0 = 0.0L;
-	// Number of sub steps to take during a solve. If substeps = 1 then no sub
-	// steps are actually taken. The number of actual substeps = substeps + 1
-	int substeps = 1;
+	// Number of sub steps to take during a solve
+	int substeps = 0;
 
 	public:
 	//**************************************************************************
