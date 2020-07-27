@@ -56,17 +56,14 @@ void speciesDriver::setIntegratorSolver(std::string method, std::string
 // @param fname	The name of the file to write the matrix to. This file will
 //						be in the csv format
 //*****************************************************************************
-void speciesDriver::writeTransitionMatrixToFile(std::string fname){
-	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
+void speciesDriver::writeTransitionMatrixToFile(const std::string fname){
 	MatrixD dA;
 	bool augmented = true;
 
 	if (mpi.rank == 0){
-	A = buildTransMatrix(augmented, 0.0);
+		A = buildTransMatrix(augmented, 0.0);
 		dA = Eigen::MatrixXd(A);
-		std::ofstream outputFile;
-		outputFile.open(fname);
-		outputFile << dA.format(CSVFormat) << std::endl;
+		writeCSV(dA, fname);
 	}	
 }
 
