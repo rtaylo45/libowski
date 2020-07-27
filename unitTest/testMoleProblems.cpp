@@ -511,7 +511,7 @@ void moleProblem10(int myid){
 
 	// Loop over matrix exp solvers
 	for (std::string &solverType : solvers){
-		std::ofstream outputFile, outputFileCSV;
+		std::ofstream outputFile;
 		// Adds the species 
 		ids = spec.addSpeciesFromFile(speciesNamesFile);
 		// Set source terms
@@ -525,8 +525,6 @@ void moleProblem10(int myid){
 		outputFile << "solverName: " << solverType << std::endl;
 		// name of the csv solution output file
 		std::string outputFileNameCSV = "moleProblem10"+solverType+".csv";
-		// Opens file
-		outputFileCSV.open(outputFileNameCSV);
 		// Sets the matrix exp solver
 		spec.setMatrixExpSolver(solverType);
 		// sets init time
@@ -549,7 +547,7 @@ void moleProblem10(int myid){
 		}
 		outputFile << " " << std::endl;
 		// Write out solution to matrix 
-		outputFileCSV << solData.format(CSVFormat);
+		writeCSV(solData, outputFileNameCSV);
 		// Cleans species
 		spec.clean();
 	}
@@ -618,12 +616,12 @@ void moleProblem12(int myid){
 	std::string outputFileName = "moleProblem12.out";
 	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", 
 	"pade-method1", "pade-method2", "taylor"};
-	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
 
 	// File names for setting up problems
 	std::string speciesNamesFile = path + "MoleP12SpeciesInputNames.dat";
 	std::string speciesDecayFile = path + "MoleP12SpeciesInputDecay.dat";
 	std::string speciesTransFile = path + "MoleP12SpeciesInputTrans.dat";
+	std::string solution = path + "moleP12Solution.csv";
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -634,7 +632,7 @@ void moleProblem12(int myid){
 
 	// Loop over matrix exp solvers
 	for (std::string &solverType : solvers){
-		std::ofstream outputFile, outputFileCSV;
+		std::ofstream outputFile;
 		// Adds the species 
 		ids = spec.addSpeciesFromFile(speciesNamesFile);
 		// Set source terms
@@ -648,8 +646,6 @@ void moleProblem12(int myid){
 		outputFile << "solverName: " << solverType << std::endl;
 		// name of the csv solution output file
 		std::string outputFileNameCSV = "moleProblem12"+solverType+".csv";
-		// Opens file
-		outputFileCSV.open(outputFileNameCSV);
 		// Sets the matrix exp solver
 		spec.setMatrixExpSolver(solverType);
 		// sets init time
@@ -672,7 +668,7 @@ void moleProblem12(int myid){
 		}
 		outputFile << " " << std::endl;
 		// Write out solution to matrix 
-		outputFileCSV << solData.format(CSVFormat);
+		writeCSV(solData, outputFileNameCSV);
 		// Cleans species
 		spec.clean();
 	}
@@ -700,8 +696,8 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	moleProblem1(myid); 
-	moleProblem2(myid);
+	//moleProblem1(myid); 
+	//moleProblem2(myid);
 	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);
