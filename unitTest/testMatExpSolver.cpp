@@ -190,8 +190,6 @@ void testSolverTime(int myid, int numprocs, matrixExponential *expSolver){
 	outputFile.open(fileName);
 
 	for (int n = 10; n <= 10; n = n*10){
-		std::cout << myid << " " << mpi.rank << " " << mpi.size << std::endl;
-		if (myid==0){std::cout << "Size: "+std::to_string(n) << std::endl;};
 		if (myid==0){outputFile << "Size: "+std::to_string(n)+"\n";};
 
    	SparseMatrixD A(n,n);
@@ -615,7 +613,6 @@ void testKrylovSubspace(int myid){
 			// Test against the base solution without the krylov subspace
 			if (myid == 0){
 				error = (ana - approx).norm();
-				std::cout << solverType << " " << i << " " << error << std::endl;
 
 				// Do assertions, After subspace dim 49 the minumal error should be reached
 				if (i > 49) {
