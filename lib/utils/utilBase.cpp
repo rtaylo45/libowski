@@ -132,34 +132,66 @@ void writeCSV(const Matrix<derived, Dynamic, Dynamic>& A, const std::string fnam
 //*****************************************************************************
 // Reads in a matrix to a CSV file
 //
-// @param path	
+// @param A		Reference to the matrix that hold the read data
+// @param path	Path to the csv file
 //*****************************************************************************
 template <typename derived>
 void readCSV(Matrix<derived, Dynamic, Dynamic>& A, const std::string path) {
    std::ifstream indata;
    std::string line;
-   std::vector<derived> values;
+   std::vector<long double> values;
    int rows = 0, cols = 0;
 
-	checkFileExists(path);
    indata.open(path);
    while (std::getline(indata, line)) {
-       std::stringstream lineStream(line);
-       std::string cell;
-       while (std::getline(lineStream, cell, ',')) {
-           values.push_back(std::stod(cell));
-       }
-       ++rows;
+      std::stringstream lineStream(line);
+      std::string cell;
+      while (std::getline(lineStream, cell, ',')) {
+			values.push_back(std::stold(cell));
+      }
+      ++rows;
    }
 	cols = values.size()/rows;
 	A = Matrix<derived, Dynamic, Dynamic>::Zero(rows, cols);
 	// Loops over vector to add it to the matrix
 	int tempRow = 0, tempCol = 0;
 	for (int i = 0; i < values.size(); i++){
-		A(tempRow, tempCol) = values[i];
+		A(tempRow, tempCol) = (derived)values[i];
 		tempCol += 1;
 		if (tempCol >= cols){tempCol = 0; tempRow += 1;};
 	}
+}
+
+//*****************************************************************************
+// Computes the relative RMSE between two matrices 
+// 
+// @param refMat
+// @param apporxMat
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeRMSE(const Matrix<derived, Dynamic, Dynamic>& refMat,
+	const Matrix<derived, Dynamic, Dynamic>& approxMat){
+	// make sure the mats are the same size
+	assert(refMat.cols() == approxMat.cols());
+	assert(refMat.rows() == approxMat.rows());
+	int rows = refMat.rows();
+	int cols = refMat.cols();
+	int N = rows*cols;
+	derived ref, approx, error = 0.0, eps = 1.e-16;
+
+	// Loop over mats	
+	for (int i = 0; i < rows; i++){
+		for (int j = 0; j < cols; j++){
+			ref = refMat(i,j);
+			approx = approxMat(i,j);
+			if (ref >= eps){
+				error += std::pow((ref - approx)/ref, 2.0);
+			}
+		}
+	}
+	error = error/(derived)N;
+	error = std::pow(error, 0.5);
+	return error;
 }
 
 
@@ -173,3 +205,4 @@ template void findReplace(MatrixI& A, int findValue, int replaceValue);
 template void writeCSV(const MatrixD& A, const std::string fname);
 template void writeCSV(const MatrixLD& A, const std::string fname);
 template void readCSV(MatrixD& A, const std::string path);
+template double computeRelativeRMSE(const MatrixD& refMat, const MatrixD& approxMat);

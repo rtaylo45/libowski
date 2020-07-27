@@ -481,6 +481,7 @@ void moleProblem9(int myid){
 //		Ci(x, 0) = 1e10
 //
 //	Solution: 
+//		Computed using matlab
 //
 //*****************************************************************************
 void moleProblem10(int myid){
@@ -491,6 +492,7 @@ void moleProblem10(int myid){
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 1;
 	double xLength = 1.0, yLength = 4.0;
+	MatrixD anaSolution;
 	std::vector<int> ids;
 	std::string path = getDataPath();
 	std::string outputFileName = "moleProblem10.out";
@@ -501,6 +503,7 @@ void moleProblem10(int myid){
 	// File names for setting up problems
 	std::string speciesNamesFile = path + "MoleP10SpeciesInputNames.dat";
 	std::string speciesDecayFile = path + "MoleP10SpeciesInputDecay.dat";
+	std::string solutionfname = path + "moleP10Solution.csv";
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -508,6 +511,8 @@ void moleProblem10(int myid){
 	speciesDriver spec = speciesDriver(&model);
 	// Sets the neutron flux
 	model.setSystemNeutronFlux(1.e13);
+	// Reads in the analytical solution
+	readCSV(anaSolution, solutionfname);
 
 	// Loop over matrix exp solvers
 	for (std::string &solverType : solvers){
@@ -548,6 +553,8 @@ void moleProblem10(int myid){
 		outputFile << " " << std::endl;
 		// Write out solution to matrix 
 		writeCSV(solData, outputFileNameCSV);
+		double error = computeRelativeRMSE(anaSolution, solData);
+		assert(error < 1.e-9);
 		// Cleans species
 		spec.clean();
 	}
@@ -611,6 +618,7 @@ void moleProblem12(int myid){
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 1;
 	double xLength = 1.0, yLength = 4.0;
+	MatrixD anaSolution;
 	std::vector<int> ids;
 	std::string path = getDataPath();
 	std::string outputFileName = "moleProblem12.out";
@@ -621,7 +629,7 @@ void moleProblem12(int myid){
 	std::string speciesNamesFile = path + "MoleP12SpeciesInputNames.dat";
 	std::string speciesDecayFile = path + "MoleP12SpeciesInputDecay.dat";
 	std::string speciesTransFile = path + "MoleP12SpeciesInputTrans.dat";
-	std::string solution = path + "moleP12Solution.csv";
+	std::string solutionfname = path + "moleP12Solution.csv";
 
 	// Builds the mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -629,6 +637,8 @@ void moleProblem12(int myid){
 	speciesDriver spec = speciesDriver(&model);
 	// Sets the neutron flux
 	model.setSystemNeutronFlux(1.e13);
+	// Reads in the analytical solution
+	readCSV(anaSolution, solutionfname);
 
 	// Loop over matrix exp solvers
 	for (std::string &solverType : solvers){
@@ -669,6 +679,8 @@ void moleProblem12(int myid){
 		outputFile << " " << std::endl;
 		// Write out solution to matrix 
 		writeCSV(solData, outputFileNameCSV);
+		double error = computeRelativeRMSE(anaSolution, solData);
+		assert(error < 1.e-9);
 		// Cleans species
 		spec.clean();
 	}
@@ -696,8 +708,8 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	//moleProblem1(myid); 
-	//moleProblem2(myid);
+	moleProblem1(myid); 
+	moleProblem2(myid);
 	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);

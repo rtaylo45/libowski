@@ -55,4 +55,11 @@ void writeCSV(const Matrix<derived, Dynamic, Dynamic>&, const std::string);
 template <typename derived>
 void readCSV(Matrix<derived, Dynamic, Dynamic>&, const std::string);
 
+//*****************************************************************************
+// Computes the relative RMSE between two matrices 
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeRMSE(const Matrix<derived, Dynamic, Dynamic>&, 
+	const Matrix<derived, Dynamic, Dynamic>&);
+
 #endif
