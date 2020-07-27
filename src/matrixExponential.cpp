@@ -64,7 +64,15 @@ matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
 	useKrylovSubspace = KrylovFlag;
 	krylovSubspaceDim = subspaceDim;
 }
-
+//**************************************************************************
+// Sets the krylov subspace dimension
+//
+// @param dim		Dimension of the subspace
+//**************************************************************************
+void matrixExponential::setKrylovSubspaceDimension(int dim){
+	useKrylovSubspace = true;
+	krylovSubspaceDim = dim;
+}
 //*****************************************************************************
 // Methods for Taylor series Class
 //
@@ -226,6 +234,19 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 VectorD taylor::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 	MatrixD M;
 	VectorD sol;
+	// Generates the krylov subspace if needed
+	if (useKrylovSubspace){
+		// define matrices and variables
+		MatrixD Q;
+		SparseMatrixD H;
+		SparseMatrixD At = A*t;
+		double beta = v0.norm();
+		// Builds the krylov subspace
+		arnoldi(At, v0, krylovSubspaceDim, Q, H);
+		// Computes the result
+		sol = beta*(Q*expmv(H, 1.0, VectorD::Unit(krylovSubspaceDim,0), M));
+		return sol;
+	}
 	sol = expmv(A, t, v0, M);
 	return sol;
 }
@@ -630,8 +651,23 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 
 	// Loop over substeps
 	for (int substep = 0; substep <= substeps; substep++){
-		sol = expmv(A, n0, t);
-		n0 = sol;
+		// Generates the krylov subspace if needed
+		if (useKrylovSubspace){
+			// define matrices and variables
+			MatrixD Q;
+			SparseMatrixD H;
+			SparseMatrixD At = A*t;
+			double beta = v0.norm();
+			// Builds the krylov subspace
+			arnoldi(At, v0, krylovSubspaceDim, Q, H);
+			// Computes the result
+			sol = beta*(Q*expmv(H, VectorD::Unit(krylovSubspaceDim,0), 1.0));
+			n0 = sol;
+		}
+		else{
+			sol = expmv(A, n0, t);
+			n0 = sol;
+		}
 	}
 	return sol;
 }
@@ -644,6 +680,11 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 //*****************************************************************************
 SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 	SparseMatrixD matExp;
+	if (useKrylovSubspace){
+		std::string errorMessage =
+			" Krylov Subspace cannot be used with compute method\n";
+		libowskiException::runtimeError(errorMessage);
+	}
 	matExp = expm(A, t);
 	return matExp;
 }

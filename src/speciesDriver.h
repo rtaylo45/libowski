@@ -96,6 +96,8 @@ class speciesDriver {
 	// After all of the speices source terms are set and all mesh parameters 
 	// are set. Call this right before you call the solve method
 	void writeTransitionMatrixToFile(std::string);
+	/// Sets the Krylov subspace dimension of the matexp solver
+	void setKrylovSubspaceDimension(int dim);
 	// Cleans species
 	void clean();
 
