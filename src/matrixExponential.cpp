@@ -64,7 +64,15 @@ matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
 	useKrylovSubspace = KrylovFlag;
 	krylovSubspaceDim = subspaceDim;
 }
-
+//**************************************************************************
+// Sets the krylov subspace dimension
+//
+// @param dim		Dimension of the subspace
+//**************************************************************************
+void matrixExponential::setKrylovSubspaceDimension(int dim){
+	useKrylovSubspace = true;
+	krylovSubspaceDim = dim;
+}
 //*****************************************************************************
 // Methods for Taylor series Class
 //
@@ -672,6 +680,11 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 //*****************************************************************************
 SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
 	SparseMatrixD matExp;
+	if (useKrylovSubspace){
+		std::string errorMessage =
+			" Krylov Subspace cannot be used with compute method\n";
+		libowskiException::runtimeError(errorMessage);
+	}
 	matExp = expm(A, t);
 	return matExp;
 }

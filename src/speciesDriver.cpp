@@ -18,11 +18,22 @@ speciesDriver::speciesDriver(modelMesh* model){
 // Sets the matrix exponential solver
 //
 // @param solverName	The name of the materix exponential solver type
+// @param krylovFlag	Bool used to set if the krylov subspace is to be used
+// @param krylovDim	Dimension of the subspace
 //*****************************************************************************
 void speciesDriver::setMatrixExpSolver(std::string solverName, bool krylovFlag,
 	int krylovDim){
 	expSolver = matrixExponentialFactory::getExpSolver(solverName, krylovFlag,
 		krylovDim);
+}
+
+//*****************************************************************************
+// Sets the krylov subsapce dimension of the matrix exp solver
+//
+// @param dim	Dimension of the krylov subspace
+//*****************************************************************************
+void speciesDriver::setKrylovSubspaceDimension(int dim){
+	expSolver->setKrylovSubspaceDimension(dim);
 }
 
 //*****************************************************************************
