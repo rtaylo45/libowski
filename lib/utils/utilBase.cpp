@@ -5,7 +5,8 @@
 // and helper functions.
 //*****************************************************************************
 #include "utilBase.h"
-#include <iostream>
+
+using namespace Eigen;
 
 //*****************************************************************************
 // Test if two number are approx equal
@@ -112,6 +113,54 @@ std::vector<T> lineSpace(T start, T end, std::size_t N){
    }
    return xs;
 }
+//*****************************************************************************
+// Writes a matrix to a CSV file
+//
+//	@param A			Matrix
+// @param fname	file name
+//*****************************************************************************
+template <typename derived>
+void writeCSV(const Matrix<derived, Dynamic, Dynamic>& A, const std::string fname){
+	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
+
+	std::ofstream outputFile;
+	outputFile.open(fname);
+	outputFile << A.format(CSVFormat) << std::endl;
+
+}
+
+//*****************************************************************************
+// Reads in a matrix to a CSV file
+//
+// @param path	
+//*****************************************************************************
+template <typename derived>
+void readCSV(Matrix<derived, Dynamic, Dynamic>& A, const std::string path) {
+   std::ifstream indata;
+   std::string line;
+   std::vector<derived> values;
+   int rows = 0, cols = 0;
+
+	checkFileExists(path);
+   indata.open(path);
+   while (std::getline(indata, line)) {
+       std::stringstream lineStream(line);
+       std::string cell;
+       while (std::getline(lineStream, cell, ',')) {
+           values.push_back(std::stod(cell));
+       }
+       ++rows;
+   }
+	cols = values.size()/rows;
+	A = Matrix<derived, Dynamic, Dynamic>::Zero(rows, cols);
+	// Loops over vector to add it to the matrix
+	int tempRow = 0, tempCol = 0;
+	for (int i = 0; i < values.size(); i++){
+		A(tempRow, tempCol) = values[i];
+		tempCol += 1;
+		if (tempCol >= cols){tempCol = 0; tempRow += 1;};
+	}
+}
 
 
 // Data types that can use the template functions
@@ -121,3 +170,6 @@ template std::vector<double> lineSpace(double start, double end, std::size_t N);
 template std::vector<int> lineSpace(int start, int end, std::size_t N);
 template void findReplace(MatrixLI& A, long int findValue, long int replaceValue);
 template void findReplace(MatrixI& A, int findValue, int replaceValue);
+template void writeCSV(const MatrixD& A, const std::string fname);
+template void writeCSV(const MatrixLD& A, const std::string fname);
+template void readCSV(MatrixD& A, const std::string path);
