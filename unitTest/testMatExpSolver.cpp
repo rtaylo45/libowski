@@ -190,8 +190,6 @@ void testSolverTime(int myid, int numprocs, matrixExponential *expSolver){
 	outputFile.open(fileName);
 
 	for (int n = 10; n <= 10; n = n*10){
-		std::cout << myid << " " << mpi.rank << " " << mpi.size << std::endl;
-		if (myid==0){std::cout << "Size: "+std::to_string(n) << std::endl;};
 		if (myid==0){outputFile << "Size: "+std::to_string(n)+"\n";};
 
    	SparseMatrixD A(n,n);
@@ -245,6 +243,9 @@ void tankProblem(int myid, matrixExponential *expSolver, bool runCompute){
 //		x2_0 = 0.0
 //		x3_0 = 0.0
 //
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. 
 //*****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double x1_0 = 1000.0, x2_0 = 0.0, x3_0 = 0.0;
@@ -340,6 +341,9 @@ void xenonIodineProblem(int myid, matrixExponential *expSolver, bool runCompute)
 //		dN_d/dt = 0.0
 //		d_0 = 1.0
 //	
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. 
 //*****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double N_xe_0 = 0.0, N_I_0 = 0.0, N_d_0 = 1.0;
@@ -471,6 +475,9 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 //	To add the constant source terms we need to add a dummy species to hold the
 //	coefficients. 
 //	
+//	Note: The source terms were taken from a problem that Aaron Grahm built.
+//	They should be in g/cm^3/s for the constant source terms. Need to convert 
+//	this value.
 //****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double t = 0.0, tnew = 0.0; 
@@ -574,44 +581,42 @@ void neutronPrecursorProblem(int myid, matrixExponential *expSolver){
 // Test the krylov subspace approx for both of the Pade methods
 //*****************************************************************************
 void testKrylovSubspace(int myid){
-
-	matrixExponential *testExpSolverMethod1;
-	matrixExponential *testExpSolverMethod2;
-	matrixExponential *anaExpSolverMethod1;
-	matrixExponential *anaExpSolverMethod2;
 	// Base solver
-	anaExpSolverMethod1 = matrixExponentialFactory::getExpSolver("pade-method1");
-	anaExpSolverMethod2 = matrixExponentialFactory::getExpSolver("pade-method2");
+	matrixExponential *testExpSolver;
+	// Krylov solver
+	matrixExponential *anaExpSolver;
+	// Solvers to test
+	std::vector<std::string> solvers {"pade-method1", "pade-method2", "taylor"};
 	const int m = 100;
 	SparseMatrixD H, A;
 	MatrixD V;
-	VectorD ana1, ana2, approx1, approx2, b;
+	VectorD ana, approx, b;
 	b = VectorD::Ones(m);
 	A = buildJMatrix(m);
 	double t = 1.0;
-	double error1 = 0.0;
-	double error2 = 0.0;
-	// ananlytical solution
-	ana1 = anaExpSolverMethod1->apply(A, b, t);
-	ana2 = anaExpSolverMethod2->apply(A, b, t);
+	double error = 0.0;
 
-	if (myid ==0){
+	// Loop over matrix exp solvers
+	for (std::string &solverType : solvers){
+		// Gets the solver without krylov approx
+		anaExpSolver = matrixExponentialFactory::getExpSolver(solverType);
+		// ananlytical solution
+		ana = anaExpSolver->apply(A, b, t);
 		// Runs through different subspace dimensions
-		for (int i= 1; i <= 100; i++){
+		for (int i= 10; i <= 100; i++){
 			// Get the solvers
-			testExpSolverMethod1 = matrixExponentialFactory::getExpSolver("pade-method1", true, i);
-			testExpSolverMethod2 = matrixExponentialFactory::getExpSolver("pade-method2", true, i);
+			testExpSolver = matrixExponentialFactory::getExpSolver(
+				solverType, true, i);
 			// Generate soltuion
-			approx1 = testExpSolverMethod1->apply(A, b, t);
-			approx2 = testExpSolverMethod2->apply(A, b, t);
+			approx = testExpSolver->apply(A, b, t);
 			// Test against the base solution without the krylov subspace
-			error1 = (ana1 - approx1).norm();
-			error2 = (ana2 - approx2).norm();
+			if (myid == 0){
+				error = (ana - approx).norm();
 
-			// Do assertions, After subspace dim 49 the minumal error should be reached
-			if (i > 49) {
-				assert(error1 < 1.e-13);
-				assert(error2 < 1.e-13);
+				// Do assertions, After subspace dim 49 the minumal error should be reached
+				if (i > 49) {
+					assert(error < 1.e-13);
+				}
 			}
 		}
 	}

@@ -35,6 +35,8 @@ add_subdirectory(${SRC_DIR})
 ENABLE_TESTING()
 # Add unit test directory
 add_subdirectory(unitTest)
+# Add case studie directory
+add_subdirectory(caseStudies)
 
 ###############################################################################
 # Old cmake stuff

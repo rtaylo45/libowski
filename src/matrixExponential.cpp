@@ -64,7 +64,15 @@ matrixExponential::matrixExponential(bool KrylovFlag, int subspaceDim){
 	useKrylovSubspace = KrylovFlag;
 	krylovSubspaceDim = subspaceDim;
 }
-
+//**************************************************************************
+// Sets the krylov subspace dimension
+//
+// @param dim		Dimension of the subspace
+//**************************************************************************
+void matrixExponential::setKrylovSubspaceDimension(int dim){
+	useKrylovSubspace = true;
+	krylovSubspaceDim = dim;
+}
 //*****************************************************************************
 // Methods for Taylor series Class
 //
@@ -226,6 +234,19 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 VectorD taylor::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 	MatrixD M;
 	VectorD sol;
+	// Generates the krylov subspace if needed
+	if (useKrylovSubspace){
+		// define matrices and variables
+		MatrixD Q;
+		SparseMatrixD H;
+		SparseMatrixD At = A*t;
+		double beta = v0.norm();
+		// Builds the krylov subspace
+		arnoldi(At, v0, krylovSubspaceDim, Q, H);
+		// Computes the result
+		sol = beta*(Q*expmv(H, 1.0, VectorD::Unit(krylovSubspaceDim,0), M));
+		return sol;
+	}
 	sol = expmv(A, t, v0, M);
 	return sol;
 }
@@ -614,13 +635,73 @@ cauchy::cauchy(bool krylovBool, int krylovDim):matrixExponential(krylovBool,
 	krylovDim){};
 
 //*****************************************************************************
-// Calculates exp(A*t)v. The action of the matrix expoential on a vector
+// Calculates exp(A*t)v. The action of the matrix 
+// expoential on a vector
 //
 // @param A		The coefficient matrix for the system of ODE's
 // @param v0	Initial condition vector
 // @param t		Time step of the solve
 //*****************************************************************************
 VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
+	VectorD sol, n0;
+	// Calc new time step size
+	t = t/(double)(substeps+1);
+	// Initial condition
+	n0 = v0;
+
+	// Loop over substeps
+	for (int substep = 0; substep <= substeps; substep++){
+		// Generates the krylov subspace if needed
+		if (useKrylovSubspace){
+			if (substeps != 0){
+				std::cout << "Warning Krylov Subspace should not be use\n"
+					"with substeps in Cauchy solvers\n";
+			}
+			// define matrices and variables
+			MatrixD Q;
+			SparseMatrixD H;
+			SparseMatrixD At = A*t;
+			double beta = v0.norm();
+			// Builds the krylov subspace
+			arnoldi(At, v0, krylovSubspaceDim, Q, H);
+			// Computes the result
+			sol = beta*(Q*expmv(H, VectorD::Unit(krylovSubspaceDim,0), 1.0));
+			n0 = sol;
+		}
+		else{
+			sol = expmv(A, n0, t);
+			n0 = sol;
+		}
+	}
+	return sol;
+}
+
+//*****************************************************************************
+// Calculates exp(A*t). The matrix exponential
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param t		Time step of the solve
+//*****************************************************************************
+SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
+	SparseMatrixD matExp;
+	if (useKrylovSubspace){
+		std::string errorMessage =
+			" Krylov Subspace cannot be used with compute method\n";
+		libowskiException::runtimeError(errorMessage);
+	}
+	matExp = expm(A, t);
+	return matExp;
+}
+
+//*****************************************************************************
+// Internal function that calculates exp(A*t)v. The action of the matrix 
+// expoential on a vector
+//
+// @param A		The coefficient matrix for the system of ODE's
+// @param v0	Initial condition vector
+// @param t		Time step of the solve
+//*****************************************************************************
+VectorD cauchy::expmv(const SparseMatrixD& A, const VectorD& v0, double t){
 
 	// The sparse LU solver object
 	Eigen::SparseLU<SparseMatrixCLD, COLAMDOrdering<int> > solver;
@@ -689,12 +770,12 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 }
 
 //*****************************************************************************
-// Calculates exp(A*t). The matrix exponential
+// Internal function that calculates exp(A*t). The matrix exponential
 //
 // @param A		The coefficient matrix for the system of ODE's
 // @param t		Time step of the solve
 //*****************************************************************************
-SparseMatrixD cauchy::compute(const SparseMatrixD& A, double t){
+SparseMatrixD cauchy::expm(const SparseMatrixD& A, double t){
 
 	// If the Krylov subspace flag is true kill the program
 	if (useKrylovSubspace){

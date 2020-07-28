@@ -10,8 +10,8 @@
 // 
 // @param xCells		Number of cells in the x direction
 // @param yCells		Number of cells in the y direction
-// @param xDirLength	Total length in the x direction [ft]
-// @param yDirLength	Total length in the y direction [ft]
+// @param xDirLength	Total length in the x direction [m]
+// @param yDirLength	Total length in the y direction [m]
 //**************************************************************************
 modelMesh::modelMesh(int xCells, int yCells, double xDirLength, double 
 		yDirLength){
@@ -64,7 +64,6 @@ void modelMesh::createCells(){
 void modelMesh::createCellFaces(){
 	int absIndex = 0, jmax;
 	
-	//int k = (numOfxCells+1)*(2*numOfyCells+1) + numOfxCells;
 	for (int i = 0; i <= 2*numOfxCells; i++){
 		if (i%2){
 			jmax = numOfyCells+1;
@@ -192,7 +191,7 @@ bool modelMesh::checkCellLoc(int i, int j){
 //*****************************************************************************
 // Sets a constant x velocity across the whole problem
 //
-// @param velocity	x velocity [ft/s]
+// @param velocity	x velocity [m/s]
 //*****************************************************************************
 void modelMesh::setConstantXVelocity(double velocity){
 	for (int i = 0; i < numOfxCells; i++){
@@ -214,7 +213,7 @@ void modelMesh::setConstantXVelocity(double velocity){
 //*****************************************************************************
 // Sets a constant x velocity across a channel
 //
-// @param velocity	x velocity [ft/s]
+// @param velocity	x velocity [m/s]
 //*****************************************************************************
 void modelMesh::setConstantXVelocity(double velocity, int row){
 	for (int i = 0; i < numOfxCells; i++){
@@ -234,7 +233,7 @@ void modelMesh::setConstantXVelocity(double velocity, int row){
 //*****************************************************************************
 // Sets a constant y velocity across the whole problem
 //
-// @param velocity	y velocity [ft/s]
+// @param velocity	y velocity [m/s]
 //*****************************************************************************
 void modelMesh::setConstantYVelocity(double velocity){
 	for (int i = 0; i < numOfxCells; i++){
@@ -256,7 +255,7 @@ void modelMesh::setConstantYVelocity(double velocity){
 //*****************************************************************************
 // Sets a constant y velocity across a channel
 //
-// @param velocity	y velocity [ft/s]
+// @param velocity	y velocity [m/s]
 //*****************************************************************************
 void modelMesh::setConstantYVelocity(double velocity, int column){
 	for (int j = 0; j < numOfyCells; j++){
@@ -290,7 +289,7 @@ void modelMesh::setSystemTemperature(double temp){
 //*****************************************************************************
 // Sets the pressure in the whole problem
 //
-// @param pressure		Pressure in lbf/in^2
+// @param pressure		Pressure in Pa
 //*****************************************************************************
 void modelMesh::setSystemPressure(double pressure){
 	for (int i = 0; i < numOfxCells; i++){
@@ -301,6 +300,19 @@ void modelMesh::setSystemPressure(double pressure){
 	}
 }
 
+//*****************************************************************************
+// Sets the neutron flux in the whole problem
+//
+// @param phi		Neutron flux in 1/cm^2/s
+//*****************************************************************************
+void modelMesh::setSystemNeutronFlux(double phi){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setNeutronFlux(phi);
+		}
+	}
+}
 //*****************************************************************************
 // Set cell temperature
 //
@@ -318,11 +330,23 @@ void modelMesh::setCellTemperature(int i, int j, double temp){
 //
 // @param i				x cell index
 // @param j				y cell index
-// @param Pressure	Pressure in lbf/in^2
+// @param Pressure	Pressure in Pa
 //*****************************************************************************
 void modelMesh::setCellPressure(int i, int j, double pressure){
 	meshCell* cell = getCellByLoc(i,j);
 	cell->setPressure(pressure);
+}
+
+//*****************************************************************************
+// Set cell neutron flux
+//
+// @param i				x cell index
+// @param j				y cell index
+// @param phi			Neutron flux in 1/cm^2/s
+//*****************************************************************************
+void modelMesh::setCellNeutronFlux(int i, int j, double phi){
+	meshCell* cell = getCellByLoc(i,j);
+	cell->setNeutronFlux(phi);
 }
 
 //*****************************************************************************

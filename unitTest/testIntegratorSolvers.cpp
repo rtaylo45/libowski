@@ -28,6 +28,9 @@ void tankProblem(int myid, ODEintegrator *intSolver){
 //		x2_0 = 0.0
 //		x3_0 = 0.0
 //
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. 
 //*****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double x1_0 = 1000.0, x2_0 = 0.0, x3_0 = 0.0;
@@ -101,6 +104,9 @@ void xenonIodineProblem(int myid, ODEintegrator *intSolver){
 //		dN_d/dt = 0.0
 //		d_0 = 1.0
 //	
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units. 
 //*****************************************************************************
 	typedef Eigen::Triplet<double> T;
    double N_xe_0 = 0.0, N_I_0 = 0.0, N_d_0 = 1.0;

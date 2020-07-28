@@ -303,6 +303,26 @@ void testlineSpace(int myid){
 
 }
 
+//*****************************************************************************
+// Test the linspace function 
+//*****************************************************************************
+void testCSVReader(int myid){
+	MatrixD testMat1 = MatrixD::Random(4,7);
+	MatrixD retMat1;
+	double error;
+
+	// writes matrix to csv file
+	writeCSV(testMat1, "test1.csv");
+
+	// reads in the csv file
+	readCSV(retMat1, "test1.csv");
+
+	// checks error
+	error = (testMat1 - retMat1).norm();
+	assert(error < 1.e-14);
+
+	std::remove("test1.csv");
+}
 
 int main(){
 	int myid = mpi.rank;
@@ -313,6 +333,7 @@ int main(){
 	testBinomialCoeff(myid);
 	testArnoldi(myid);
 	testlineSpace(myid);
+	testCSVReader(myid);
 
 	mpi.finalize();
 }

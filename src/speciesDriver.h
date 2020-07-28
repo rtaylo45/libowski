@@ -42,7 +42,7 @@ class speciesDriver {
 	int dummySpec = 1;
 	// Logical set after the matrix has been built
 	bool matrixInit = false;
-	// Last solve time 
+	// Last solve time [s]
 	double lastSolveTime = 0.0;
 	// Transition matrix
 	SparseMatrixD A;
@@ -63,6 +63,8 @@ class speciesDriver {
 	species* getSpeciesPtr(int, int, int);
 	// Gets the species concentration
 	double getSpecies(int, int, int);
+	// Gets the species name
+	std::string getSpeciesName(int, int , int);
 	// Sets the species concentration
 	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms
@@ -72,6 +74,9 @@ class speciesDriver {
 	void setSpeciesSourceFromFile(std::string, std::string = "None");
 	// Sets a boundary condition in a cell
 	void setBoundaryCondition(std::string, std::string, int, double = 0);
+	// Sets a boundary condition in a cell for a list of isotopes
+	void setBoundaryCondition(std::string, std::string, std::vector<int>,
+		std::vector<double> = std::vector<double>());
 	// Call to make solver rebuild the A matrix before the next solve
 	void resetMatrix();
 	// Solves the transient species transport equation with matrix exp
@@ -86,6 +91,13 @@ class speciesDriver {
 	void setIntegratorSolver(std::string, std::string);
 	// Gives ability to set the flux limiter function
 	void setFluxLimiter(std::string);
+	// Writes out the base line transition matrix to a csv file. This matrix
+	// is not multiplied by the time step size. This function must be called
+	// After all of the speices source terms are set and all mesh parameters 
+	// are set. Call this right before you call the solve method
+	void writeTransitionMatrixToFile(std::string);
+	/// Sets the Krylov subspace dimension of the matexp solver
+	void setKrylovSubspaceDimension(int dim);
 	// Cleans species
 	void clean();
 

@@ -18,11 +18,22 @@ speciesDriver::speciesDriver(modelMesh* model){
 // Sets the matrix exponential solver
 //
 // @param solverName	The name of the materix exponential solver type
+// @param krylovFlag	Bool used to set if the krylov subspace is to be used
+// @param krylovDim	Dimension of the subspace
 //*****************************************************************************
 void speciesDriver::setMatrixExpSolver(std::string solverName, bool krylovFlag,
 	int krylovDim){
 	expSolver = matrixExponentialFactory::getExpSolver(solverName, krylovFlag,
 		krylovDim);
+}
+
+//*****************************************************************************
+// Sets the krylov subsapce dimension of the matrix exp solver
+//
+// @param dim	Dimension of the krylov subspace
+//*****************************************************************************
+void speciesDriver::setKrylovSubspaceDimension(int dim){
+	expSolver->setKrylovSubspaceDimension(dim);
 }
 
 //*****************************************************************************
@@ -34,6 +45,26 @@ void speciesDriver::setMatrixExpSolver(std::string solverName, bool krylovFlag,
 void speciesDriver::setIntegratorSolver(std::string method, std::string 
 	solverName){
 	intSolver = integratorFactory::getIntegrator(method, solverName);
+}
+
+//*****************************************************************************
+// Writes out the base line transition matrix to a csv file. This matrix
+// is not multiplied by the time step size. This function must be called
+// After all of the speices source terms are set and all mesh parameters 
+// are set. Call this right before you call the solve method
+//
+// @param fname	The name of the file to write the matrix to. This file will
+//						be in the csv format
+//*****************************************************************************
+void speciesDriver::writeTransitionMatrixToFile(const std::string fname){
+	MatrixD dA;
+	bool augmented = true;
+
+	if (mpi.rank == 0){
+		A = buildTransMatrix(augmented, 0.0);
+		dA = Eigen::MatrixXd(A);
+		writeCSV(dA, fname);
+	}	
 }
 
 //*****************************************************************************
@@ -57,9 +88,9 @@ void speciesDriver::setFluxLimiter(std::string limiterName){
 //*****************************************************************************
 // Adds a species to the model
 //
-// @param molarMass  Molar mass of species [lbm/mol]
-// @param [initCon]  Initial concentration [lbm/ft^3]
-// @param [diffCoef]	Diffusion coefficient [ft^2/s]
+// @param molarMass  Molar mass of species [g/mol]
+// @param [initCon]  Initial concentration [kg/m^3]
+// @param [diffCoef]	Diffusion coefficient [m^2/s]
 // @param name			Name of the species
 //*****************************************************************************
 int speciesDriver::addSpecies(double molarMass, double initCon,
@@ -139,11 +170,23 @@ double speciesDriver::getSpecies(int i, int j, int specID){
 // @param i       x index
 // @param j       y index
 // @param specID  Species ID
-// @param specCon	Concentration [lbm/ft^3]
+// @param specCon	Concentration [kg/m^3]
 //*****************************************************************************
 void speciesDriver::setSpeciesCon(int i, int j, int specID, double specCon){
    species* spec = getSpeciesPtr(i, j, specID);
    spec->c = specCon;
+}
+
+//*****************************************************************************
+// Gets the species name
+//
+// @param i       x index
+// @param j       y index
+// @param specID  Species ID
+//*****************************************************************************
+std::string speciesDriver::getSpeciesName(int i, int j, int specID){
+   species* spec = getSpeciesPtr(i, j, specID);
+   return spec->name;
 }
 
 //*****************************************************************************
@@ -155,8 +198,8 @@ void speciesDriver::setSpeciesCon(int i, int j, int specID, double specCon){
 // @param coeffs			A vector of species source coefficients
 //								[1/s]
 // @param transcoeffs	A vector of species souce coefficients for transmutation
-//								[ft^2]
-// @param s					Constant source in cell [lbm/ft^3/s]
+//								[cm^2]
+// @param s					Constant source in cell [kg/m^3/s]
 //*****************************************************************************
 void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<double>
       coeffs, double s, std::vector<double> transCoeffs){
@@ -200,7 +243,7 @@ void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
 // @param specID			Species ID
 // @param name				Species name
 // @param coeffs			A vector of species source coefficients
-//								[ft^2]
+//								[m^2]
 //*****************************************************************************
 void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
 		std::vector<double> coeffs){
@@ -278,7 +321,7 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
 //
 //	@param Loc		Location 
 // @param specID  Species ID
-// @param bc		BC value [lbm/ft^3]
+// @param bc		BC value [kg/m^3] or [kg/m^2]
 //*****************************************************************************
 void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc, 
 	int specID, double bc){
@@ -314,12 +357,74 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 }
 
 //*****************************************************************************
+// Sets a boundary condition in a cell for a vector of species
+//
+//	@param Loc		Location 
+// @param ids		vector of species ids
+// @param bcs		vector of BC values [kg/m^3] or [kg/m^2]
+//*****************************************************************************
+void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc, 
+	std::vector<int> ids, std::vector<double> bcs){
+	int specID;
+	double bc;
+
+	// Check to make sure that both vectors are of equal size. 
+	// The default arg for bcs is an empty vector. If it is empty is does not
+	// do this check
+	if (not bcs.empty()){
+		assert(ids.size() == bcs.size());
+	}
+
+	int locID = -1;
+
+	if (loc == "north") {locID = 0;};
+	if (loc == "south") {locID = 1;};
+	if (loc == "east") {locID = 2;};
+	if (loc == "west") {locID = 3;};
+	assert(locID != -1);
+
+	if (BCType == "dirichlet") {
+		for (int index = 0; index < ids.size(); index++){
+			bc = 0.0;
+			specID = ids[index];
+			if (not bcs.empty()){ bc = bcs[index];};
+			setGeneralBoundaryCondition(BCType, locID, specID, bc);
+		}
+	}
+	else if (BCType == "newmann"){
+		for (int index = 0; index < ids.size(); index++){
+			bc = 0.0;
+			specID = ids[index];
+			if (not bcs.empty()){ bc = bcs[index];};
+			setGeneralBoundaryCondition(BCType, locID, specID, bc);
+		}
+	} 
+	else if (BCType == "periodic"){
+		setPeriodicBoundaryCondition(locID);
+	} 
+	else if (BCType == "free flow"){
+		for (int index = 0; index < ids.size(); index++){
+			bc = 0.0;
+			specID = ids[index];
+			if (not bcs.empty()){ bc = bcs[index];};
+			setGeneralBoundaryCondition(BCType, locID, specID, bc);
+		}
+	}
+	else{
+		std::string errorMessage = 
+			" You have selected an invalid boundary condition ";
+		libowskiException::runtimeError(errorMessage);
+	}
+	
+}
+
+//*****************************************************************************
 // Sets a dirichlet or Newmann boundary condition in a cell
 //
 // @param type		BC type
 //	@param LocID	Location ID
 // @param specID  Species ID
-// @param bc		BC value [lbm/ft^3]
+// @param bc		BC value [kg/m^3] or [kg/m^2]
 //*****************************************************************************
 void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID, 
 	int specID, double bc){
@@ -455,13 +560,19 @@ void speciesDriver::solve(double solveTime){
 	double timeStep = solveTime - lastSolveTime;
 	double rtol = 1.e-5, diff;
 	VectorD defSourceOld, defSourceNew;
+	std::ofstream outputFile;
+	const static IOFormat CSVFormat(StreamPrecision, DontAlignCols, ", ", "\n");
 
+	A = buildTransMatrix(augmented, 0.0);
 	if (mpi.rank == 0){
-		//dA = Eigen::MatrixXd(A*timeStep);
+		//dA = Eigen::MatrixXd(A);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
 		//std::ofstream outputFile;
-		//outputFile.open("matrix.out", std::ios_base::app);
-		//outputFile << dA << std::endl;
+		//outputFile.open("matrix.csv");
+		//outputFile.precision(16);
+		//outputFile.setf(ios::fixed);
+		//outputFile.setf(ios::showpoint);
+		//outputFile << dA.format(CSVFormat) << std::endl;
 		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << " "  << std::endl;
 		//std::cout << dA  << std::endl;
@@ -470,7 +581,6 @@ void speciesDriver::solve(double solveTime){
 		//std::cout << N0  << std::endl;
 		//matrixInit = true;
 	}
-	A = buildTransMatrix(augmented, 0.0);
 	N0 = buildInitialConditionVector(augmented);
 	sol = expSolver->apply(A, N0, timeStep);
 	unpackSolution(sol);

@@ -14,9 +14,9 @@
 class modelMesh {
 
 	public:
-	// Total length in x direction
+	// Total length in x direction [m]
 	double xLength = 0.0;
-	// Total length in y direction
+	// Total length in y direction [m]
 	double yLength = 0.0;
 	// Number of cells in the x direction
 	int numOfxCells = 0;
@@ -30,9 +30,9 @@ class modelMesh {
 	std::vector<meshCellFace> meshCellFaces;
 	// Vector of cell surfaces
 	std::vector<surface> surfaces;
-	// Change in x direction
+	// Change in x direction [m]
 	double dx = 0.0;
-	// Change in y direction
+	// Change in y direction [m]
 	double dy = 0.0;
 	
 	public:
@@ -56,10 +56,14 @@ class modelMesh {
 	void setSystemTemperature(double);
 	// Sets a pressure in the whole system
 	void setSystemPressure(double);
+	// Sets a neutron flux in the whole system
+	void setSystemNeutronFlux(double);
 	// Set temperature in a cell
 	void setCellTemperature(int, int, double);
 	// Set pressure in a cell
 	void setCellPressure(int, int, double);
+	// Set neutron flux in a cell
+	void setCellNeutronFlux(int, int, double);
 	// Adds a physical surface to a cell
 	void addSurface(int, int, std::string);
 	// Adds a physical surface along a boundary

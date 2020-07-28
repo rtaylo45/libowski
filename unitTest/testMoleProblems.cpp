@@ -25,13 +25,13 @@
 //			dC/dt = -lambda*C(x,t)
 //
 //	Domaine:
-//			x = [0, 100]
-//			t = [0, 20]
-//			lambda = 0.01
+//			x = [0, 100]	cm
+//			t = [0, 20]		s
+//			lambda = 0.01	1/s
 //
 //	Initial conditions and BC's:
-//			C(x, 0) = 1000.(x + 1)
-//			C(0,t) = C(100,t)
+//			C(x, 0) = 1000.(x + 1)	kg/m^3
+//			C(0,t) = C(100,t)			kg/m^3
 //
 //	Solution:
 //			C(x,t) = C(x,0)*e^(-lambda*t)
@@ -41,7 +41,9 @@ void moleProblem1(int myid){
 	int yCells = 1, xCells = 1000;
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	std::vector<std::string> solvers {"hyperbolic", "pade-method2", "taylor"};
-	double xLength = 100., yLength = 0.0; // cm
+	// convert cm to m
+	double xLength = 100./100.; // m
+	double yLength = 0.0; // m
 	double tEnd = 20.0;	// seconds
 	double lambda = 0.1;	// 1/s
 	double cSol, cCon;
@@ -128,7 +130,8 @@ void moleProblem1(int myid){
 						relativeError = std::abs(cSol-cCon)/cSol;
 						maxRelativeError = std::max(maxRelativeError, relativeError);
 						rmse += std::pow(relativeError,2.);
-						outputFile << xc << " " << cCon << "\n";
+						// xc is converted from m to cm
+						outputFile << xc*100. << " " << cCon << "\n";
 						assert(isApprox(cCon, cSol));
 					}
 				}
@@ -153,14 +156,14 @@ void moleProblem1(int myid){
 //			dC/dt = -vdC/dx -lambda*C(x,t)
 //
 //	Domaine:
-//			x = [0, 100]
-//			t = [0, 20]
-//			v = 2.0
-//			lambda = 0.01
+//			x = [0, 100]	cm
+//			t = [0, 20]		s
+//			v = 2.0			cm/s
+//			lambda = 0.01	1/s
 //
 //	Initial conditions and BC's:
-//			C(x, 0) = 1000.0
-//			C(0,t) = 1000.0
+//			C(x, 0) = 1000.0	kg/m^3
+//			C(0,t) = 1000.0	kg/m^3
 //
 //	Solution:
 //			C(x,t) = TBD
@@ -174,11 +177,11 @@ void moleProblem2(int myid){
 	//std::vector<double> steps = {1, 2, 4, 8, 20, 40};
 	std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
 	//std::vector<std::string> solvers {"hyperbolic"};
-	double xLength = 100, yLength = 0.0; // cm
+	double xLength = 100./100.; // m
+	double yLength = 0.0; // m
 	double tEnd = 20.0;	// seconds
 	double lambda = 0.01;	// 1/s
-	//double lambda = 0.0;	// 1/s
-	double velocity = 2.0; // cm/s
+	double velocity = 2.0/100.; // m/s
 	double cSol, cCon;
 	int cID;
 	double x1, x2, initCon, dx, xc, dt, t;
@@ -292,8 +295,7 @@ void moleProblem2(int myid){
 					outputFile << "\n";
 					//std::cout << solverType << " " << dx << " " << dt 
 					//	<< " " << percentError << "\n";
-					// clean species
-					printf("%15s %2.3f %4.2E %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, dx, 
+					printf("%15s %2.3f %4.2E %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, dx*100.,
 							maxRelativeError, std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
 				}
 				spec.clean();
@@ -314,16 +316,13 @@ void moleProblem2(int myid){
 // deposited on the wall at the beginning.
 //
 //	Problem equations:
-//			dCi/dt = -R(T)
-//			dCw/dt = R(T)
+//			dCi/dt = -v*dCi/dx - lambda*Ci
+//			dCw/dt = lambda*Cw
 //
 //	Domaine:
 //			x = [0, 100]
 //			t = [0, 20]
-//			R(T) = A1*e^(A2/T)
-//			A1 = 0.1
-//			A2 = -500.
-//			T = 900
+//			lambda = 0.1
 //
 //	Initial conditions and BC's:
 //			Ci(x, 0) = 1000.0
@@ -332,386 +331,409 @@ void moleProblem2(int myid){
 //			Cw(0,t) = Cw(100,t)
 //
 //	Solution:
-//			Ci(x,t) = Ci0 - R(T)*t
-//			Cw(x,t) = R(T)*t
+//			Ci(x,t) = 1000*e^(-lambda*t),			x >= v*t
+//					  = 1000*e^(-lambda*x/v),		x < v*t
+//
+//			Cw(x,t) = 1000*(1 - e^(-lambda*t)),	x >= v*t
+//					  = 1000*(1 - e^(-lambda*x/v) + lambda*e^(-lambda*x/v)*(t - x/v))
+//						 x < v*t
 //
 //*****************************************************************************
 void moleProblem3(int myid){
-	int yCells = 1;
-	std::vector<int> numOfxCells{10};
-	std::vector<double> steps = {1};
-	double xLength = 100, yLength = 0.0; // cm
-	double tEnd = 20.0;	// seconds
-	double A1 = 1.0, A2 = 500, T = 900.;
-	double R = A1*exp(-A2/T);
-	double CiSol, CwSol, CiCon, CwCon;
-	int CiID, CwID;
-	double x1, x2, initCon, dx, xc, dt, t;
-	double linfError = 0.0;
-	meshCell* cell = nullptr;
-	std::string outputFileName;
-	std::vector<double> Cicoeffs = {0.0, 0.0};
-	std::vector<double> Cwcoeffs = {0.0, 0.0};
-	// sets the ouput file name
-	std::ofstream outputFile;
-	outputFileName = "moleproblem3.out";
-	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
-	outputFile << "dx"	<< " " << "dt" << " " << "max l2 error" << "\n";
-	outputFile << "Total problem time: " << tEnd << "\n";
-
-	// loops over number of cells
-	for (int &xCells : numOfxCells){
-		// build the mesh
-		modelMesh model(xCells, yCells, xLength, yLength);
-		// build species driver
-		speciesDriver spec = speciesDriver(&model);
-
-		// loops over number of time steps
-		for (double &numofsteps	: steps){
-			dt = tEnd/numofsteps;
-			outputFile << "dx: " << xLength/(double)xCells << "\n";
-			outputFile << "dt: " << dt << "\n";
-			outputFile << "x " << "Ci " << "Cw "<< "\n";
-
-			// add specs
-			CiID = spec.addSpecies(1.0, 0.0, 0.0);
-			CwID = spec.addSpecies(1.0, 0.0, 0.0);
-
-			// sets the intial condition and sources
-			for (int i = 0; i < xCells; i++){
-				for (int j = 0; j < yCells; j++){
-					cell = model.getCellByLoc(i,j);	
-
-					// calculates the x positions as the cell faces
-					dx = cell->dx;
-					xc = cell->x;
-					x2 = xc + dx/2;
-					x1 = xc - dx/2;
-
-					// calculates the initial concentration from mvt. 
-					initCon = 1000.0;
-
-					spec.setSpeciesCon(i, j, CiID, initCon);
-
-					// sets the sources
-					spec.setSpeciesSource(i, j, CiID, Cicoeffs, -R);
-					spec.setSpeciesSource(i, j, CwID, Cwcoeffs, R);
-				}
-			}
-			t = 0.0;
-			// solve the problem
-			for (int step = 1; step <= numofsteps; step++){
-				t = step*dt;
-				// solve with cram
-				spec.solve(t);
-			}
-			// gets species concentrations
-			if (myid==0){
-				for (int i = 0; i < xCells; i++){
-					for (int j = 0; j < yCells; j++){
-						cell = model.getCellByLoc(i,j);	
-
-						// caclulate analytical solution
-						xc = cell->x;
-						CiSol = xc - R*t + 1000.;
-						CwSol = R*t;
-
-						// get libowski solution
-						CiCon = spec.getSpecies(i, j, CiID);
-						CwCon = spec.getSpecies(i, j, CwID);
-
-						//assert(isapprox(vsol, vcon, 1e-5, 1e-4));
-						//linfError = std::max(linfError, std::abs(csol-ccon)/csol);
-						outputFile << xc << " " << CiCon << " " << CwCon << "\n";
-					}
-				}
-			}
-			outputFile << "\n";
-			//std::cout << dx << " " << dt << " " << linfError << "\n";
-			// clean species
-			spec.clean();
-		}
-		spec.clean();
-		model.clean();
-	}
 }
 
 //*****************************************************************************
 // Mole problem 4
 //
-// This problem is the same as problem 3, but with the liquid flowing at a 
-// constant velocity in the positive x direction
+// This problem models the drift and decay of the 6 delayed neutron precursor 
+// groups.
 //
 //	Problem equations:
-//			dCi/dt = -v*dCi/dx-R(T)
-//			dCw/dt = R(T)
 //
 //	Domaine:
-//			x = [0, 100]
-//			t = [0, 20]
-//			v = 2.0
-//			R(T) = A1*e^(A2/T)
-//			A1 = 0.1
-//			A2 = -500.
-//			T = 900
 //
 //	Initial conditions and BC's:
-//			Ci(x, 0) = 1000.0
-//			Ci(0,t) = 1000.0
-//			Cw(x, 0) = 0
-//			Cw(0,t) = Cw(100,t)
 //
 //	Solution: 
-//			Ci(x,t) = TBD
-//			Cw(x,t) = TBD
 //
 //*****************************************************************************
 void moleProblem4(int myid){
-	int yCells = 1;
-	std::vector<int> numOfxCells{10};
-	std::vector<double> steps = {1};
-	double xLength = 100, yLength = 0.0; // cm
-	double tEnd = 10.0;	// seconds
-	double A1 = 0.1, A2 = 500., T = 900.;
-	double velocity = 2.0; // cm/s
-	double R = A1*exp(-A2/T);
-	double CiSol, CwSol, CiCon, CwCon;
-	int CiID, CwID;
-	double x1, x2, initCon, dx, xc, dt, t;
-	double linfError = 0.0;
-	meshCell* cell = nullptr;
-	std::string outputFileName;
-	std::vector<double> Cicoeffs = {0.0, 0.0};
-	std::vector<double> Cwcoeffs = {0.0, 0.0};
-	// sets the ouput file name
-	std::ofstream outputFile;
-	outputFileName = "moleproblem4.out";
-	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
-	outputFile << "Total problem time: " << tEnd << "\n";
-
-	// loops over number of cells
-	for (int &xCells : numOfxCells){
-		// build the mesh
-		modelMesh model(xCells, yCells, xLength, yLength);
-		// build species driver
-		speciesDriver spec = speciesDriver(&model);
-		// set x velocity
-		model.setConstantXVelocity(velocity);
-
-		// loops over number of time steps
-		for (double &numofsteps	: steps){
-			dt = tEnd/numofsteps;
-			outputFile << "dx: " << xLength/(double)xCells << "\n";
-			outputFile << "dt: " << dt << "\n";
-			outputFile << "x " << "Ci " << "Cw "<< "\n";
-
-			// add specs
-			CiID = spec.addSpecies(1.0, 0.0, 0.0);
-			CwID = spec.addSpecies(1.0, 0.0, 0.0);
-
-			// sets the intial condition and sources
-			for (int i = 0; i < xCells; i++){
-				for (int j = 0; j < yCells; j++){
-					cell = model.getCellByLoc(i,j);	
-
-					// calculates the x positions as the cell faces
-					dx = cell->dx;
-					xc = cell->x;
-					x2 = xc + dx/2;
-					x1 = xc - dx/2;
-
-					// calculates the initial concentration from mvt. 
-					initCon = (5.*(std::pow(M_PI, 0.5))/(dx))*(erf(3.-x1/10.) - erf(3.-x2/10.));
-					initCon += (1/dx)*(10.*x2 - 10.*x1);
-
-					spec.setSpeciesCon(i, j, CiID, initCon);
-
-					// sets the sources
-					spec.setSpeciesSource(i, j, CiID, Cicoeffs, -R);
-					spec.setSpeciesSource(i, j, CwID, Cwcoeffs, R);
-				}
-			}
-			t = 0.0;
-			// solve the problem
-			for (int step = 1; step <= numofsteps; step++){
-				t = step*dt;
-				// solve with cram
-				spec.solve(t);
-			}
-			// gets species concentrations
-			if (myid==0){
-				for (int i = 0; i < xCells; i++){
-					for (int j = 0; j < yCells; j++){
-						cell = model.getCellByLoc(i,j);	
-
-						// caclulate analytical solution
-						xc = cell->x;
-						CiSol = 0.0;
-						CwSol = R*t;
-
-						// get libowski solution
-						CiCon = spec.getSpecies(i, j, CiID);
-						CwCon = spec.getSpecies(i, j, CwID);
-
-						//assert(isapprox(vsol, vcon, 1e-5, 1e-4));
-						//linfError = std::max(linfError, std::abs(csol-ccon)/csol);
-						outputFile << xc << " " << CiCon << " " << CwCon << "\n";
-					}
-				}
-			}
-			outputFile << "\n";
-			//std::cout << dx << " " << dt << " " << linfError << "\n";
-			// clean species
-			spec.clean();
-		}
-		spec.clean();
-		model.clean();
-	}
 }
 
 //*****************************************************************************
 // Mole problem 5
 //
-// This problem is the same as problem 4 but with temperature that varies in 
-// the x direction. Source term is constant but varies in the x direction,
-// so need to use MVT and integrate over the cell. 
+// This problem is the same as Problem 3, but with the liquid flowing at a 
+// constant velocity in the positive x direction.
 //
 //	Problem equations:
-//			dCi/dt = -v*dCi/dx-R(T)
-//			dCw/dt = R(T)
 //
 //	Domaine:
-//			x = [0, 100]
-//			t = [0, 20]
-//			v = 2.0
-//			R(T) = A1*e^(A2/T)
-//			T = 850 + x
-//			A1 = 0.1
-//			A2 = -500.
 //
 //	Initial conditions and BC's:
-//			Ci(x, 0) = 1000.0
-//			Ci(0,t) = 1000.0
-//			Cw(x, 0) = 0
-//			Cw(0,t) = Cw(100,t)
 //
 //	Solution: 
-//			C(x,t) = TBD
-//			Cw(x,t) = TBD
 //
 //*****************************************************************************
 void moleProblem5(int myid){
-	int yCells = 1;
-	std::vector<int> numOfxCells{10};
-	std::vector<double> steps = {1};
-	double xLength = 100, yLength = 0.0; // cm
-	double tEnd = 10.0;	// seconds
-	double A1 = 0.1, A2 = 500., T = 900.;
-	double velocity = 2.0; // cm/s
-	double R = A1*exp(-A2/T);
-	double CiSol, CwSol, CiCon, CwCon;
-	int CiID, CwID;
-	double x1, x2, initCon, dx, xc, dt, t;
-	double linfError = 0.0;
-	meshCell* cell = nullptr;
-	std::string outputFileName;
-	std::vector<double> Cicoeffs = {0.0, 0.0};
-	std::vector<double> Cwcoeffs = {0.0, 0.0};
-	// sets the ouput file name
-	std::ofstream outputFile;
-	outputFileName = "moleproblem5.out";
-	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
-	outputFile << "Total problem time: " << tEnd << "\n";
+}
 
-	// loops over number of cells
-	for (int &xCells : numOfxCells){
-		// build the mesh
-		modelMesh model(xCells, yCells, xLength, yLength);
-		// Add BC surface
-		model.addBoundarySurface("west");
-		// build species driver
-		speciesDriver spec = speciesDriver(&model);
-		// set x velocity
-		model.setConstantXVelocity(velocity);
+//*****************************************************************************
+// Mole problem 6
+//
+// This problem is the same as problem 5, but with temperature that varies 
+// in the x direction.
+//
+//	Problem equations:
+//
+//	Domaine:
+//
+//	Initial conditions and BC's:
+//
+//	Solution: 
+//
+//*****************************************************************************
+void moleProblem6(int myid){
+}
 
-		// loops over number of time steps
-		for (double &numofsteps	: steps){
-			dt = tEnd/numofsteps;
-			outputFile << "dx: " << xLength/(double)xCells << "\n";
-			outputFile << "dt: " << dt << "\n";
-			outputFile << "x " << "Ci " << "Cw "<< "\n";
+//*****************************************************************************
+// Mole problem 7
+//
+// This problem models the production, flow, and decay of I-135 in a 1D pipe. 
+// The production term is driven by an externally coupled fission source. 
+// The problem should be simulated for 48 hours.
+//
+//	Problem equations:
+//
+//	Domaine:
+//
+//	Initial conditions and BC's:
+//
+//	Solution: 
+//
+//*****************************************************************************
+void moleProblem7(int myid){
+}
 
-			// add specs
-			CiID = spec.addSpecies(1.0, 0.0, 0.0);
-			CwID = spec.addSpecies(1.0, 0.0, 0.0);
+//*****************************************************************************
+// Mole problem 8
+//
+// This problem builds on Problem 7 by generating Xe-135 from the I-135 decay 
+// as well as from fission. Xe-135 absorption of neutrons is also modeled 
+// while both I-135 and Xe-135 are transported around the loop.
+//
+//	Problem equations:
+//
+//	Domaine:
+//
+//	Initial conditions and BC's:
+//
+//	Solution: 
+//
+//*****************************************************************************
+void moleProblem8(int myid){
+}
 
-			// sets the intial condition and sources
-			for (int i = 0; i < xCells; i++){
-				for (int j = 0; j < yCells; j++){
-					cell = model.getCellByLoc(i,j);	
+//*****************************************************************************
+// Mole problem 9
+//
+// This problem builds on Problem 8 by allowing Xe-135 to enter and grow 
+// pre-existing gas bubbles. These bubbles are assumed to have some initial 
+// distribution made entire of helium.
+//
+//	Problem equations:
+//
+//	Domaine:
+//
+//	Initial conditions and BC's:
+//
+//	Solution: 
+//
+//*****************************************************************************
+void moleProblem9(int myid){
+}
 
-					// calculates the x positions as the cell faces
-					dx = cell->dx;
-					xc = cell->x;
-					x2 = xc + dx/2;
-					x1 = xc - dx/2;
+//*****************************************************************************
+// Mole problem 10
+//
+// This problem models the primary uranium isotopes along with Pu-239 and 
+// Np-239. The isotopes all start with a flat distribution and decay without 
+// moving.
+//
+//	Problem equations:
+//		dCi/dt = sum^{9}_{j=1} A_{i,j}*C_{j}
+//
+//		i = 1, U-233
+//			 2, U-234
+//			 3, U-235
+//			 4, U-236
+//			 5, U-237
+//			 6, U-238
+//			 7, U-239
+//			 8, Pu-239
+//			 9, Np-239
+//
+//	Domaine:
+//		x = [0, 400cm]
+//		t = [0, 10y]
+//
+//	Initial conditions and BC's:
+//		Ci(x, 0) = 1e10
+//
+//	Solution: 
+//		Computed using matlab
+//
+//*****************************************************************************
+void moleProblem10(int myid){
+	double t;
+	int steps = 10;
+	double depletionTime = 10.*365.; // Days
+	double totalTime = depletionTime*24.*60.*60.;
+	double dt = totalTime/steps;
+	int xCells = 1, yCells = 1;
+	double xLength = 1.0, yLength = 4.0;
+	MatrixD anaSolution;
+	std::vector<int> ids;
+	std::string path = getDataPath();
+	std::string outputFileName = "moleProblem10.out";
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", 
+	"pade-method1", "pade-method2", "taylor"};
+	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
 
-					// calculates the initial concentration from mvt. 
-					initCon = (5.*(std::pow(M_PI, 0.5))/(dx))*(erf(3.-x1/10.) - erf(3.-x2/10.));
-					initCon += (1/dx)*(10.*x2 - 10.*x1);
+	// File names for setting up problems
+	std::string speciesNamesFile = path + "MoleP10SpeciesInputNames.dat";
+	std::string speciesDecayFile = path + "MoleP10SpeciesInputDecay.dat";
+	std::string solutionfname = path + "moleP10Solution.csv";
 
-					spec.setSpeciesCon(i, j, CiID, initCon);
+	// Builds the mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+	// Builds species object
+	speciesDriver spec = speciesDriver(&model);
+	// Sets the neutron flux
+	model.setSystemNeutronFlux(1.e13);
+	// Reads in the analytical solution
+	readCSV(anaSolution, solutionfname);
 
-					// sets the sources
-					spec.setSpeciesSource(i, j, CiID, Cicoeffs, -R);
-					spec.setSpeciesSource(i, j, CwID, Cwcoeffs, R);
-				}
-			}
-			t = 0.0;
-			// solve the problem
-			for (int step = 1; step <= numofsteps; step++){
-				t = step*dt;
-				// solve with cram
-				spec.solve(t);
-			}
-			// gets species concentrations
-			if (myid==0){
-				for (int i = 0; i < xCells; i++){
-					for (int j = 0; j < yCells; j++){
-						cell = model.getCellByLoc(i,j);	
-
-						// caclulate analytical solution
-						xc = cell->x;
-						CiSol = xc - R*t;
-						CwSol = R*t;
-
-						// get libowski solution
-						CiCon = spec.getSpecies(i, j, CiID);
-						CwCon = spec.getSpecies(i, j, CwID);
-
-						//assert(isapprox(vsol, vcon, 1e-5, 1e-4));
-						//linfError = std::max(linfError, std::abs(csol-ccon)/csol);
-						outputFile << xc << " " << CiCon << " " << CwCon << "\n";
-					}
-				}
-			}
-			outputFile << "\n";
-			//std::cout << dx << " " << dt << " " << linfError << "\n";
-			// clean species
-			spec.clean();
+	// Loop over matrix exp solvers
+	for (std::string &solverType : solvers){
+		std::ofstream outputFile;
+		// Adds the species 
+		ids = spec.addSpeciesFromFile(speciesNamesFile);
+		// Set source terms
+		spec.setSpeciesSourceFromFile(speciesDecayFile);
+		// Write transition matrix to file
+		spec.writeTransitionMatrixToFile("transitionMatrixMoleP10.csv");
+		// Opens outputfile
+		if (myid == 0){
+			outputFile.open(outputFileName, std::ios_base::app);
+			outputFile.precision(16); 
+			// Write solver name
+			outputFile << "solverName: " << solverType << std::endl;
 		}
+		// name of the csv solution output file
+		std::string outputFileNameCSV = "moleProblem10"+solverType+".csv";
+		// Sets the matrix exp solver
+		spec.setMatrixExpSolver(solverType);
+		// sets init time
+		t = 0.0;
+		// sets the soltuion data array
+		MatrixD solData = MatrixD::Zero(10,10);
+
+		// Loop over the solve tiems
+		for (int k = 0; k < steps; k++){
+			t = t + dt;
+			spec.solve(t);
+			if (myid == 0){
+			outputFile << "Time: " << t << std::endl;
+			// Loop over species to print solution
+				for (int id = 0; id < ids.size(); id++){
+					std::string name = spec.getSpeciesName(0, 0, ids[id]);
+					double con = spec.getSpecies(0, 0, ids[id]);
+					outputFile << name << " " << con << std::endl;
+					solData(id, k) = con;
+				}
+			}
+		}
+		if (myid == 0){
+			outputFile << " " << std::endl;
+			// Write out solution to matrix 
+			writeCSV(solData, outputFileNameCSV);
+			double error = computeRelativeRMSE(anaSolution, solData);
+			std::cout << solverType << " " << error << std::endl;
+			assert(error < 1.e-9);
+		}
+		// Cleans species
 		spec.clean();
-		model.clean();
 	}
 }
+
+//*****************************************************************************
+// Mole problem 11
+//
+// This problem builds on Problem 10 by adding transport of the isotopes 
+// around the loop.
+//
+//	Problem equations:
+//
+//	Domaine:
+//
+//	Initial conditions and BC's:
+//
+//	Solution: 
+//
+//*****************************************************************************
+void moleProblem11(int myid){
+}
+
+//*****************************************************************************
+// Mole problem 12
+//
+// This problem is the same as Problem 10, but includes additional transitions 
+// due to a coupled neutron flux. The transition matrix was built using the 
+// neutron flux shown below, in pyLibowski.
+//
+//	Problem equations:
+//		dCi/dt = sum^{9}_{j=1} A_{i,j}*C_{j}
+//
+//		i = 1, U-233
+//			 2, U-234
+//			 3, U-235
+//			 4, U-236
+//			 5, U-237
+//			 6, U-238
+//			 7, U-239
+//			 8, Pu-239
+//			 9, Np-239
+//
+//	Domaine:
+//		x = [0, 400cm]
+//		t = [0, 10y]
+//		phi = 1e13	1/cm^2/s
+//
+//	Initial conditions and BC's:
+//		Ci(x, 0) = 1e10
+//
+//	Solution: 
+//		Computed using matlab
+//
+//*****************************************************************************
+void moleProblem12(int myid){
+	double t;
+	int steps = 10;
+	double depletionTime = 10.*365.; // Days
+	double totalTime = depletionTime*24.*60.*60.;
+	double dt = totalTime/steps;
+	int xCells = 1, yCells = 1;
+	double xLength = 1.0, yLength = 4.0;
+	MatrixD anaSolution;
+	std::vector<int> ids;
+	std::string path = getDataPath();
+	std::string outputFileName = "moleProblem12.out";
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", 
+	"pade-method1", "pade-method2", "taylor"};
+
+	// File names for setting up problems
+	std::string speciesNamesFile = path + "MoleP12SpeciesInputNames.dat";
+	std::string speciesDecayFile = path + "MoleP12SpeciesInputDecay.dat";
+	std::string speciesTransFile = path + "MoleP12SpeciesInputTrans.dat";
+	std::string solutionfname = path + "moleP12Solution.csv";
+
+	// Builds the mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+	// Builds species object
+	speciesDriver spec = speciesDriver(&model);
+	// Sets the neutron flux
+	model.setSystemNeutronFlux(1.e13);
+	// Reads in the analytical solution
+	readCSV(anaSolution, solutionfname);
+
+	// Loop over matrix exp solvers
+	for (std::string &solverType : solvers){
+		std::ofstream outputFile;
+		// Adds the species 
+		ids = spec.addSpeciesFromFile(speciesNamesFile);
+		// Set source terms
+		spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
+		// Write transition matrix to file
+		spec.writeTransitionMatrixToFile("transitionMatrixMoleP12.csv");
+		// Opens outputfile
+		if (myid == 0){
+			outputFile.open(outputFileName, std::ios_base::app);
+			outputFile.precision(16); 
+			// Write solver name
+			outputFile << "solverName: " << solverType << std::endl;
+		}
+		// name of the csv solution output file
+		std::string outputFileNameCSV = "moleProblem12"+solverType+".csv";
+		// Sets the matrix exp solver
+		spec.setMatrixExpSolver(solverType);
+		// sets init time
+		t = 0.0;
+		// sets the soltuion data array
+		MatrixD solData = MatrixD::Zero(10,10);
+
+		// Loop over the solve tiems
+		for (int k = 0; k < steps; k++){
+			t = t + dt;
+			spec.solve(t);
+			if (myid == 0){
+				outputFile << "Time: " << t << std::endl;
+				// Loop over species to print solution
+				for (int id = 0; id < ids.size(); id++){
+					std::string name = spec.getSpeciesName(0, 0, ids[id]);
+					double con = spec.getSpecies(0, 0, ids[id]);
+					outputFile << name << " " << con << std::endl;
+					solData(id, k) = con;
+				}
+			}
+		}
+		if (myid == 0){
+			outputFile << " " << std::endl;
+			// Write out solution to matrix 
+			writeCSV(solData, outputFileNameCSV);
+			double error = computeRelativeRMSE(anaSolution, solData);
+			assert(error < 1.e-9);
+		}
+		// Cleans species
+		spec.clean();
+	}
+}
+
+//*****************************************************************************
+// Mole problem 13
+//
+// This problem is the same as Problem 12, but includes transport due to 
+// velocity of the fluid.
+//
+//	Problem equations:
+//
+//	Domaine:
+//
+//	Initial conditions and BC's:
+//
+//	Solution: 
+//
+//*****************************************************************************
+void moleProblem13(int myid){
+}
+
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	moleProblem1(myid); moleProblem2(myid);
+	moleProblem1(myid); 
+	moleProblem2(myid);
 	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);
+	//moleProblem6(myid);
+	//moleProblem7(myid);
+	//moleProblem8(myid);
+	//moleProblem9(myid);
+	moleProblem10(myid);
+	//moleProblem11(myid);
+	moleProblem12(myid);
+	//moleProblem13(myid);
 
 	mpi.finalize();
 }

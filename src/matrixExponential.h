@@ -39,6 +39,10 @@ class matrixExponential{
 	//**************************************************************************
 	virtual SparseMatrixD compute(const SparseMatrixD&, double) = 0;
 	//**************************************************************************
+	// Sets the krylov subspace dimension
+	//**************************************************************************
+	virtual void setKrylovSubspaceDimension(int);
+	//**************************************************************************
 	// Consturcture
 	//**************************************************************************
 	matrixExponential(bool, int);	
@@ -209,6 +213,8 @@ class cauchy : public matrixExponential{
 	MatrixCLD alpha;
 	// Limit of r at infinity
 	long double alpha_0 = 0.0L;
+	// Number of sub steps to take during a solve
+	int substeps = 6;
 
 	public:
 	//**************************************************************************
@@ -223,6 +229,18 @@ class cauchy : public matrixExponential{
 	// Computes the matrix exponential. exp(A*t)
 	//**************************************************************************
 	virtual SparseMatrixD compute(const SparseMatrixD&, double);
+
+	private:
+	//**************************************************************************
+	// Internal function that computes the matrix exponential action on a 
+	// vector. exp(A*t)v
+	//**************************************************************************
+	virtual VectorD expmv(const SparseMatrixD&, const VectorD&, double);
+	//**************************************************************************
+	// Internal function that computes the matrix exponential. exp(A*t)
+	//**************************************************************************
+	virtual SparseMatrixD expm(const SparseMatrixD&, double);
+		
 };
 
 //*****************************************************************************

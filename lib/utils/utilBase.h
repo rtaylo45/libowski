@@ -7,6 +7,9 @@
 #ifndef UTILBASE_H
 #define UTILBASE_H
 #include <cmath>
+#include <iostream>
+#include <fstream>
+#include "sys.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
 
@@ -39,5 +42,24 @@ int factorial(int);
 //*****************************************************************************
 template <typename T>
 std::vector<T> lineSpace(T, T, std::size_t);
+
+//*****************************************************************************
+// Writes matrix to CSV
+//*****************************************************************************
+template <typename derived>
+void writeCSV(const Matrix<derived, Dynamic, Dynamic>&, const std::string);
+
+//*****************************************************************************
+// Reads a CSV file into a matrix
+//*****************************************************************************
+template <typename derived>
+void readCSV(Matrix<derived, Dynamic, Dynamic>&, const std::string);
+
+//*****************************************************************************
+// Computes the relative RMSE between two matrices 
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeRMSE(const Matrix<derived, Dynamic, Dynamic>&, 
+	const Matrix<derived, Dynamic, Dynamic>&);
 
 #endif
