@@ -524,10 +524,12 @@ void moleProblem10(int myid){
 		// Write transition matrix to file
 		spec.writeTransitionMatrixToFile("transitionMatrixMoleP10.csv");
 		// Opens outputfile
-		outputFile.open(outputFileName, std::ios_base::app);
-		outputFile.precision(16); 
-		// Write solver name
-		outputFile << "solverName: " << solverType << std::endl;
+		if (myid == 0){
+			outputFile.open(outputFileName, std::ios_base::app);
+			outputFile.precision(16); 
+			// Write solver name
+			outputFile << "solverName: " << solverType << std::endl;
+		}
 		// name of the csv solution output file
 		std::string outputFileNameCSV = "moleProblem10"+solverType+".csv";
 		// Sets the matrix exp solver
@@ -541,20 +543,25 @@ void moleProblem10(int myid){
 		for (int k = 0; k < steps; k++){
 			t = t + dt;
 			spec.solve(t);
+			if (myid == 0){
 			outputFile << "Time: " << t << std::endl;
 			// Loop over species to print solution
-			for (int id = 0; id < ids.size(); id++){
-				std::string name = spec.getSpeciesName(0, 0, ids[id]);
-				double con = spec.getSpecies(0, 0, ids[id]);
-				outputFile << name << " " << con << std::endl;
-				solData(id, k) = con;
+				for (int id = 0; id < ids.size(); id++){
+					std::string name = spec.getSpeciesName(0, 0, ids[id]);
+					double con = spec.getSpecies(0, 0, ids[id]);
+					outputFile << name << " " << con << std::endl;
+					solData(id, k) = con;
+				}
 			}
 		}
-		outputFile << " " << std::endl;
-		// Write out solution to matrix 
-		writeCSV(solData, outputFileNameCSV);
-		double error = computeRelativeRMSE(anaSolution, solData);
-		assert(error < 1.e-9);
+		if (myid == 0){
+			outputFile << " " << std::endl;
+			// Write out solution to matrix 
+			writeCSV(solData, outputFileNameCSV);
+			double error = computeRelativeRMSE(anaSolution, solData);
+			std::cout << solverType << " " << error << std::endl;
+			assert(error < 1.e-9);
+		}
 		// Cleans species
 		spec.clean();
 	}
@@ -650,10 +657,12 @@ void moleProblem12(int myid){
 		// Write transition matrix to file
 		spec.writeTransitionMatrixToFile("transitionMatrixMoleP12.csv");
 		// Opens outputfile
-		outputFile.open(outputFileName, std::ios_base::app);
-		outputFile.precision(16); 
-		// Write solver name
-		outputFile << "solverName: " << solverType << std::endl;
+		if (myid == 0){
+			outputFile.open(outputFileName, std::ios_base::app);
+			outputFile.precision(16); 
+			// Write solver name
+			outputFile << "solverName: " << solverType << std::endl;
+		}
 		// name of the csv solution output file
 		std::string outputFileNameCSV = "moleProblem12"+solverType+".csv";
 		// Sets the matrix exp solver
@@ -667,20 +676,24 @@ void moleProblem12(int myid){
 		for (int k = 0; k < steps; k++){
 			t = t + dt;
 			spec.solve(t);
-			outputFile << "Time: " << t << std::endl;
-			// Loop over species to print solution
-			for (int id = 0; id < ids.size(); id++){
-				std::string name = spec.getSpeciesName(0, 0, ids[id]);
-				double con = spec.getSpecies(0, 0, ids[id]);
-				outputFile << name << " " << con << std::endl;
-				solData(id, k) = con;
+			if (myid == 0){
+				outputFile << "Time: " << t << std::endl;
+				// Loop over species to print solution
+				for (int id = 0; id < ids.size(); id++){
+					std::string name = spec.getSpeciesName(0, 0, ids[id]);
+					double con = spec.getSpecies(0, 0, ids[id]);
+					outputFile << name << " " << con << std::endl;
+					solData(id, k) = con;
+				}
 			}
 		}
-		outputFile << " " << std::endl;
-		// Write out solution to matrix 
-		writeCSV(solData, outputFileNameCSV);
-		double error = computeRelativeRMSE(anaSolution, solData);
-		assert(error < 1.e-9);
+		if (myid == 0){
+			outputFile << " " << std::endl;
+			// Write out solution to matrix 
+			writeCSV(solData, outputFileNameCSV);
+			double error = computeRelativeRMSE(anaSolution, solData);
+			assert(error < 1.e-9);
+		}
 		// Cleans species
 		spec.clean();
 	}

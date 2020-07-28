@@ -586,8 +586,7 @@ void testKrylovSubspace(int myid){
 	// Krylov solver
 	matrixExponential *anaExpSolver;
 	// Solvers to test
-	std::vector<std::string> solvers {"pade-method1", "pade-method2", "taylor",
-		"CRAM", "hyperbolic", "parabolic"};
+	std::vector<std::string> solvers {"pade-method1", "pade-method2", "taylor"};
 	const int m = 100;
 	SparseMatrixD H, A;
 	MatrixD V;

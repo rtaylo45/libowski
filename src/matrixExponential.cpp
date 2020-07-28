@@ -653,6 +653,10 @@ VectorD cauchy::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 	for (int substep = 0; substep <= substeps; substep++){
 		// Generates the krylov subspace if needed
 		if (useKrylovSubspace){
+			if (substeps != 0){
+				std::cout << "Warning Krylov Subspace should not be use\n"
+					"with substeps in Cauchy solvers\n";
+			}
 			// define matrices and variables
 			MatrixD Q;
 			SparseMatrixD H;
