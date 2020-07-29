@@ -56,7 +56,8 @@ class speciesDriver {
 	// Constructor
 	speciesDriver(modelMesh* model);
 	// Adds a species to the system
-	int addSpecies(double, double = 0.0, double = 0.0, std::string = "None");
+	int addSpecies(double, double = 0.0, double = 0.0, std::string = "None",
+		bool = true);
 	// Adds species from a file generated from pyLibowski
 	std::vector<int> addSpeciesFromFile(std::string);
 	// Gets a pointer to the species object
