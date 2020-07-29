@@ -92,14 +92,16 @@ void speciesDriver::setFluxLimiter(std::string limiterName){
 // @param [initCon]  Initial concentration [kg/m^3]
 // @param [diffCoef]	Diffusion coefficient [m^2/s]
 // @param name			Name of the species
+// @param Transport	bool to set if the speices is to be transport with the 
+//							velocity field
 //*****************************************************************************
 int speciesDriver::addSpecies(double molarMass, double initCon,
-	double diffCoeff, std::string name){
+	double diffCoeff, std::string name, bool transport){
    for (int i = 0; i < modelPtr->numOfxCells; i++){
       for (int j = 0; j < modelPtr->numOfyCells; j++){
          meshCell* cell = modelPtr->getCellByLoc(i,j);
 
-         cell->addSpecies(molarMass, initCon, diffCoeff, name);
+         cell->addSpecies(molarMass, initCon, diffCoeff, name, transport);
       }
    }
    int specID = numOfSpecs;
