@@ -50,10 +50,22 @@ template <typename derived>
 void writeCSV(const Matrix<derived, Dynamic, Dynamic>&, const std::string);
 
 //*****************************************************************************
+// Writes vector to CSV
+//*****************************************************************************
+template <typename derived>
+void writeCSV(const Matrix<derived, Dynamic, 1>&, const std::string);
+
+//*****************************************************************************
 // Reads a CSV file into a matrix
 //*****************************************************************************
 template <typename derived>
 void readCSV(Matrix<derived, Dynamic, Dynamic>&, const std::string);
+
+//*****************************************************************************
+// Reads a CSV file into a matrix
+//*****************************************************************************
+template <typename derived>
+void readCSV(Matrix<derived, Dynamic, 1>&, const std::string);
 
 //*****************************************************************************
 // Computes the relative RMSE between two matrices 
