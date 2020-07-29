@@ -294,6 +294,9 @@ void moleProblem2(int myid){
 //*****************************************************************************
 // Mole problem 3
 //
+// TODO: I believe the analytical solution for Cw(x,t) is wrong for this 
+//			problem.
+//
 // This problem is the same as Problem 1, expect that instead of radioactive 
 // decay, an Arrhenius deposition rate is applied instead. All removal from
 // the liquid deposits on the wall and remains. None of the material is 
@@ -304,10 +307,10 @@ void moleProblem2(int myid){
 //			dCw/dt = lambda*Cw
 //
 //	Domaine:
-//			x = [0, 100]
-//			t = [0, 20]
-//			lambda = 0.1
-//			v = 2.0 cm/s
+//			x = [0, 100]	cm 
+//			t = [0, 20]		s
+//			lambda = 0.1	1/s
+//			v = 2.0			cm/s
 //
 //	Initial conditions and BC's:
 //			Ci(x, 0) = 1000.0
@@ -326,11 +329,11 @@ void moleProblem2(int myid){
 //*****************************************************************************
 void moleProblem3(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{10};
+	std::vector<int> numOfxCells{10, 100};
 	//std::vector<double> steps = {20};
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
-	//std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
-	std::vector<std::string> solvers {"hyperbolic"};
+	std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
+	//std::vector<std::string> solvers {"hyperbolic"};
 	double xLength = 100./100.; // m
 	double yLength = 0.0; // m
 	double tEnd = 20.0;	// seconds
@@ -379,12 +382,12 @@ void moleProblem3(int myid){
 					outputFile << "Solver: " << solverType << "\n";
 					outputFile << "dx: " << xLength/(double)xCells << "\n";
 					outputFile << "dt: " << dt << "\n";
-					outputFile << "variables " << "x " << "clSol " << "clSol " << 
+					outputFile << "variables " << "x " << "clSol " << "clLib " << 
 						"cwSol " << "cwLib" << "\n";
 				}
 				// add specs
-				clID = spec.addSpecies(1.0, 0.0, 0.0);
-				cwID = spec.addSpecies(1.0, 0.0, 0.0);
+				clID = spec.addSpecies(1.0, 0.0, 0.0, "cliquid", true);
+				cwID = spec.addSpecies(1.0, 0.0, 0.0, "cwall", false);
 				// Set BCs
 				spec.setBoundaryCondition("dirichlet","west", clID, 1000.0);
 				spec.setBoundaryCondition("dirichlet","west", cwID, 0.0);
@@ -590,8 +593,8 @@ void moleProblem9(int myid){
 //			 9, Np-239
 //
 //	Domaine:
-//		x = [0, 400cm]
-//		t = [0, 10y]
+//		x = [0, 400]	cm
+//		t = [0, 10]		y
 //
 //	Initial conditions and BC's:
 //		Ci(x, 0) = 1e10
@@ -722,9 +725,9 @@ void moleProblem11(int myid){
 //			 9, Np-239
 //
 //	Domaine:
-//		x = [0, 400cm]
-//		t = [0, 10y]
-//		phi = 1e13	1/cm^2/s
+//		x = [0, 400]	cm
+//		t = [0, 10]		y
+//		phi = 1e13		1/cm^2/s
 //
 //	Initial conditions and BC's:
 //		Ci(x, 0) = 1e10
@@ -837,8 +840,8 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	//moleProblem1(myid); 
-	//moleProblem2(myid);
+	moleProblem1(myid); 
+	moleProblem2(myid);
 	moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);
@@ -846,9 +849,9 @@ int main(){
 	//moleProblem7(myid);
 	//moleProblem8(myid);
 	//moleProblem9(myid);
-	//moleProblem10(myid);
+	moleProblem10(myid);
 	//moleProblem11(myid);
-	//moleProblem12(myid);
+	moleProblem12(myid);
 	//moleProblem13(myid);
 
 	mpi.finalize();
