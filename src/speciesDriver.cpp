@@ -66,6 +66,21 @@ void speciesDriver::writeTransitionMatrixToFile(const std::string fname){
 		writeCSV(dA, fname);
 	}	
 }
+//*****************************************************************************
+// Writes out the Initial condition vector
+//
+// @param fname	The name of the file to write the matrix to. This file will
+//						be in the csv format
+//*****************************************************************************
+void speciesDriver::writeInitialConditionToFile(const std::string fname){
+	VectorD v;
+	bool augmented = true;
+
+	if (mpi.rank == 0){
+		v = buildInitialConditionVector(augmented);
+		writeCSV(v, fname);
+	}	
+}
 
 //*****************************************************************************
 // Sets the flux limiter function
