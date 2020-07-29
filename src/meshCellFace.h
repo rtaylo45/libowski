@@ -21,6 +21,7 @@ class meshCellFace {
 	int i;
 	// Index of face in y direction
 	int j;
+	// Absolute index of the surface
 	int absIndex;
 	// Velocity component normal to the surface
 	double vl = 0.0;

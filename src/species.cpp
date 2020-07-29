@@ -6,12 +6,16 @@
 // @param initCon		Initial concentration [kg/m^3]
 // @param diffCoeff	Diffusion coefficient [m^2/s]
 // @param name			String of the species name
+// @param transport	Bool to set if the species is to be transported by the 
+//							velocity field
 //**************************************************************************
-species::species(double molarMass, double initCon, double diffCoeff, std::string name_){
+species::species(double molarMass, double initCon, double diffCoeff, 
+	std::string name_, bool transport_){
 	MM = molarMass;
 	c = initCon;
 	D = diffCoeff;
 	name = name_;
+	transport = transport_;
 }
 
 //**************************************************************************

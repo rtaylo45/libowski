@@ -44,11 +44,13 @@ meshCell::meshCell(int iIndex, int jIndex, int absoluteIndex, double xCor,
 // @param initCon		Initial concentration [kg/m^3]
 // @param diffCoeff	Diffusion coefficient [m^2/s]
 // @param name			Species name
+// @param transprot	bool to set if the species is to be tranpsorted with the 
+//							fluid velocity
 //*****************************************************************************
 void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff,
-	std::string name){
+	std::string name, bool transport){
 
-	species spec(molarMass, initCon, diffCoeff, name);
+	species spec(molarMass, initCon, diffCoeff, name, transport);
 	// loop over connections to see if the species needs to be added
 	// to a surface
 	for (int conCount = 0; conCount < connections.size(); conCount ++){
@@ -56,7 +58,7 @@ void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff,
 		surface* conSurface = thisCon->getSurface();
 		// if the pointer is not null then add species to that surface
 		if(conSurface->isInit){
-			conSurface->addSpecies(molarMass, initCon, diffCoeff, name);
+			conSurface->addSpecies(molarMass, initCon, diffCoeff, name, transport);
 		}
 	}
 	speciesVector.push_back(spec);

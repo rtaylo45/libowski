@@ -24,6 +24,8 @@ class species {
 	double bc = 0.0;
 	// Diffusion coefficient [m^2/s]
 	double D = 0.0;
+	// Bool to set if the species is transported with the fluid velocity
+	bool transport = true;
 	// Vector of linear source term coefficients in order of species IDs [1/s]
 	std::vector<double> coeffs;
 	// Vector of linear source terms for neturon induces reactions in order of 
@@ -34,7 +36,8 @@ class species {
 	// Class methods
 	public:
 	// Constructor
-	species(double, double = 0.0, double = 0.0, std::string = "None");
+	species(double, double = 0.0, double = 0.0, std::string = "None", 
+		bool = true);
 
 	// Clean
 	void clean();
