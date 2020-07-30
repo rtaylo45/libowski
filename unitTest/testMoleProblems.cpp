@@ -327,10 +327,10 @@ void moleProblem2(int myid){
 void moleProblem3(int myid){
 	int yCells = 1;
 	std::vector<int> numOfxCells{10, 100, 1000};
-	std::vector<double> steps = {400};
-	//std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
-	//std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
-	std::vector<std::string> solvers {"hyperbolic"};
+	//std::vector<double> steps = {400};
+	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
+	std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
+	//std::vector<std::string> solvers {"hyperbolic"};
 	double xLength = 100./100.; // m
 	double yLength = 0.0; // m
 	double tEnd = 20.0;	// seconds
