@@ -723,7 +723,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				// If the connection distance is zero then there is no cell in that 
 				// direction and the transition rate is zero. This will happen 
 				// when modeling 1D cases.
-				if (conDist){
+				if (conDist and thisSpecPtr->transport){
 					// Computes the transition coefficient for convection
 					tran = thisCon->connectionFacePtr->vl*thisCon->area/thisCellPtr->volume;
 					// matrix coefficient
