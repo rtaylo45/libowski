@@ -39,7 +39,7 @@ void singleCellDepletion(int myid, std::string solverType){
 	std::vector<int> ids;
 	std::string path = getDataPath();
 	std::string outputFileName = "caseStudy1.out";
-	std::string outputFileNameMatlab = "caseStudy1"+solverType+".csv";
+	std::string outputFileNameMatlab = "caseStudy1"+solverType+"Substeps12.csv";
 	std::ofstream outputFile, outputFileMatlab;
 	outputFile.open(outputFileName, std::ios_base::app);
 	outputFileMatlab.open(outputFileNameMatlab);
@@ -95,15 +95,38 @@ void singleCellDepletion(int myid, std::string solverType){
 	outputFileMatlab << solData.format(CSVFormat);
 }
 
-void pipeDepletion(int myid){
+//**************************************************************************
+// A pip depletion case
+//
+//	Problem equations:
+//		dCi/dt = -v*dCi/dx + sum^{J}_{j=1} A_{i,j}*C_{j}
+//
+//	Domaine:
+//			x = [0, 4]		m
+//			t = [0, 10]		y
+//
+//	Initial conditions and BC's:
+//			C_{H-1}		= 2.74768E28
+//			C_{B-10}		= 1.001E25
+//			C_{O-16}		= 2.7503E28
+//			C_{Zr-91}	= 4.14467E26
+//			C_{Zr-96}	= 1.03432E26
+//			C_{U-235}	= 1.909E26
+//			C_{U-238}	= 6.592E27
+//
+//	Solution:
+//		Calculated by matlab using year long time steps
+// 
+//**************************************************************************
+void pipeDepletion(int myid, std::string solverType){
 	double t = 0.0;
-	int steps = 5;
-	double depletionTime = 0.05; // Days
+	int steps = 1;
+	double depletionTime = 100.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps;
-	int xCells = 1, yCells = 50;
+	int xCells = 1, yCells = 10;
 	double velocity = 0.5;
-	double xLength = 1.0, yLength = 100.0;
+	double xLength = 1.0, yLength = 6.0;
 	std::vector<int> ids;
 
 	// Files for the source terms and species names	
@@ -126,6 +149,9 @@ void pipeDepletion(int myid){
 
 	// Sets all the decay and transmutation sources
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
+
+	// Sets the matrix exp solver
+	spec.setMatrixExpSolver(solverType);
 
 	// Sets the neutron flux
 	for (int i = 0; i < xCells; i++){
@@ -172,15 +198,16 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 	//std::vector<std::string> solvers {"taylor"};
-	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
-	"pade-method2", "taylor"};
+	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
+	//"pade-method2"};
+	std::vector<std::string> solvers {"CRAM"};
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
 		if(myid == 0){std::cout << solverType << std::endl;};
-		singleCellDepletion(myid, solverType);
+		//singleCellDepletion(myid, solverType);
+		pipeDepletion(myid, solverType);
 	}
-	//pipeDepletion(myid);
 
 	mpi.finalize();
 }
