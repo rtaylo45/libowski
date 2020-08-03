@@ -80,7 +80,6 @@ void singleCellDepletion(int myid, std::string solverType){
 		t = t + dt;
 		spec.solve(t);
 		if (myid == 0){
-			std::cout << "solved" << std::endl;
 			outputFile << "Time: " << t << std::endl;
 			std::cout << "Time: " << t << std::endl;
 			for (int id = 0; id < ids.size(); id++){
@@ -128,6 +127,9 @@ void pipeDepletion(int myid, std::string solverType){
 	double velocity = 0.5;
 	double xLength = 1.0, yLength = 6.0;
 	std::vector<int> ids;
+	std::string outputFileName = "caseStudy2.out";
+	std::ofstream outputFile;
+	outputFile.open(outputFileName, std::ios_base::app);
 
 	// Files for the source terms and species names	
 	std::string speciesNamesFile = getDataPath() + "speciesInputNames.dat";
@@ -153,6 +155,13 @@ void pipeDepletion(int myid, std::string solverType){
 	// Sets the matrix exp solver
 	spec.setMatrixExpSolver(solverType);
 
+	if (myid == 0){
+		outputFile << "solverName: " << solverType << std::endl;
+		outputFile.precision(16); 
+		spec.writeTransitionMatrixToFile("transitionMatrixCaseStudy2.csv");
+		spec.writeInitialConditionToFile("initialConditionCaseStudy2.csv");
+	}
+
 	// Sets the neutron flux
 	for (int i = 0; i < xCells; i++){
 		for (int j = 0; j < yCells; j++){
@@ -176,18 +185,22 @@ void pipeDepletion(int myid, std::string solverType){
 		spec.solve(t);
 	}
 	if (myid == 0){
+		outputFile << "Time: " << t << std::endl;
+		outputFile << "Variables: " << "i " << "j " << "SpecId " << 
+			"SpecName " << "Con" << std::endl;
 		// Loops to print results
 		for (int i = 0; i < xCells; i++){
 			for (int j = 0; j < yCells; j++){
-				std::cout << i << " " << j << std::endl;
 				// Loops over the species 
 				for (int id = 0; id < ids.size(); id++){
 					std::string name = spec.getSpeciesName(i, j, ids[id]);
 					double con = spec.getSpecies(i, j, ids[id]);
-					std::cout << name << " " << con << std::endl;
+					outputFile << i << " " << j << " " << id << " " << name 
+						<< " " << con << std::endl;
 				}
 			}
 		}
+		outputFile << " " << std::endl;
 	}
 }
 
@@ -198,9 +211,9 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 	//std::vector<std::string> solvers {"taylor"};
-	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
-	//"pade-method2"};
-	std::vector<std::string> solvers {"CRAM"};
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
+	"pade-method2"};
+	//std::vector<std::string> solvers {"CRAM", "hyperbolic"};
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
