@@ -24,8 +24,13 @@ if(${MPI_FOUND})
 	set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
 	set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
 endif()
+
+# Links the file system library 
+link_libraries(stdc++fs)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-O3")
+
 
 # util directory
 add_subdirectory(${UTIL_DIR})
