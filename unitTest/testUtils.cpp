@@ -310,18 +310,19 @@ void testCSVReader(int myid){
 	MatrixD testMat1 = MatrixD::Random(4,7);
 	MatrixD retMat1;
 	double error;
+	std::string fname = "test" + std::to_string(myid) + ".csv";
 
 	// writes matrix to csv file
-	writeCSV(testMat1, "test1.csv");
+	writeCSV(testMat1, fname);
 
 	// reads in the csv file
-	readCSV(retMat1, "test1.csv");
+	readCSV(retMat1, fname);
 
 	// checks error
 	error = (testMat1 - retMat1).norm();
 	assert(error < 1.e-14);
 
-	std::remove("test1.csv");
+	std::remove(fname.c_str());
 }
 
 int main(){
