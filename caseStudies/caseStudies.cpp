@@ -30,8 +30,8 @@
 //**************************************************************************
 void singleCellDepletion(int myid, std::string solverType){
 	double t = 0.0;
-	int steps = 10;
-	double depletionTime = 10.*365.; // Days
+	int steps = 1;
+	double depletionTime = 100.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 1;
@@ -129,6 +129,7 @@ void pipeDepletion(int myid, std::string solverType){
 	std::vector<int> ids;
 	std::string outputFileName = "caseStudy2.out";
 	std::ofstream outputFile;
+	VectorD refSolData;
 	outputFile.open(outputFileName, std::ios_base::app);
 
 	// Files for the source terms and species names	
@@ -145,22 +146,10 @@ void pipeDepletion(int myid, std::string solverType){
 	// Species IDs
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
 
-	// Adds periodic boundary condions to all isotopes
-	spec.setBoundaryCondition("periodic","south", ids);
-	spec.setBoundaryCondition("periodic","north", ids);
-
 	// Sets all the decay and transmutation sources
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
-
-	// Sets the matrix exp solver
-	spec.setMatrixExpSolver(solverType);
-
-	if (myid == 0){
-		outputFile << "solverName: " << solverType << std::endl;
-		outputFile.precision(16); 
-		spec.writeTransitionMatrixToFile("transitionMatrixCaseStudy2.csv");
-		spec.writeInitialConditionToFile("initialConditionCaseStudy2.csv");
-	}
+	VectorD solData = VectorD::Zero(xCells*yCells*ids.size()+1);
+	readCSV(refSolData, std::string("CaseStudy2Solution.csv"));
 
 	// Sets the neutron flux
 	for (int i = 0; i < xCells; i++){
@@ -174,9 +163,23 @@ void pipeDepletion(int myid, std::string solverType){
 			model.setCellNeutronFlux(i, j, 1.e13*s);
 		}
 	}
-
 	// set y velocity
 	model.setConstantYVelocity(velocity);
+
+	// Adds periodic boundary condions to all isotopes
+	spec.setBoundaryCondition("periodic","south", ids);
+	spec.setBoundaryCondition("periodic","north", ids);
+
+	// Sets the matrix exp solver
+	spec.setMatrixExpSolver(solverType);
+
+	if (myid == 0){
+		outputFile << "solverName: " << solverType << std::endl;
+		outputFile.precision(16); 
+		spec.writeTransitionMatrixToFile("transitionMatrixCaseStudy2.csv");
+		spec.writeInitialConditionToFile("initialConditionCaseStudy2.csv");
+	}
+
 
 	// Loops to solve the problem
 	for (int k = 0; k < steps; k++){
@@ -189,6 +192,7 @@ void pipeDepletion(int myid, std::string solverType){
 		outputFile << "Variables: " << "i " << "j " << "SpecId " << 
 			"SpecName " << "Con" << std::endl;
 		// Loops to print results
+		int index = 0;
 		for (int i = 0; i < xCells; i++){
 			for (int j = 0; j < yCells; j++){
 				// Loops over the species 
@@ -197,10 +201,16 @@ void pipeDepletion(int myid, std::string solverType){
 					double con = spec.getSpecies(i, j, ids[id]);
 					outputFile << i << " " << j << " " << id << " " << name 
 						<< " " << con << std::endl;
+					solData[index] = con;
+					index ++;
 				}
 			}
 		}
 		outputFile << " " << std::endl;
+		if (myid == 0){
+			double rmse = computeRelativeRMSE(refSolData, solData);
+			printf("%s RMSE %e\n", solverType.c_str(), rmse);
+		}
 	}
 }
 
@@ -211,9 +221,10 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 	//std::vector<std::string> solvers {"taylor"};
-	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
-	"pade-method2"};
-	//std::vector<std::string> solvers {"CRAM", "hyperbolic"};
+	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
+	//"pade-method2"};
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
+	//std::vector<std::string> solvers {"CRAM"};
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){

@@ -159,6 +159,7 @@ void readCSV(Matrix<derived, Dynamic, Dynamic>& A, const std::string path) {
    int rows = 0, cols = 0;
 
    indata.open(path);
+	checkFileExists(path);
    while (std::getline(indata, line)) {
       std::stringstream lineStream(line);
       std::string cell;
@@ -189,7 +190,8 @@ void readCSV(Matrix<derived, Dynamic, 1>& A, const std::string path) {
    std::string line;
    std::vector<long double> values;
    int rows = 0, cols = 0;
-
+	
+	checkFileExists(path);
    indata.open(path);
    while (std::getline(indata, line)) {
       std::stringstream lineStream(line);
@@ -242,6 +244,36 @@ derived computeRelativeRMSE(const Matrix<derived, Dynamic, Dynamic>& refMat,
 	return error;
 }
 
+//*****************************************************************************
+// Computes the relative RMSE between two vectors
+// 
+// @param refVect
+// @param apporxVect
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeRMSE(const Matrix<derived, Dynamic, 1>& refVect,
+	const Matrix<derived, Dynamic, 1>& approxVect){
+	// make sure the mats are the same size
+	assert(refVect.rows() == approxVect.rows());
+	int rows = refVect.rows();
+	int cols = 1;
+	int N = rows*cols;
+	derived ref, approx, error = 0.0, eps = 1.e-16;
+
+	// Loop over mats	
+	for (int i = 0; i < rows; i++){
+		ref = refVect(i);
+		approx = approxVect(i);
+		if (ref >= eps and ref != 1.0){
+			error += std::pow((ref - approx)/ref, 2.0);
+		}
+		
+	}
+	error = error/(derived)N;
+	error = std::pow(error, 0.5);
+	return error;
+}
+
 
 // Data types that can use the template functions
 template bool isApprox(double goalVal, double testVal, double rtol, double atol);
@@ -259,3 +291,4 @@ template void readCSV(VectorLD& A, const std::string path);
 template void readCSV(MatrixD& A, const std::string path);
 template void readCSV(MatrixLD& A, const std::string path);
 template double computeRelativeRMSE(const MatrixD& refMat, const MatrixD& approxMat);
+template double computeRelativeRMSE(const VectorD& refVect, const VectorD& approxVect);

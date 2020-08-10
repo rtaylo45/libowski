@@ -150,7 +150,7 @@ std::vector<int> speciesDriver::addSpeciesFromFile(std::string fname){
 		name = result.at(0); mm = stod(result.at(1)); initCon = stod(result.at(2)); 
 		D = stod(result.at(3));
 		// Adds the species
-		specIDs.push_back(addSpecies(mm, initCon, D, name));
+		specIDs.push_back(addSpecies(mm, initCon, D, name, true));
    }
 	return specIDs;
 }
@@ -582,12 +582,13 @@ void speciesDriver::solve(double solveTime){
 	if (mpi.rank == 0){
 		//dA = Eigen::MatrixXd(A);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
+		//std::cout << dA.eigenvalues() << std::endl;
 		//std::ofstream outputFile;
-		//outputFile.open("matrix.csv");
+		//outputFile.open("eigenvalues.txt");
+		//outputFile << dA.eigenvalues() << std::endl;
 		//outputFile.precision(16);
 		//outputFile.setf(ios::fixed);
 		//outputFile.setf(ios::showpoint);
-		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << " "  << std::endl;
 		//std::cout << dA  << std::endl;
 		//std::cout << dA.determinant() << std::endl;

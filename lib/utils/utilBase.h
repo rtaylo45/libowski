@@ -74,4 +74,11 @@ template <typename derived>
 derived computeRelativeRMSE(const Matrix<derived, Dynamic, Dynamic>&, 
 	const Matrix<derived, Dynamic, Dynamic>&);
 
+//*****************************************************************************
+// Computes the relative RMSE between two vectors
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeRMSE(const Matrix<derived, Dynamic, 1>&, 
+	const Matrix<derived, Dynamic, 1>&);
+
 #endif
