@@ -7,7 +7,7 @@ add_executable(unitTestMesh testMesh.cpp)
 add_executable(unitTestVerification verificationProblems.cpp)
 add_executable(unitTestUtils testUtils.cpp)
 add_executable(unitTestMoleProblems testMoleProblems.cpp)
-add_executable(unitTestFluxConvergence testFluxConvergence.cpp)
+add_executable(unitTestSpatialConvergence testSpatialConvergence.cpp)
 
 # Unit test path
 set(TEST_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -42,10 +42,10 @@ if(${MPI_FOUND})
 	target_compile_definitions(unitTestMoleProblems PRIVATE HAVE_MPI)
 	add_test(test_Mole ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ${TEST_PATH}/unitTestMoleProblems)
 
-	# flux convergence problems
-	target_link_libraries(unitTestFluxConvergence PRIVATE liblibowski ${MPI_LIBRARIES})
-	target_compile_definitions(unitTestFluxConvergence PRIVATE HAVE_MPI)
-	add_test(test_Flux ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ${TEST_PATH}/unitTestFluxConvergence)
+	# Spatial convergence problems
+	target_link_libraries(unitTestSpatialConvergence PRIVATE liblibowski ${MPI_LIBRARIES})
+	target_compile_definitions(unitTestSpatialConvergence PRIVATE HAVE_MPI)
+	add_test(test_Spatial_convergence ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ${TEST_PATH}/unitTestSpatialConvergence)
 
 else()
 	# Integrator Solver test
@@ -73,6 +73,6 @@ else()
 	add_test(test_Mole ${TEST_PATH}/unitTestMoleProblems)
 
 	# Flux convergence problems
-	target_link_libraries(unitTestFluxConvergence PRIVATE liblibowski)
-	add_test(test_Flux ${TEST_PATH}/unitTestFluxConvergence)
+	target_link_libraries(unitTestSpatailConvergence PRIVATE liblibowski)
+	add_test(test_Spatial_convergence ${TEST_PATH}/unitTestSpatialConvergence)
 endif()
