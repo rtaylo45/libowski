@@ -684,9 +684,9 @@ void problem5(int myid){
 	for (std::string &solverType : solvers){
 		std::vector<double> linfVector, l1Vector, l2Vector, runTimeVector;
 
-		std::ofstream outputFile;
-		outputFileName = "problem5"+solverType+".out";
-		outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
+		//std::ofstream outputFile;
+		//outputFileName = "problem5"+solverType+".out";
+		//outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 		
 		// Loops over number of cells
 		for (int &xCells : numOfxCells){
