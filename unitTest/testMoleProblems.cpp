@@ -136,8 +136,8 @@ void moleProblem1(int myid){
 					}
 				}
 				outputFile << "\n";
-				printf("%15s %4.2f %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, relativeError,
-						std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
+				printf("%15s %4.2f %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, 
+					relativeError, std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
 			}
 			// Clean species
 			spec.clean();
@@ -294,9 +294,6 @@ void moleProblem2(int myid){
 //*****************************************************************************
 // Mole problem 3
 //
-// TODO: I believe the analytical solution for Cw(x,t) is wrong for this 
-//			problem.
-//
 // This problem is the same as Problem 1, expect that instead of radioactive 
 // decay, an Arrhenius deposition rate is applied instead. All removal from
 // the liquid deposits on the wall and remains. None of the material is 
@@ -329,8 +326,8 @@ void moleProblem2(int myid){
 //*****************************************************************************
 void moleProblem3(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{10, 100};
-	//std::vector<double> steps = {20};
+	std::vector<int> numOfxCells{10, 100, 1000};
+	//std::vector<double> steps = {400};
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
 	//std::vector<std::string> solvers {"hyperbolic"};
@@ -424,8 +421,8 @@ void moleProblem3(int myid){
 							dx = cell->dx;
 							if (xc < velocity*t){
 								clSol = 1000.0*exp(-lambda*xc/velocity);
-								cwSol = 1000.0*(1.-exp(-lambda*xc/velocity) + 
-									lambda*exp(-lambda*xc/velocity)*(t-xc/velocity));
+								cwSol = 1000.0*(1. + (lambda*(t-xc/velocity) - 
+									1.)*exp(-lambda*xc/velocity));
 							}
 							else{
 								clSol = 1000.0*exp(-lambda*t);
@@ -435,9 +432,10 @@ void moleProblem3(int myid){
 							clCon = spec.getSpecies(i, j, clID);
 							cwCon = spec.getSpecies(i, j, cwID);
 
-							//if (xCells == 1000 and numofsteps == 400.){
-							//	assert(isApprox(cSol, cCon, 1.0, 1e-3));
-							//}
+							if (xCells == 1000 and numofsteps == 400.){
+								assert(isApprox(cwSol, cwCon, 5.0, 1e-2));
+								assert(isApprox(clSol, clCon, 5.0, 1e-2));
+							}
 							outputFile << xc << " " << clSol << " " << clCon <<
 								" " << cwSol << " " << cwCon << "\n";
 							relativeError = std::abs(clSol-clCon)/clSol + 

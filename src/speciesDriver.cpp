@@ -66,6 +66,21 @@ void speciesDriver::writeTransitionMatrixToFile(const std::string fname){
 		writeCSV(dA, fname);
 	}	
 }
+//*****************************************************************************
+// Writes out the Initial condition vector
+//
+// @param fname	The name of the file to write the matrix to. This file will
+//						be in the csv format
+//*****************************************************************************
+void speciesDriver::writeInitialConditionToFile(const std::string fname){
+	VectorD v;
+	bool augmented = true;
+
+	if (mpi.rank == 0){
+		v = buildInitialConditionVector(augmented);
+		writeCSV(v, fname);
+	}	
+}
 
 //*****************************************************************************
 // Sets the flux limiter function
@@ -135,7 +150,7 @@ std::vector<int> speciesDriver::addSpeciesFromFile(std::string fname){
 		name = result.at(0); mm = stod(result.at(1)); initCon = stod(result.at(2)); 
 		D = stod(result.at(3));
 		// Adds the species
-		specIDs.push_back(addSpecies(mm, initCon, D, name));
+		specIDs.push_back(addSpecies(mm, initCon, D, name, true));
    }
 	return specIDs;
 }
@@ -560,22 +575,20 @@ void speciesDriver::solve(double solveTime){
 	MatrixD dA;
 	bool augmented = true;
 	double timeStep = solveTime - lastSolveTime;
-	double rtol = 1.e-5, diff;
 	VectorD defSourceOld, defSourceNew;
 	std::ofstream outputFile;
-	const static IOFormat CSVFormat(StreamPrecision, DontAlignCols, ", ", "\n");
 
 	A = buildTransMatrix(augmented, 0.0);
 	if (mpi.rank == 0){
 		//dA = Eigen::MatrixXd(A);
 		//std::cout << dA.rows() << " " << dA.cols() << std::endl;
+		//std::cout << dA.eigenvalues() << std::endl;
 		//std::ofstream outputFile;
-		//outputFile.open("matrix.csv");
+		//outputFile.open("eigenvalues.txt");
+		//outputFile << dA.eigenvalues() << std::endl;
 		//outputFile.precision(16);
 		//outputFile.setf(ios::fixed);
 		//outputFile.setf(ios::showpoint);
-		//outputFile << dA.format(CSVFormat) << std::endl;
-		//std::cout << dA.eigenvalues() << std::endl;
 		//std::cout << " "  << std::endl;
 		//std::cout << dA  << std::endl;
 		//std::cout << dA.determinant() << std::endl;
@@ -708,7 +721,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				// If the connection distance is zero then there is no cell in that 
 				// direction and the transition rate is zero. This will happen 
 				// when modeling 1D cases.
-				if (conDist){
+				if (conDist and thisSpecPtr->transport){
 					// Computes the transition coefficient for convection
 					tran = thisCon->connectionFacePtr->vl*thisCon->area/thisCellPtr->volume;
 					// matrix coefficient

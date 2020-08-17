@@ -130,6 +130,22 @@ void writeCSV(const Matrix<derived, Dynamic, Dynamic>& A, const std::string fnam
 }
 
 //*****************************************************************************
+// Writes a vector to a CSV file
+//
+//	@param A			vector
+// @param fname	file name
+//*****************************************************************************
+template <typename derived>
+void writeCSV(const Matrix<derived, Dynamic, 1>& A, const std::string fname){
+	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
+
+	std::ofstream outputFile;
+	outputFile.open(fname);
+	outputFile << A.format(CSVFormat) << std::endl;
+
+}
+
+//*****************************************************************************
 // Reads in a matrix to a CSV file
 //
 // @param A		Reference to the matrix that hold the read data
@@ -142,6 +158,40 @@ void readCSV(Matrix<derived, Dynamic, Dynamic>& A, const std::string path) {
    std::vector<long double> values;
    int rows = 0, cols = 0;
 
+   indata.open(path);
+	checkFileExists(path);
+   while (std::getline(indata, line)) {
+      std::stringstream lineStream(line);
+      std::string cell;
+      while (std::getline(lineStream, cell, ',')) {
+			values.push_back(std::stold(cell));
+      }
+      ++rows;
+   }
+	cols = values.size()/rows;
+	A = Matrix<derived, Dynamic, Dynamic>::Zero(rows, cols);
+	// Loops over vector to add it to the matrix
+	int tempRow = 0, tempCol = 0;
+	for (int i = 0; i < values.size(); i++){
+		A(tempRow, tempCol) = (derived)values[i];
+		tempCol += 1;
+		if (tempCol >= cols){tempCol = 0; tempRow += 1;};
+	}
+}
+//*****************************************************************************
+// Reads in a vector to a CSV file
+//
+// @param A		Reference to the vector that hold the read data
+// @param path	Path to the csv file
+//*****************************************************************************
+template <typename derived>
+void readCSV(Matrix<derived, Dynamic, 1>& A, const std::string path) {
+   std::ifstream indata;
+   std::string line;
+   std::vector<long double> values;
+   int rows = 0, cols = 0;
+	
+	checkFileExists(path);
    indata.open(path);
    while (std::getline(indata, line)) {
       std::stringstream lineStream(line);
@@ -194,6 +244,36 @@ derived computeRelativeRMSE(const Matrix<derived, Dynamic, Dynamic>& refMat,
 	return error;
 }
 
+//*****************************************************************************
+// Computes the relative RMSE between two vectors
+// 
+// @param refVect
+// @param apporxVect
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeRMSE(const Matrix<derived, Dynamic, 1>& refVect,
+	const Matrix<derived, Dynamic, 1>& approxVect){
+	// make sure the mats are the same size
+	assert(refVect.rows() == approxVect.rows());
+	int rows = refVect.rows();
+	int cols = 1;
+	int N = rows*cols;
+	derived ref, approx, error = 0.0, eps = 1.e-16;
+
+	// Loop over mats	
+	for (int i = 0; i < rows; i++){
+		ref = refVect(i);
+		approx = approxVect(i);
+		if (ref >= eps and ref != 1.0){
+			error += std::pow((ref - approx)/ref, 2.0);
+		}
+		
+	}
+	error = error/(derived)N;
+	error = std::pow(error, 0.5);
+	return error;
+}
+
 
 // Data types that can use the template functions
 template bool isApprox(double goalVal, double testVal, double rtol, double atol);
@@ -202,7 +282,13 @@ template std::vector<double> lineSpace(double start, double end, std::size_t N);
 template std::vector<int> lineSpace(int start, int end, std::size_t N);
 template void findReplace(MatrixLI& A, long int findValue, long int replaceValue);
 template void findReplace(MatrixI& A, int findValue, int replaceValue);
+template void writeCSV(const VectorD& A, const std::string fname);
+template void writeCSV(const VectorLD& A, const std::string fname);
 template void writeCSV(const MatrixD& A, const std::string fname);
 template void writeCSV(const MatrixLD& A, const std::string fname);
+template void readCSV(VectorD& A, const std::string path);
+template void readCSV(VectorLD& A, const std::string path);
 template void readCSV(MatrixD& A, const std::string path);
+template void readCSV(MatrixLD& A, const std::string path);
 template double computeRelativeRMSE(const MatrixD& refMat, const MatrixD& approxMat);
+template double computeRelativeRMSE(const VectorD& refVect, const VectorD& approxVect);

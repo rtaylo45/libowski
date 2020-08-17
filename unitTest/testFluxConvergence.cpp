@@ -134,8 +134,8 @@ void problem1x(int myid, std::string solverType){
 					outputFile << xc << " " << cSol << " " << cCon << "\n";
 				}
 			}
-			printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
-					linf, l1/float(xCells), l2/float(xCells));
+			//printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
+					//linf, l1/float(xCells), l2/float(xCells));
 			outputFile << "\n";
 			linfVector.push_back(linf);
 			l1Vector.push_back(l1/float(xCells));
@@ -146,9 +146,14 @@ void problem1x(int myid, std::string solverType){
 	// Loop through error vectors to check convergence
 	if (myid == 0){
 		for (int i = 1; i < linfVector.size(); i++){
-			linfRate = round(log2(linfVector[i-1]/linfVector[i]));
-			l1Rate = round(log2(l1Vector[i-1]/l1Vector[i]));
-			l2Rate = round(log2(l2Vector[i-1]/l2Vector[i]));
+			linfRate = log2(linfVector[i-1]/linfVector[i]);
+			l1Rate = log2(l1Vector[i-1]/l1Vector[i]);
+			l2Rate = log2(l2Vector[i-1]/l2Vector[i]);
+			int xCells = numOfxCells[i];
+			printf("%15s %4d %4.2f %4.2f %4.2f \n", solverType.c_str(), xCells, 
+				linfRate, l1Rate, l2Rate);
+			l1Rate = round(l1Rate);
+			l2Rate = round(l2Rate);
 			assert(l1Rate == 2);
 			assert(l2Rate == 2);
 		}
@@ -254,8 +259,8 @@ void problem1y(int myid, std::string solverType){
 					outputFile << yc << " " << cSol << " " << cCon << "\n";
 				}
 			}
-			printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dy, 
-					linf, l1/float(yCells), l2/float(yCells));
+			//printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dy, 
+					//linf, l1/float(yCells), l2/float(yCells));
 			outputFile << "\n";
 			linfVector.push_back(linf);
 			l1Vector.push_back(l1/float(yCells));
@@ -266,11 +271,16 @@ void problem1y(int myid, std::string solverType){
 	// Loop through error vectors to check convergence
 	if (myid == 0){
 		for (int i = 1; i < linfVector.size(); i++){
-			linfRate = round(log2(linfVector[i-1]/linfVector[i]));
-			l1Rate = round(log2(l1Vector[i-1]/l1Vector[i]));
-			l2Rate = round(log2(l2Vector[i-1]/l2Vector[i]));
-			assert(l1Rate == 2);
-			assert(l2Rate == 2);
+			linfRate = log2(linfVector[i-1]/linfVector[i]);
+			l1Rate = log2(l1Vector[i-1]/l1Vector[i]);
+			l2Rate = log2(l2Vector[i-1]/l2Vector[i]);
+			int yCells = numOfyCells[i];
+			printf("%15s %4d %4.2f %4.2f %4.2f \n", solverType.c_str(), yCells, 
+				linfRate, l1Rate, l2Rate);
+			l1Rate = round(l1Rate);
+			l2Rate = round(l2Rate);
+			assert(l1Rate == l1Rate);
+			assert(l2Rate == l2Rate);
 		}
 	}
 }
@@ -361,8 +371,8 @@ void problem2(int myid){
 					outputFile << xc << " " << cSol << " " << cCon << "\n";
 				}
 			}
-			//printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
-			//		maxRelativeError, std::pow(rmse/float(xCells), 0.5));
+			printf("%15s %2.3f %4.2E %4.2e %4.2e \n", solverType.c_str(), dt,
+			dx, maxRelativeError, std::pow(rmse/float(xCells), 0.5));
 			outputFile << "\n";
 		}
 	}
@@ -495,8 +505,8 @@ void problem3(int myid){
 						outputFile << xc << " " << cSol << " " << cCon << "\n";
 					}
 				}
-				//printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
-				//		maxRelativeError, std::pow(rmse/float(xCells), 0.5));
+				printf("%15s %2.3f %4.2E %4.2e %4.2e \n", solverType.c_str(),
+				dt, dx, maxRelativeError, std::pow(rmse/float(xCells), 0.5));
 				outputFile << "\n";
 			}
 		}
@@ -615,8 +625,8 @@ void problem4(int myid){
 						outputFile << xc << " " << cSol << " " << cCon << "\n";
 					}
 				}
-				//printf("%15s %2.3f %4.2E %4.2e %4.2e %4.2e %4.2e \n", solverType.c_str(), dt, dx, 
-				//		maxRelativeError, std::pow(rmse/float(xCells), 0.5));
+				printf("%15s %2.3f %4.2E %4.2e %4.2e \n", solverType.c_str(),
+				dt, dx, maxRelativeError, std::pow(rmse/float(xCells), 0.5));
 				outputFile << "\n";
 			}
 		}
@@ -624,7 +634,6 @@ void problem4(int myid){
 	outputFile << "end";
 }
 int main(){
-
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
