@@ -12,27 +12,7 @@ alt="\begin{equation*}
 ">
 </p>
 
-The first term represents the change in species with time, the second is the flux through the volume surface the last is the change in concentration with a volumetric source term. The flux through the surface is comprised of a convective flux and diffusive. Volumetric source terms include those found in nuclear reactors such as decay, transmutation and generation from fission. Other source terms come from chemical reactions, both linear and nonlinear. These can include chemical reactions, phase migration and surface reactions. After the control volume method is applied to the integral transport equation,
-
-<p align="center">
-<img src="http://www.sciweavers.org/tex2img.php?eq=%20%20%20%20%5Cfrac%7B%5Cpartial%20%5Coverline%7BC%7D_%7Bi%7D%7D%7B%5Cpartial%20t%7D%20%3D%20-%20%5Cfrac%7B1%7D%7BV%7D%5Ciint_S%20n%20%5Ccdot%20F_%7Bi%7D%20%5C%2CdS%20%2B%20%5Csum%20%5Coverline%7BC%7D_%7BV%2Ci%7D%0A&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="    \frac{\partial \overline{C}_{i}}{\partial t} = - \frac{1}{V}\iint_S n \cdot F_{i} \,dS + \sum \overline{C}_{V,i}" width="251" height="51" />
-</p>
-
-Next the method of lines is used to discretize the spatial varialbes. For a fixed control volume in 2D cartesian gemoetry, the integral transport equation for species i is shown below.
-
-<p align="center">
-<img src="http://www.sciweavers.org/tex2img.php?eq=%5Cfrac%7Bd%20%5Coverline%7BC%7D_%7Bi%7D%7D%7Bd%20t%7D%20%3D%20-%20%5Cfrac%7B1%7D%7BV%7D%5Cbigg%5B%20F_%7Bx%7DA_%7Bx%7D%20%2B%20F_%7By%7DA_%7By%7D%5Cbigg%5D%20%2B%20%5Csum%20%5Coverline%7BC%7D_%7BV%2Ci%7D%0A&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="\frac{d \overline{C}_{i}}{d t} = - \frac{1}{V}\bigg[ F_{x}A_{x} + F_{y}A_{y}\bigg] + \sum \overline{C}_{V,i}" width="278" height="49" />
-</p>
-
-The flux in x and y are approximated using a first order upwind differencing scheme for convection and a second order central differencing scheme for diffusion. 
-
-The governing equations become are a set of first order ODEs as follows.
-
-<p align="center">
-<img src="http://www.sciweavers.org/tex2img.php?eq=%5Cfrac%7Bd%20C%7D%7Bd%20t%7D%20%3D%20AC%20%2B%20F%28C%2Ct%29%0A&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="\frac{d C}{d t} = AC + F(C,t)" width="144" height="43" />
-</p>
-
-A is the transition matrix. It containts the coefficients for burnup as well as the convection/diffusion source terms. The nonlinear source terms are collected in F(c,t). This equation is in vector matrix notation. C is a vector of species concentrations. We are solving for the concentrations in each cell volume, so the size of our system is the number of species X number of cells. Solving the system of ODE's is done witht matrix exponential time differencing. This solution is 
+The first term represents the change in species with time, the second is the flux through the volume surface the last is the change in concentration with a volumetric source term. For molten salt reactors this equation becomes:
 
 <p align="center">
 <img src=
@@ -53,9 +33,55 @@ alt="\begin{align*}
 ">
 </p>
 
-This formula is exact and ETD methods approximate the integral in the expression. The problem lies in evaluating the exponential of the transition matrix. Currently the only matrix exponential solver in libowski is based transforming the matrix exponential with Cauchy's integral formula into a contour integral that winds the spectrum A. This is done with either CRAM or a ration approximation derived using a contour on the left hand side of the complex plane. This might not be the best, other matrix exponential solvers are currently in the works. 
+where N is the number of nuclides in the system and K is the number of neutron induced reactions for a specific isotope.  The first term on the left hand side represent generation from decay of nuclide j with the second being generation from neutron induced reactions. The third and fourth term includes losses from decay and transmutation reactions. Other source terms can be included from chemical reactions, both linear and nonlinear. These can include chemical reactions, phase migration and surface reactions. After the control volume method is applied to the integral transport equation,
+
+<p align="center">
+<img src=
+"https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cbegin%7Bequation%2A%7D%0A%5Cbegin%7Bsplit%7D%0A++++%5Cfrac%7B%5Cpartial+%5Coverline%7B%5Crho%7D_%7Bi%7D%7D%7B%5Cpartial+t%7D%0A++++%3D+%5Cfrac%7B-1%7D%7BV%7D%5Cint_%7BV%7D%5Cbigg%28%5Cnabla+%5Ccdot+%5Crho_%7Bi%7D%28r%2Ct%29%5Cboldsymbol%7Bv%7D%0A++++%2B+%26%5Cnabla+%5Ccdot+j_%7Bi%7D%28r%2Ct%29%5Cbigg%29dV%0A++++%2B%0A++++%5Csum_%7Bj%3D1%7D%5E%7BN%7D%5Cfrac%7BM_%7Bi%7D%7D%7BM_%7Bj%7D%7D%5Cbigg%28b_%7Bj%5Crightarrow+i%7D%5Clambda_%7Bj%7D+%2B+%0A++++%5Csum_%7Bk%3D1%7D%5E%7BK%7D%5Cgamma_%7Bj%5Crightarrow+i%2Ck%7D%5Coverline%7B%5Csigma%7D_%7Bk%2Cj%7D%5Coverline%7B%5Cphi%7D+%5Cbigg%29%5Coverline%7B%5Crho%7D_%7Bj%7D%28t%29%5C%5C%0A++++%26-+%5Cbigg%28%5Clambda_%7Bi%7D+%2B+%5Coverline%7B%5Cphi%7D%5Csum_%7Bk%3D1%7D%5E%7BK%7D+%5Coverline%7B%5Csigma%7D_%7Bk%2Ci%7D%5Cbigg%29%5Coverline%7B%5Crho%7D_%7Bi%7D%28t%29.%0A%5Cend%7Bsplit%7D%0A%5Cend%7Bequation%2A%7D%0A" 
+alt="\begin{equation*}
+\begin{split}
+    \frac{\partial \overline{\rho}_{i}}{\partial t}
+    = \frac{-1}{V}\int_{V}\bigg(\nabla \cdot \rho_{i}(r,t)\boldsymbol{v}
+    + &\nabla \cdot j_{i}(r,t)\bigg)dV
+    +
+    \sum_{j=1}^{N}\frac{M_{i}}{M_{j}}\bigg(b_{j\rightarrow i}\lambda_{j} + 
+    \sum_{k=1}^{K}\gamma_{j\rightarrow i,k}\overline{\sigma}_{k,j}\overline{\phi} \bigg)\overline{\rho}_{j}(t)\\
+    &- \bigg(\lambda_{i} + \overline{\phi}\sum_{k=1}^{K} \overline{\sigma}_{k,i}\bigg)\overline{\rho}_{i}(t).
+\end{split}
+\end{equation*}
+">
+</p>
+
+The transport flux in x and y are approximated using a second order upwind TVD scheme for convection and a second order central differencing scheme for diffusion. 
+
+The governing equations become are a set of first order ODEs as follows.
+
+<p align="center">
+<img src=
+"https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cbegin%7Bequation%2A%7D%0A++++%5Cfrac%7Bd%5Cboldsymbol%7B%5Crho%7D%7D%7Bdt%7D+%3D+%5Cboldsymbol%7BL%5Crho%7D+%2B+%5Cboldsymbol%7BN%7D%28t%2C%5Cboldsymbol%7B%5Crho%7D%29.%0A%5Cend%7Bequation%2A%7D%0A" 
+alt="\begin{equation*}
+    \frac{d\boldsymbol{\rho}}{dt} = \boldsymbol{L\rho} + \boldsymbol{N}(t,\boldsymbol{\rho}).
+\end{equation*}
+">
+</p>
+
+L is the transition matrix. It containts the coefficients for burnup as well as the convection/diffusion source terms. The nonlinear source terms are collected in N. This equation is in vector matrix notation. Rho is a vector of species concentrations. We are solving for the concentrations in each cell volume, so the size of our system is the number of species X number of cells. Solving the system of ODE's is done witht matrix exponential time differencing. This solution is 
+
+<p align="center">
+<img src=
+"https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cbegin%7Bequation%2A%7D%0A++++%5Cboldsymbol%7B%5Crho%7D%28t_%7Bn%7D+%2B+%5CDelta+t%29+%3D+e%5E%7B%5CDelta+t%5Cboldsymbol%7BL%7D%7D%5Cboldsymbol%7B%5Crho%7D%28t_%7Bn%7D%29+%2B+e%5E%7B%5CDelta+t%5Cboldsymbol%7BL%7D%7D%5Cint_%7B0%7D%5E%7B%5CDelta+t%7De%5E%7B-%5Cboldsymbol%7BL%7D%5Ctau%7D%5Cboldsymbol%7BN%7D%28t_%7Bn%7D+%2B+%5Ctau%2C%5Cboldsymbol%7B%5Crho%7D%28t_%7Bn%7D+%2B+%5Ctau%29%29d%5Ctau.%0A%5Cend%7Bequation%2A%7D%0A" 
+alt="\begin{equation*}
+    \boldsymbol{\rho}(t_{n} + \Delta t) = e^{\Delta t\boldsymbol{L}}\boldsymbol{\rho}(t_{n}) + e^{\Delta t\boldsymbol{L}}\int_{0}^{\Delta t}e^{-\boldsymbol{L}\tau}\boldsymbol{N}(t_{n} + \tau,\boldsymbol{\rho}(t_{n} + \tau))d\tau.
+\end{equation*}
+">
+</p>
+
+
+This formula is exact and ETD methods approximate the integral in the expression. The problem lies in evaluating the exponential of the transition matrix. Currently there are 6 algorithms for solving the matrix exponential. One based on a truncated Taylor series (`Taylor`), two on the Pade approximation (`pade-method1` and `pade-method2`) and three on Cauchys integral formula (`CRAM`, `parabolic` and `hyperbolic`). The Krylov substace method is also avaliable as a preprocessing step.
 
 # Usage
 Pull the code to your favorite place and create a `build` folder in the main `libowski` directory. `CD` into the `build` folder and run `cmake ..` to generate the make file. Then run `make all` to build the project. The only dependence is the eigen3 library. It is used for all matrix types and linear algebra functions. It is included in the download.
 
-Testing is done using `ctest`. To run the unit test run `make test` in your build directory.
+Testing is done using `ctest`. To run the unit test run `make test` in your build directory. Some unit test require files that have not been uploaded into the reop and so some test will fail. I need to fix this going forward.
+
+This probject can be built with MPI if cmake detects it with the `Find MPI` command. Only the Cauchy algorithms are built to run in parallel and can run on up to 8 procs for CRAM and 16 for the parabolic and hyperbolic solvers. 
