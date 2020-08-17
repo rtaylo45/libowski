@@ -57,7 +57,7 @@ void problem1x(int myid, std::string solverType){
 	double l1, l2, linf;	
 	int cID;
 	double velocity = 2.0;
-	double relativeError = 0.0;
+	double absError = 0.0;
 	double linfRate, l2Rate, l1Rate;
 	meshCell* cell = nullptr;
 	// Sets the ouput file name
@@ -126,10 +126,10 @@ void problem1x(int myid, std::string solverType){
 					xc = cell->x;
 					cSol = exp(-std::pow((xc-velocity*t-30.)/10., 2.));
 					cCon = spec.getSpecies(i, j, cID);
-					relativeError = std::abs(cSol-cCon);
+					absError = std::abs(cSol-cCon);
 					l1 += std::abs(cSol-cCon);
 					l2 += l1*l1;
-					linf = std::max(linf, relativeError);
+					linf = std::max(linf, absError);
 
 					outputFile << xc << " " << cSol << " " << cCon << "\n";
 				}
@@ -183,7 +183,7 @@ void problem1y(int myid, std::string solverType){
 	double l1, l2, linf;	
 	int cID;
 	double velocity = 2.0;
-	double relativeError = 0.0;
+	double absError = 0.0;
 	double linfRate, l2Rate, l1Rate;
 	meshCell* cell = nullptr;
 	// Sets the ouput file name
@@ -251,10 +251,10 @@ void problem1y(int myid, std::string solverType){
 					yc = cell->y;
 					cSol = exp(-std::pow((yc-velocity*t-30.)/10., 2.));
 					cCon = spec.getSpecies(i, j, cID);
-					relativeError = std::abs(cSol-cCon);
+					absError = std::abs(cSol-cCon);
 					l1 += std::abs(cSol-cCon);
 					l2 += l1*l1;
-					linf = std::max(linf, relativeError);
+					linf = std::max(linf, absError);
 
 					outputFile << yc << " " << cSol << " " << cCon << "\n";
 				}
@@ -633,6 +633,167 @@ void problem4(int myid){
 	}
 	outputFile << "end";
 }
+
+//*****************************************************************************
+// 2 species 1D diffusion problem, taken from the following paper
+// NUMERICAL METHODS FOR STIFF REACTION-DIFFUSION SYSTEMS
+//	By: Chou, Zhang, Zhao, and Nie
+//
+//	Diff eqs:
+//		dU/dt = d*Uxx - a*U + V
+//		dV/dt = d*Vxx - b*V
+//
+//	Solution:
+//		U(x,t) = (e^(-(a+d)*t) + e^(-(b+d)*t))*cos(x).
+//		U(x,t) = (a-b)*e^(-(b+d)*t)*cos(x).
+//
+// They don't explicitly give the initial condiiton in the paper, but if you
+// plug in zero to the solution you can get it for U and V.
+//
+//	BC's:
+//		Ux(0,t) = 0, Uv(0.t) = 0, U(pi/2,t) = 0, V(pi/2,t) = 0
+//
+//	Note: The units for this problem kinda dont matter either. This is just an
+//	internal ODE test, the ODE solution is provided and calculated using the 
+//	same problem units.
+//*****************************************************************************
+void problem5(int myid){
+	int yCells = 1;
+	std::vector<int> numOfxCells{10, 20, 40, 80, 160, 320};
+	double xLength = M_PI/2., yLength = 0.0;
+	double numOfSteps = 1;
+	double tEnd = 1.0;
+	double dt = tEnd/numOfSteps, t = 0;
+	double a = 0.1, b = 0.01, d = 1.0;	// Diffusion dominated
+	//double a = 2.0, b = 1.0, d = 0.001;		// Reaction dominated
+	//double a = 100.0, b = 1.0, d = 0.001;		// Stiff reaction dominated
+	double UCon, VCon, USol, VSol;
+	int UID, VID;
+	double x1, x2, xc, initCon, x, dx;
+	double l1, l2, linf;
+	double linfRate, l2Rate, l1Rate;
+	double absError, runtime;
+	meshCell* cell = nullptr;
+	std::string outputFileName;
+	std::vector<double> Ucoeffs = {-a, 1.0};
+	std::vector<double> Vcoeffs = {0.0, -b};
+	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
+		"pade-method1", "pade-method2", "taylor"};
+
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
+		std::vector<double> linfVector, l1Vector, l2Vector, runTimeVector;
+
+		std::ofstream outputFile;
+		outputFileName = "problem5"+solverType+".out";
+		outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
+		
+		// Loops over number of cells
+		for (int &xCells : numOfxCells){
+
+			// Build the Mesh
+			modelMesh model(xCells, yCells, xLength, yLength);
+			// Sets the surfaces
+			model.addBoundarySurface("east");
+			model.addBoundarySurface("west");
+			// Build species driver
+			speciesDriver spec = speciesDriver(&model);
+
+			// Add species. I will add the initial condition later
+			UID = spec.addSpecies(1.0, 0.0, d);
+			VID = spec.addSpecies(1.0, 0.0, d);
+			// Sets the species matrix exp solver
+			spec.setMatrixExpSolver(solverType);
+
+			// Add BCs
+			spec.setBoundaryCondition("newmann","west", UID, 0.0);
+			spec.setBoundaryCondition("dirichlet","east", UID, 0.0);
+			spec.setBoundaryCondition("newmann","west", VID, 0.0);
+			spec.setBoundaryCondition("dirichlet","east", VID, 0.0);
+
+			// Sets the intial condition
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j);	
+
+					// Calculates the x positions as the cell faces
+					dx = cell->dx;
+					xc = cell->x;
+					x2 = xc + dx/2;
+					x1 = xc - dx/2;
+
+					// Calculates the initial concentration from MVT. 
+					initCon = (1./dx)*(sin(x2) - sin(x1));		
+
+					spec.setSpeciesCon(i,j,UID, 2*initCon);
+					spec.setSpeciesCon(i,j,VID, (a-b)*initCon);
+
+					// Sets the sourses
+					spec.setSpeciesSource(i, j, UID, Ucoeffs);
+					spec.setSpeciesSource(i, j, VID, Vcoeffs);
+				}
+			}
+
+			for (int step = 1; step <= numOfSteps; step++){
+				t = step*dt;
+				// Solve with CRAM
+				auto start = std::chrono::high_resolution_clock::now();
+				spec.solve(t);
+				auto end = std::chrono::high_resolution_clock::now();
+				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+					end - start);
+
+				linf = 0.0; l1 = 0.0; l2 = 0.0;
+				// Gets species Concentrations
+				if (myid==0){
+					for (int i = 0; i < xCells; i++){
+						for (int j = 0; j < yCells; j++){
+							cell = model.getCellByLoc(i,j);	
+
+							// Caclulate analytical solution
+							x = cell->x;
+							USol = (exp(-(a+d)*t) + exp(-(b+d)*t))*cos(x);
+							VSol = (a-b)*exp(-(b+d)*t)*cos(x);
+							// Get libowski solution
+							UCon = spec.getSpecies(i, j, UID);
+							VCon = spec.getSpecies(i, j, VID);
+						
+							absError = std::abs(USol-UCon)/USol + std::abs(VSol-VCon)/VSol;
+							l1 += absError;
+							l2 += l1*l1;
+							linf = std::max(linf, absError);
+
+						}
+					}
+				}
+				linfVector.push_back(linf);
+				l1Vector.push_back(l1/float(xCells));
+				l2Vector.push_back(l2/float(xCells));
+				runTimeVector.push_back(duration.count()/1.e6);
+			}
+			model.clean();
+			spec.clean();
+		}
+		// Loop through error vectors to check convergence
+		if (myid == 0){
+			for (int i = 1; i < linfVector.size(); i++){
+				runtime = runTimeVector[i];	
+				linfRate = log2(linfVector[i-1]/linfVector[i]);
+				l1Rate = log2(l1Vector[i-1]/l1Vector[i]);
+				l2Rate = log2(l2Vector[i-1]/l2Vector[i]);
+				int xCells = numOfxCells[i];
+				printf("%15s %4d %4.2f %4.2f %4.2f %4.2e %4.2e %4.2e %4.2e \n",
+					solverType.c_str(), xCells, linfRate, l1Rate, l2Rate, 
+					linfVector[i], l1Vector[i], l2Vector[i], runtime);
+				l1Rate = round(l1Rate);
+				l2Rate = round(l2Rate);
+				assert(l1Rate == 2);
+				assert(l2Rate == 2);
+			}
+		}
+	}
+
+}
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
@@ -644,7 +805,7 @@ int main(){
 		problem1x(myid, solverType);
 		problem1y(myid, solverType);
 	}
-	problem2(myid); problem3(myid); problem4(myid);
+	problem2(myid); problem3(myid); problem4(myid); problem5(myid);
 
 	mpi.finalize();
 }
