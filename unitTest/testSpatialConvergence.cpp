@@ -45,7 +45,7 @@
 void problem1x(int myid, std::string solverType){
 	int yCells = 1;
 	std::vector<int> numOfxCells{10, 20, 40, 80, 160, 320};
-	std::vector<double> linfVector, l1Vector, l2Vector;
+	std::vector<double> linfVector, l1Vector, l2Vector, runTimeVector;
 	double xLength = 100., yLength = 0.0;
 	double dx;
 	double tEnd = 2.0;
@@ -63,6 +63,9 @@ void problem1x(int myid, std::string solverType){
 	// Sets the ouput file name
 	std::ofstream outputFile;
 	std::string outputFileName = "fluxProblem1x.out";
+	//std::string limiter = "First order upwind";
+	std::string limiter = "muscl";
+	//std::string limiter = "superbee";
 	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 	outputFile << "Total problem time: " << tEnd << "\n";
 	outputFile << "Total problem length: " << xLength << "\n";
@@ -81,12 +84,14 @@ void problem1x(int myid, std::string solverType){
 		cID = spec.addSpecies(1.0, 0.0, 0.0);
 		// Sets the Matrix expential solver
 		spec.setMatrixExpSolver(solverType);
+		// Sets the flux limiter type
+		spec.setFluxLimiter(limiter);
 		// x velocity
 		model.setConstantXVelocity(velocity);
 		// Boundary conditions
 		spec.setBoundaryCondition("periodic", "west", cID);
 		spec.setBoundaryCondition("periodic", "east", cID);
-		outputFile << "Solver: " << solverType << "\n";
+		outputFile << "Solver: " << limiter << "\n";
 		outputFile << "dx: " << xLength/(double)xCells << "\n";
 		outputFile << "dt: " << dt << "\n";
 		outputFile << "variables " << "x " << "Solution " << "Libowski" << "\n";
@@ -112,12 +117,16 @@ void problem1x(int myid, std::string solverType){
 			}
 		}
 
+		auto start = std::chrono::high_resolution_clock::now();
 		// Solves the problem for each time step
 		for (int step = 1; step <= numOfSteps; step++){
 			t = step*dt;
 			spec.solve(t);
-			//spec.solveImplicit(t);
 		}
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+			end - start);
+		linf = 0.0; l1 = 0.0; l2 = 0.0;
 		// Loops to get solution info
 		if (myid == 0){
 			for (int i = 0; i < xCells; i++){
@@ -127,7 +136,7 @@ void problem1x(int myid, std::string solverType){
 					cSol = exp(-std::pow((xc-velocity*t-30.)/10., 2.));
 					cCon = spec.getSpecies(i, j, cID);
 					absError = std::abs(cSol-cCon);
-					l1 += std::abs(cSol-cCon);
+					l1 += absError;
 					l2 += l1*l1;
 					linf = std::max(linf, absError);
 
@@ -140,22 +149,25 @@ void problem1x(int myid, std::string solverType){
 			linfVector.push_back(linf);
 			l1Vector.push_back(l1/float(xCells));
 			l2Vector.push_back(l2/float(xCells));
+			runTimeVector.push_back(duration.count()/1.e6);
 		}
 	}
 	outputFile << "end";
 	// Loop through error vectors to check convergence
 	if (myid == 0){
 		for (int i = 1; i < linfVector.size(); i++){
+			double runtime = runTimeVector[i];	
 			linfRate = log2(linfVector[i-1]/linfVector[i]);
 			l1Rate = log2(l1Vector[i-1]/l1Vector[i]);
 			l2Rate = log2(l2Vector[i-1]/l2Vector[i]);
 			int xCells = numOfxCells[i];
-			printf("%15s %4d %4.2f %4.2f %4.2f \n", solverType.c_str(), xCells, 
-				linfRate, l1Rate, l2Rate);
+			printf("%15s %4d %4.2f %4.2f %4.2f %8.7e %8.7e %8.7e %4.2e \n",
+				solverType.c_str(), xCells, linfRate, l1Rate, l2Rate, 
+				linfVector[i], l1Vector[i], l2Vector[i], runtime);
 			l1Rate = round(l1Rate);
 			l2Rate = round(l2Rate);
-			assert(l1Rate == 2);
-			assert(l2Rate == 2);
+			//assert(l1Rate == 2);
+			//assert(l2Rate == 2);
 		}
 	}
 }
@@ -174,7 +186,7 @@ void problem1y(int myid, std::string solverType){
 	std::vector<double> linfVector, l1Vector, l2Vector;
 	double xLength = 0., yLength = 100.0;
 	double dy;
-	double tEnd = 2.0;
+	double tEnd = 5.0;
 	double cSol, cCon;
 	double t = 0.0;
 	int numOfSteps = 200;
@@ -291,7 +303,7 @@ void problem1y(int myid, std::string solverType){
 // x		[0, 100]
 // I.C.	0.0
 // B.C.  west: Dirichlet 1.0
-//			east: Free flow
+//			east: newmann
 //*****************************************************************************
 void problem2(int myid){
 	int yCells = 1;
@@ -338,7 +350,7 @@ void problem2(int myid){
 		model.setConstantXVelocity(velocity);
 		// Boundary conditions
 		spec.setBoundaryCondition("dirichlet", "west", cID, 1.0);
-		spec.setBoundaryCondition("free flow", "east", cID);
+		spec.setBoundaryCondition("newmann", "east", cID, 0.0);
 		outputFile << "Solver: " << solverType << "\n";
 		outputFile << "dx: " << xLength/(double)xCells << "\n";
 		outputFile << "dt: " << dt << "\n";
@@ -350,6 +362,103 @@ void problem2(int myid){
 		for (int step = 1; step <= numOfSteps; step++){
 			t = step*dt;
 			spec.solve(t);
+		}
+		// Loops to get solution info
+		if (myid == 0){
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j);	
+					xc = cell->x;
+					if (xc < velocity*t){
+						cSol = 1.0;
+					}
+					else {
+						cSol = 0.0;
+					}
+					cCon = spec.getSpecies(i, j, cID);
+					relativeError = std::abs(cSol-cCon);
+					maxRelativeError = std::max(maxRelativeError, relativeError);
+					rmse += std::pow(relativeError,2.);
+
+					outputFile << xc << " " << cSol << " " << cCon << "\n";
+				}
+			}
+			printf("%15s %2.3f %4.2E %4.2e %4.2e \n", solverType.c_str(), dt,
+			dx, maxRelativeError, std::pow(rmse/float(xCells), 0.5));
+			outputFile << "\n";
+		}
+	}
+	outputFile << "end";
+}
+//*****************************************************************************
+// Test 2.b
+//
+// v		2.0
+// x		[0, 100]
+// I.C.	0.0
+// B.C.  west: Dirichlet 1.0
+//			east: newmann
+//*****************************************************************************
+void problem2b(int myid){
+	int yCells = 1; int xCells = 200;
+	//std::vector<int> numOfSteps{10, 50, 100};
+	std::vector<int> numOfSteps{200};
+	double xLength = 100., yLength = 0.0;
+	double dx;
+	double tEnd = 20.0;
+	double cSol, cCon;
+	double x1, x2, initCon, xc;
+	int cID;
+	double velocity = 2.0;
+	double maxRelativeError = 0.0, relativeError = 0.0, rmse = 0.0;
+	//std::string outputFileName, solverType = "BDF2";
+	std::string outputFileName, solverType = "taylor";
+	meshCell* cell = nullptr;
+	// Sets the ouput file name
+	std::ofstream outputFile;
+	outputFileName = "fluxProblem2b.out";
+	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
+	outputFile << "Total problem time: " << tEnd << "\n";
+	outputFile << "Total problem length: " << xLength << "\n";
+	outputFile << "Refinement: " << "time" << "\n";
+
+	// loops over number of cells
+	for (int k = 0; k < numOfSteps.size(); k++){
+		int steps = numOfSteps[k];
+		double t = 0.0;
+		double dt = tEnd/steps;
+		// Build the mesh
+		modelMesh model = modelMesh(xCells, yCells, xLength, yLength);
+		// Adds boundarys
+		model.addBoundarySurface("east");
+		model.addBoundarySurface("west");
+		// Builds the species driver
+		speciesDriver spec = speciesDriver(&model);
+		// Add species
+		cID = spec.addSpecies(1.0, 0.0, 0.0);
+		// Sets the solver type
+		//spec.setIntegratorSolver("implicit", solverType);
+		// Sets the Matrix expential solver
+		spec.setMatrixExpSolver(solverType);
+		// Sets the limiter function
+		spec.setFluxLimiter("muscl");
+		// x velocity
+		model.setConstantXVelocity(velocity);
+		// Boundary conditions
+		spec.setBoundaryCondition("dirichlet", "west", cID, 1.0);
+		spec.setBoundaryCondition("newmann", "east", cID, 0.0);
+		outputFile << "Solver: " << solverType << "\n";
+		outputFile << "dx: " << xLength/(double)xCells << "\n";
+		outputFile << "dt: " << dt << "\n";
+		outputFile << "variables " << "x " << "Solution " << "Libowski" << "\n";
+		maxRelativeError = 0.0;
+		rmse = 0.0;
+
+		// Solves the problem for each time step
+		for (int step = 1; step <= steps; step++){
+			t = step*dt;
+			spec.solve(t);
+			//spec.solveImplicit(t);
 		}
 		// Loops to get solution info
 		if (myid == 0){
@@ -525,13 +634,14 @@ void problem4(int myid){
 	int yCells = 1;
 	std::vector<int> numOfxCells{200};
 	//std::vector<int> numOfxCells{100, 200, 400, 800, 1600};
-	std::vector<std::string> fluxLimiters {"First order upwind", "superbee"};
+	std::vector<std::string> fluxLimiters {"First order upwind", "superbee",
+		"muscl"};
 	double xLength = 100., yLength = 0.0;
 	double dx;
-	double tEnd = 10.0;
+	double tEnd = 20.0;
 	double cSol, cCon;
 	double t = 0.0;
-	int numOfSteps = 200;
+	int numOfSteps = 100;
 	double dt = tEnd/numOfSteps;
 	double x1, x2, initCon, xc;
 	int cID;
@@ -566,8 +676,10 @@ void problem4(int myid){
 			// x velocity
 			model.setConstantXVelocity(velocity);
 			// Boundary conditions
-			spec.setBoundaryCondition("periodic", "west", cID);
-			spec.setBoundaryCondition("periodic", "east", cID);
+			//spec.setBoundaryCondition("periodic", "west", cID);
+			//spec.setBoundaryCondition("periodic", "east", cID);
+			spec.setBoundaryCondition("dirichlet", "west", cID, 1.0);
+			spec.setBoundaryCondition("newmann", "east", cID, 0.0);
 			outputFile << "Solver: " << limiterType << "\n";
 			outputFile << "dx: " << xLength/(double)xCells << "\n";
 			outputFile << "dt: " << dt << "\n";
@@ -590,7 +702,7 @@ void problem4(int myid){
 						initCon = 0.0;
 					}
 					else {
-						initCon = 1.0;
+						initCon = 0.0;
 					}
 
 					spec.setSpeciesCon(i, j, cID, initCon);
@@ -610,11 +722,17 @@ void problem4(int myid){
 						cell = model.getCellByLoc(i,j);	
 						xc = cell->x;
 
-						if (xc < 20.+velocity*t or xc > 30.+velocity*t){
-							cSol = 0.0;
+						//if (xc < 20.+velocity*t or xc > 30.+velocity*t){
+						//	cSol = 0.0;
+						//}
+						//else {
+						//	cSol = 1.0;
+						//}
+						if (xc < velocity*t){
+							cSol = 1.0;
 						}
 						else {
-							cSol = 1.0;
+							cSol = 0.0;
 						}
 
 						cCon = spec.getSpecies(i, j, cID);
@@ -659,7 +777,8 @@ void problem4(int myid){
 //*****************************************************************************
 void problem5(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{10, 20, 40, 80, 160, 320};
+	//std::vector<int> numOfxCells{10, 20, 40, 80, 160, 320};
+	std::vector<int> numOfxCells{800};
 	double xLength = M_PI/2., yLength = 0.0;
 	double numOfSteps = 1;
 	double tEnd = 1.0;
@@ -671,7 +790,7 @@ void problem5(int myid){
 	int UID, VID;
 	double x1, x2, xc, initCon, x, dx;
 	double l1, l2, linf;
-	double linfRate, l2Rate, l1Rate;
+	double linfRate=0, l2Rate=0, l1Rate=0;
 	double absError, runtime;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
@@ -758,7 +877,7 @@ void problem5(int myid){
 							UCon = spec.getSpecies(i, j, UID);
 							VCon = spec.getSpecies(i, j, VID);
 						
-							absError = std::abs(USol-UCon)/USol + std::abs(VSol-VCon)/VSol;
+							absError = std::abs(USol-UCon) + std::abs(VSol-VCon);
 							l1 += absError;
 							l2 += l1*l1;
 							linf = std::max(linf, absError);
@@ -776,19 +895,19 @@ void problem5(int myid){
 		}
 		// Loop through error vectors to check convergence
 		if (myid == 0){
-			for (int i = 1; i < linfVector.size(); i++){
+			for (int i = 0; i < linfVector.size(); i++){
 				runtime = runTimeVector[i];	
-				linfRate = log2(linfVector[i-1]/linfVector[i]);
-				l1Rate = log2(l1Vector[i-1]/l1Vector[i]);
-				l2Rate = log2(l2Vector[i-1]/l2Vector[i]);
+				//linfRate = log2(linfVector[i-1]/linfVector[i]);
+				//l1Rate = log2(l1Vector[i-1]/l1Vector[i]);
+				//l2Rate = log2(l2Vector[i-1]/l2Vector[i]);
 				int xCells = numOfxCells[i];
-				printf("%15s %4d %4.2f %4.2f %4.2f %4.2e %4.2e %4.2e %4.2e \n",
+				printf("%15s %4d %4.2f %4.2f %4.2f %8.7e %8.7e %8.7e %4.2e \n",
 					solverType.c_str(), xCells, linfRate, l1Rate, l2Rate, 
 					linfVector[i], l1Vector[i], l2Vector[i], runtime);
-				l1Rate = round(l1Rate);
-				l2Rate = round(l2Rate);
-				assert(l1Rate == 2);
-				assert(l2Rate == 2);
+				//l1Rate = round(l1Rate);
+				//l2Rate = round(l2Rate);
+				//assert(l1Rate == 2);
+				//assert(l2Rate == 2);
 			}
 		}
 	}
@@ -799,13 +918,17 @@ int main(){
 	int numprocs = mpi.size;
 	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
 		"pade-method1", "pade-method2", "taylor"};
+	//std::vector<std::string> solvers {"parabolic"};
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
-		problem1x(myid, solverType);
-		problem1y(myid, solverType);
+		//problem1x(myid, solverType);
+		//problem1y(myid, solverType);
 	}
-	problem2(myid); problem3(myid); problem4(myid); problem5(myid);
+	//problem2(myid); problem3(myid); 
+	//problem4(myid); 
+	problem5(myid);
+	//problem2b(myid);
 
 	mpi.finalize();
 }

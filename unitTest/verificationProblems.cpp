@@ -169,15 +169,16 @@ void testProblem1(int myid){
 //*****************************************************************************
 void testProblem2(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{100, 150, 200};
+	//std::vector<int> numOfxCells{100, 150, 200};
+	std::vector<int> numOfxCells{1000};
 	//	150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 
 	//	650, 700, 750, 800, 850, 900, 950, 1000};
 	double xLength = M_PI/2., yLength = 0.0;
 	double numOfSteps = 1;
 	double tEnd = 1.0;
 	double dt = tEnd/numOfSteps, t = 0;
-	double a = 0.1, b = 0.01, d = 1.0;	// Problem 2a
-	//double a = 2.0, b = 1.0, d = 0.001;		// Problem 2b
+	//double a = 0.1, b = 0.01, d = 1.0;	// Problem 2a
+	double a = 2.0, b = 1.0, d = 0.001;		// Problem 2b
 	//double a = 100.0, b = 1.0, d = 0.001;		// Problem 2c
 	double UCon, VCon, USol, VSol;
 	int UID, VID;
@@ -276,8 +277,8 @@ void testProblem2(int myid){
 						}
 					}
 				}
-				outputFile << std::setprecision(16) << " " << dx << " " << linfErrorU << " " 
-				//std::cout << " " << dx << " " << linfErrorU << " " 
+				//outputFile << std::setprecision(16) << " " << dx << " " << linfErrorU << " " 
+				std::cout << std::setprecision(16)<< " " << dx << " " << linfErrorU << " " 
 					<< linfErrorV << " " << duration.count()/1.e6 << std::endl;
 
 			}
@@ -315,23 +316,30 @@ void testProblem2(int myid){
 void testProblem2Krylov(int myid){
 	int yCells = 1;
 	int xCells = 800;
-	std::vector<int> krylovDims = lineSpace(1, 40, 40);
+	//std::vector<int> krylovDims = lineSpace(5, 1000, 996);
+	std::vector<int> krylovDims = lineSpace(800, 800, 2);
+	//std::vector<int> krylovDims = {1};
 	double xLength = M_PI/2., yLength = 0.0;
 	double numOfSteps = 1;
 	double tEnd = 1.0;
 	double dt = tEnd/numOfSteps, t = 0;
-	//double a = 0.1, b = 0.01, d = 1.0;	// Problem 2a
-	double a = 2.0, b = 1.0, d = 0.001;		// Problem 2b
+	double a = 0.1, b = 0.01, d = 1.0;	// Problem 2a
+	//double a = 2.0, b = 1.0, d = 0.001;		// Problem 2b
 	//double a = 100.0, b = 1.0, d = 0.001;		// Problem 2c
 	double UCon, VCon, USol, VSol;
 	int UID, VID;
 	double x1, x2, xc, initCon, x, dx;
-	double linfErrorU, linfErrorV;
+	double relativeErr, linfError;
 	meshCell* cell = nullptr;
-	std::string outputFileName;
+	std::string outputFileName = "problem2Krylov.out";
+	remove(outputFileName.c_str());
 	std::vector<double> Ucoeffs = {-a, 1.0};
 	std::vector<double> Vcoeffs = {0.0, -b};
-	std::vector<std::string> solvers {"pade-method1", "pade-method2"};
+	//std::vector<std::string> solvers {"pade-method1", "pade-method2"};
+	std::vector<std::string> solvers {"pade-method2"};
+		//"taylor"};
+	FILE * pOutputFile;
+	pOutputFile = fopen(outputFileName.c_str(), "a");
 
 	// Build the Mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -344,8 +352,11 @@ void testProblem2Krylov(int myid){
 	for (std::string &solverType : solvers){
 
 		std::ofstream outputFile;
-		outputFileName = "problem2"+solverType+"Krylov.out";
-		outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
+		//outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
+		fprintf(pOutputFile, "solver: %s \n", solverType.c_str());
+		fprintf(pOutputFile, "elements: %ld \n", krylovDims.size());
+		fprintf(pOutputFile, "%s %s %s %s \n", "variables", "dim", "linf", 
+			"runtime");
 
 		for (int &krylovDim : krylovDims){
 
@@ -360,7 +371,8 @@ void testProblem2Krylov(int myid){
 			spec.setBoundaryCondition("dirichlet","east", VID, 0.0);
 
 			// Sets the species matrix exp solver
-			spec.setMatrixExpSolver(solverType, true, krylovDim);
+			//spec.setMatrixExpSolver(solverType, true, krylovDim);
+			spec.setMatrixExpSolver(solverType);
 
 			// Sets the intial condition
 			for (int i = 0; i < xCells; i++){
@@ -394,8 +406,7 @@ void testProblem2Krylov(int myid){
 				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
 					end - start);
 
-				linfErrorU = 0.0;
-				linfErrorV = 0.0;
+				linfError = 0.0;
 				// Gets species Concentrations
 				if (myid==0){
 					for (int i = 0; i < xCells; i++){
@@ -410,25 +421,30 @@ void testProblem2Krylov(int myid){
 							UCon = spec.getSpecies(i, j, UID);
 							VCon = spec.getSpecies(i, j, VID);
 
-							if (krylovDim > 4){
-								assert(isApprox(USol, UCon, 1e-7, 1e-6));
-								assert(isApprox(VSol, VCon, 1e-7, 1e-6));
-							}
-							linfErrorU = std::max(linfErrorU, std::abs(USol-UCon));
-							linfErrorV = std::max(linfErrorV, std::abs(VSol-VCon));
+							//if (krylovDim > 4){
+							//	assert(isApprox(USol, UCon, 1e-7, 1e-6));
+							//	assert(isApprox(VSol, VCon, 1e-7, 1e-6));
+							//}
+							relativeErr = std::abs(USol-UCon) + 
+								std::abs(VSol-VCon);
+							linfError = std::max(linfError, relativeErr);
 
 						}
 					}
 				}
-				outputFile << std::setprecision(16) << " " << krylovDim << " " << linfErrorU << " " 
-				//std::cout << " " << krylovDim << " " << linfErrorU << " " 
-					<< linfErrorV << " " << duration.count()/1.e6 << std::endl;
+				std::cout << std::setprecision(16) << " " << krylovDim << " " 
+				//std::cout << krylovDim << std::endl;
+					<< linfError << " " << duration.count()/1.e6 << std::endl;
+				//fprintf(pOutputFile, "%2d %8.7e %8.7e \n", krylovDim, 
+					//linfError, duration.count()/1.e6);
 
 			}
 		spec.clean();
 		}
+		fprintf(pOutputFile, "\n");
 	}
 	model.clean();
+	fprintf(pOutputFile, "end");
 }
 
 //*****************************************************************************
@@ -1591,18 +1607,18 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	testProblem1(myid);
-	testProblem2(myid);
-	testProblem2IntegratorMethods(myid);
+	//testProblem1(myid);
+	//testProblem2(myid);
+	//testProblem2IntegratorMethods(myid);
 	testProblem2Krylov(myid);
-	testProblem3(myid);
-	testXenonIodineNoFlow(myid);
-	testXenonIodineYFlow(myid);
-	testXenonIodineXFlow(myid);
-	testDiffusion2D(myid);
-	testNeutronPrecursorsFlow(myid);
+	//testProblem3(myid);
+	//testXenonIodineNoFlow(myid);
+	//testXenonIodineYFlow(myid);
+	//testXenonIodineXFlow(myid);
+	//testDiffusion2D(myid);
+	//testNeutronPrecursorsFlow(myid);
 	//testNeutronPrecursorsMultiChanFlow(myid);
-	testBenBenchmark(myid);
+	//testBenBenchmark(myid);
 
 	mpi.finalize();
 }

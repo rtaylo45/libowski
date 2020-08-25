@@ -214,6 +214,193 @@ void pipeDepletion(int myid, std::string solverType){
 	}
 }
 
+//**************************************************************************
+// 2D Neutron precuror problem
+//
+//	Problem equations:
+//	dCi/dt = -v*dCi/dx - lambda_i*Ci + beta_i*phi*sin(pi*x/100)*sin(pi*y/50)
+//
+//	Domaine:
+//		x = [0, 4]		m
+//		y = [0, 0.5]   m
+//		t = [0, 60]		s
+//
+//		i | lambda_i | beta_i
+//		---------------------
+//		1 | 0.0127	 | 0.0006 
+//   	2 | 0.0317   | 0.00364 
+//   	3 | 0.115    | 0.00349 
+//   	4 | 0.311    | 0.00628 
+//   	5 | 1.4      | 0.00179
+//   	6 | 3.87     | 0.0007
+//
+//	Initial conditions and BC's:
+//			C_{1}	= 0.0 
+//			C_{2}	= 0.0 
+//			C_{3}	= 0.0 
+//			C_{4}	= 0.0 
+//			C_{5}	= 0.0 
+//			C_{6}	= 0.0 
+//
+//			C_{i}(0, y, t)			= C_{i}(400, y, t)
+//			dC_{i}(x, 0, t)/dt	= 0
+//			dC_{i}(x, 50, t)/dt	= 0
+//
+//	Solution:
+//		Calculated by matlab
+// 
+// Note:
+//		The xCells and yCells were choosen so that the yCells do not overlap
+//		outside of the core region. i.e. each cell is fully in the core or 
+//		not in the core
+//**************************************************************************
+void neutronPrecursors(int myid, std::string solverType){
+	double t = 0.0;
+	int steps = 2;
+	double totalTime = 10.0;
+	double dt = totalTime/steps;
+	//std::vector<double> timeSteps = {0.1, 0.5, 1.0, 10.0, 20.0};
+	int xCells = 50, yCells = 100;
+	//int xCells = 5, yCells = 20;
+	double xLength = 50.0, yLength = 400.0;
+	double v_y = 25.0, v_x = 0.0;
+	double xc, yc, s;
+	MatrixD refSolData;
+	std::vector<int> ids;
+	std::vector<double> decay = {0.0127, 0.0317, 0.115, 0.311, 1.4, 3.87};
+	std::vector<double> beta = {0.06, 0.364, 0.349, 0.628, 0.179, 0.07};
+	std::vector<double> bcs = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+	std::string speciesNamesFile = getDataPath() + "neutronPrecursorsInputNames.dat";
+	std::string limiter = "First order upwind";
+	std::string outputFileName = "caseStudyNeutronPrecursors.out";
+	//std::string outputFileNameMatrix = "caseStudyNeutronprecursors"
+		//+solverType+"Substeps6.csv";
+	FILE * pOutputFile;
+	meshCell* cell = nullptr;
+	pOutputFile = fopen(outputFileName.c_str(), "a");
+
+	if (myid == 0){
+		fprintf(pOutputFile, "Solver: %s \n", solverType.c_str());
+		fprintf(pOutputFile, "Total problem time: %4.3e\n", totalTime);
+		fprintf(pOutputFile, "yLength: %4.3e\n", yLength);
+		fprintf(pOutputFile, "xLength: %4.3e\n", xLength);
+		fprintf(pOutputFile, "dt: %8.7e\n", dt);
+		fprintf(pOutputFile, "yCells: %d\n", yCells);
+		fprintf(pOutputFile, "xCells: %d\n", xCells);
+		fprintf(pOutputFile, "%s %s %s %s %s %s %s %s %s \n", "variables", 
+			"x", "y", "G1", "G2", "G3", "G4", "G5", "G6");
+	}
+	fclose(pOutputFile);
+
+	// Builds the model mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+
+	// set velocity
+	model.setConstantYVelocity(v_y);
+	model.setConstantXVelocity(v_x);
+
+	// Adds boundary surface
+	model.addBoundarySurface("east");
+	model.addBoundarySurface("west");
+
+	// Inits the species driver
+	speciesDriver spec = speciesDriver(&model);
+
+	// Sets the matrix exp solver
+	spec.setMatrixExpSolver(solverType);
+
+	// Sets the flux limiter type
+	spec.setFluxLimiter(limiter);
+
+	// Species IDs
+	ids = spec.addSpeciesFromFile(speciesNamesFile);
+
+	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
+	//readCSV(refSolData, std::string(getDataPath()+"NeutronPrecursorSolution.csv"));
+
+	// Adds the boundary conditions
+	spec.setBoundaryCondition("newmann","east", ids, bcs);
+	spec.setBoundaryCondition("newmann","west", ids, bcs);
+	spec.setBoundaryCondition("periodic","south", ids);
+	spec.setBoundaryCondition("periodic","north", ids);
+
+	// Sets the source terms
+	for (int id = 0; id < ids.size(); id++){
+		for (int i = 0; i < xCells; i++){
+			for (int j = 0; j < yCells; j++){
+				std::vector<double> coeffs(ids.size(), 0.0);
+				coeffs[id] = -decay[id];
+				meshCell* cell = model.getCellByLoc(i,j);
+				double y = cell->y, x = cell->x;
+				double y1 = y - model.dy/2., x1 = x - model.dx/2.;
+				double y2 = y + model.dy/2., x2 = x + model.dx/2.;
+				double sy = (1./model.dy)*(100./M_PI)*(cos(M_PI*y1/100.) - 
+				cos(M_PI*y2/100.));
+				double sx = (1./model.dx)*(50./M_PI)*(cos(M_PI*x1/50.) - 
+				cos(M_PI*x2/50.));
+
+				if (y < 100.){
+					s = 1.e13*sy*sx;
+				}
+				else{
+					s = 0.0;
+				}
+				model.setCellNeutronFlux(i, j, s);
+				spec.setSpeciesSource(i, j, id, coeffs, beta[id]*s);
+			}
+		}
+	}
+
+
+	//if (myid == 0){
+	//	spec.writeTransitionMatrixToFile("transitionMatrixNeutronPrecursors.csv");
+	//	spec.writeInitialConditionToFile("initialConditionNeutronPrecursors.csv");
+	//}
+
+
+	pOutputFile = fopen(outputFileName.c_str(), "a");
+	// Loops to solve the problem
+	for (int k = 0; k < steps; k++){
+		t = t + dt;
+		//t = timeSteps[k];
+		if (myid == 0){std::cout << t << std::endl;};
+		spec.solve(t);
+
+		if (myid == 0){
+			int index = 0;
+			// Loops to print results
+			fprintf(pOutputFile, "time: %5.4e\n", t);
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j);
+					xc = cell->x;
+					yc = cell->y;
+					fprintf(pOutputFile, "%5.4e %5.4e ", xc, yc);
+					// Loops over the species 
+					for (int id = 0; id < ids.size(); id++){
+						double con = spec.getSpecies(i, j, ids[id]);
+						fprintf(pOutputFile, "%17.16e ", con);
+						//solData(index, k) = con;
+						//index ++;
+					}
+					fprintf(pOutputFile, "\n");
+				}
+			}
+			fprintf(pOutputFile, "\n");
+			//VectorD refSol = refSolData.col(k);
+			//VectorD sol = solData.col(k);
+			//double rmse = computeRelativeRMSE(refSol, sol);
+			//printf("%s dt = %f RMSE %e\n", solverType.c_str(), t, 
+			//	rmse);
+		}
+	}
+	if (myid == 0){
+		fprintf(pOutputFile, "end\n");
+		fclose(pOutputFile);
+		//writeCSV(solData, outputFileNameMatrix);
+	}
+}
+
 //*****************************************************************************
 // Main test
 //*****************************************************************************
@@ -222,15 +409,17 @@ int main(){
 	int numprocs = mpi.size;
 	//std::vector<std::string> solvers {"taylor"};
 	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
-	//"pade-method2"};
-	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
-	//std::vector<std::string> solvers {"CRAM"};
+	//"pade-method2", "taylor"};
+	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
+	std::vector<std::string> solvers {"hyperbolic"};
 
+	remove("caseStudyNeutronPrecursors.out");
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
 		if(myid == 0){std::cout << solverType << std::endl;};
 		//singleCellDepletion(myid, solverType);
-		pipeDepletion(myid, solverType);
+		//pipeDepletion(myid, solverType);
+		neutronPrecursors(myid, solverType);
 	}
 
 	mpi.finalize();
