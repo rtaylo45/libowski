@@ -256,25 +256,25 @@ void pipeDepletion(int myid, std::string solverType){
 //**************************************************************************
 void neutronPrecursors(int myid, std::string solverType){
 	double t = 0.0;
-	int steps = 2;
-	double totalTime = 10.0;
+	int steps = 60;
+	double totalTime = 60.0;
 	double dt = totalTime/steps;
 	//std::vector<double> timeSteps = {0.1, 0.5, 1.0, 10.0, 20.0};
-	int xCells = 50, yCells = 100;
-	//int xCells = 5, yCells = 20;
+	//int xCells = 50, yCells = 100;
+	int xCells = 5, yCells = 20;
 	double xLength = 50.0, yLength = 400.0;
 	double v_y = 25.0, v_x = 0.0;
-	double xc, yc, s;
+	double xc, yc, s, g;
 	MatrixD refSolData;
 	std::vector<int> ids;
 	std::vector<double> decay = {0.0127, 0.0317, 0.115, 0.311, 1.4, 3.87};
 	std::vector<double> beta = {0.06, 0.364, 0.349, 0.628, 0.179, 0.07};
 	std::vector<double> bcs = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 	std::string speciesNamesFile = getDataPath() + "neutronPrecursorsInputNames.dat";
-	std::string limiter = "First order upwind";
+	std::string limiter = "muscl";
 	std::string outputFileName = "caseStudyNeutronPrecursors.out";
-	//std::string outputFileNameMatrix = "caseStudyNeutronprecursors"
-		//+solverType+"Substeps6.csv";
+	std::string outputFileNameMatrix = "caseStudyNeutronprecursors"
+		+solverType+".csv";
 	FILE * pOutputFile;
 	meshCell* cell = nullptr;
 	pOutputFile = fopen(outputFileName.c_str(), "a");
@@ -324,44 +324,50 @@ void neutronPrecursors(int myid, std::string solverType){
 	spec.setBoundaryCondition("periodic","south", ids);
 	spec.setBoundaryCondition("periodic","north", ids);
 
-	// Sets the source terms
-	for (int id = 0; id < ids.size(); id++){
-		for (int i = 0; i < xCells; i++){
-			for (int j = 0; j < yCells; j++){
-				std::vector<double> coeffs(ids.size(), 0.0);
-				coeffs[id] = -decay[id];
-				meshCell* cell = model.getCellByLoc(i,j);
-				double y = cell->y, x = cell->x;
-				double y1 = y - model.dy/2., x1 = x - model.dx/2.;
-				double y2 = y + model.dy/2., x2 = x + model.dx/2.;
-				double sy = (1./model.dy)*(100./M_PI)*(cos(M_PI*y1/100.) - 
-				cos(M_PI*y2/100.));
-				double sx = (1./model.dx)*(50./M_PI)*(cos(M_PI*x1/50.) - 
-				cos(M_PI*x2/50.));
 
-				if (y < 100.){
-					s = 1.e13*sy*sx;
-				}
-				else{
-					s = 0.0;
-				}
-				model.setCellNeutronFlux(i, j, s);
-				spec.setSpeciesSource(i, j, id, coeffs, beta[id]*s);
-			}
-		}
+
+	if (myid == 0){
+		spec.writeTransitionMatrixToFile("transitionMatrixNeutronPrecursors.csv");
+		spec.writeInitialConditionToFile("initialConditionNeutronPrecursors.csv");
 	}
-
-
-	//if (myid == 0){
-	//	spec.writeTransitionMatrixToFile("transitionMatrixNeutronPrecursors.csv");
-	//	spec.writeInitialConditionToFile("initialConditionNeutronPrecursors.csv");
-	//}
 
 
 	pOutputFile = fopen(outputFileName.c_str(), "a");
 	// Loops to solve the problem
 	for (int k = 0; k < steps; k++){
 		t = t + dt;
+		// Sets the source terms
+		for (int id = 0; id < ids.size(); id++){
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					std::vector<double> coeffs(ids.size(), 0.0);
+					coeffs[id] = -decay[id];
+					meshCell* cell = model.getCellByLoc(i,j);
+					double y = cell->y, x = cell->x;
+					double y1 = y - model.dy/2., x1 = x - model.dx/2.;
+					double y2 = y + model.dy/2., x2 = x + model.dx/2.;
+					double sy = (1./model.dy)*(100./M_PI)*(cos(M_PI*y1/100.) - 
+					cos(M_PI*y2/100.));
+					double sx = (1./model.dx)*(50./M_PI)*(cos(M_PI*x1/50.) - 
+					cos(M_PI*x2/50.));
+
+					if (y < 100.){
+						s = 1.e13*sy*sx;
+					}
+					else{
+						s = 0.0;
+					}
+					if (t > 30.0){
+						g = 0.0;
+					}
+					else{
+						g = 1.0;
+					}
+					model.setCellNeutronFlux(i, j, s*g);
+					spec.setSpeciesSource(i, j, id, coeffs, beta[id]*s*g);
+				}
+			}
+		}
 		//t = timeSteps[k];
 		if (myid == 0){std::cout << t << std::endl;};
 		spec.solve(t);
@@ -413,7 +419,6 @@ int main(){
 	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
 	std::vector<std::string> solvers {"hyperbolic"};
 
-	remove("caseStudyNeutronPrecursors.out");
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
 		if(myid == 0){std::cout << solverType << std::endl;};

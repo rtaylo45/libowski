@@ -604,7 +604,7 @@ void moleProblem9(int myid){
 void moleProblem10(int myid){
 	double t;
 	int steps = 10;
-	double depletionTime = 10.*365.; // Days
+	double depletionTime = 500.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 1;
@@ -613,8 +613,8 @@ void moleProblem10(int myid){
 	std::vector<int> ids;
 	std::string path = getDataPath();
 	std::string outputFileName = "moleProblem10.out";
-	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", 
-	"pade-method1", "pade-method2", "taylor"};
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
+	//"pade-method1", "pade-method2", "taylor"};
 	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
 
 	// File names for setting up problems
@@ -648,7 +648,7 @@ void moleProblem10(int myid){
 			outputFile << "solverName: " << solverType << std::endl;
 		}
 		// name of the csv solution output file
-		std::string outputFileNameCSV = "moleProblem10"+solverType+".csv";
+		std::string outputFileNameCSV = "moleProblem10"+solverType+"Steps10.csv";
 		// Sets the matrix exp solver
 		spec.setMatrixExpSolver(solverType);
 		// sets init time
@@ -677,7 +677,7 @@ void moleProblem10(int myid){
 			writeCSV(solData, outputFileNameCSV);
 			double error = computeRelativeRMSE(anaSolution, solData);
 			std::cout << solverType << " " << error << std::endl;
-			assert(error < 1.e-9);
+			//assert(error < 1.e-9);
 		}
 		// Cleans species
 		spec.clean();
@@ -737,7 +737,7 @@ void moleProblem11(int myid){
 void moleProblem12(int myid){
 	double t;
 	int steps = 10;
-	double depletionTime = 10.*365.; // Days
+	double depletionTime = 500.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 1;
@@ -746,8 +746,8 @@ void moleProblem12(int myid){
 	std::vector<int> ids;
 	std::string path = getDataPath();
 	std::string outputFileName = "moleProblem12.out";
-	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", 
-	"pade-method1", "pade-method2", "taylor"};
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
+	//"pade-method1", "pade-method2", "taylor"};
 
 	// File names for setting up problems
 	std::string speciesNamesFile = path + "MoleP12SpeciesInputNames.dat";
@@ -781,7 +781,7 @@ void moleProblem12(int myid){
 			outputFile << "solverName: " << solverType << std::endl;
 		}
 		// name of the csv solution output file
-		std::string outputFileNameCSV = "moleProblem12"+solverType+".csv";
+		std::string outputFileNameCSV = "moleProblem12"+solverType+"Steps10.csv";
 		// Sets the matrix exp solver
 		spec.setMatrixExpSolver(solverType);
 		// sets init time
@@ -809,7 +809,8 @@ void moleProblem12(int myid){
 			// Write out solution to matrix 
 			writeCSV(solData, outputFileNameCSV);
 			double error = computeRelativeRMSE(anaSolution, solData);
-			assert(error < 1.e-9);
+			std::cout << solverType << " " << error << std::endl;
+			//assert(error < 1.e-9);
 		}
 		// Cleans species
 		spec.clean();
@@ -838,9 +839,9 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	moleProblem1(myid); 
-	moleProblem2(myid);
-	moleProblem3(myid);
+	//moleProblem1(myid); 
+	//moleProblem2(myid);
+	//moleProblem3(myid);
 	//moleProblem4(myid);
 	//moleProblem5(myid);
 	//moleProblem6(myid);
