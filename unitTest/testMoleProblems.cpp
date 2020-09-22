@@ -226,7 +226,6 @@ void moleProblem2(int myid){
 
 				spec.setBoundaryCondition("dirichlet","west", cID, 1000.0);
 				spec.setBoundaryCondition("newmann","east", cID, 0.0);
-				//spec.setBoundaryCondition("free flow","east", cID);
 
 				// sets the intial condition and sources
 				for (int i = 0; i < xCells; i++){
@@ -393,9 +392,6 @@ void moleProblem3(int myid){
 				spec.setBoundaryCondition("dirichlet","west", cwID, 0.0);
 				spec.setBoundaryCondition("newmann","east", clID, 0.0);
 				spec.setBoundaryCondition("newmann","east", cwID, 0.0);
-
-				//spec.setBoundaryCondition("free flow","east", clID);
-				//spec.setBoundaryCondition("free flow","east", cwID);
 
 				// sets the intial condition and sources
 				for (int i = 0; i < xCells; i++){

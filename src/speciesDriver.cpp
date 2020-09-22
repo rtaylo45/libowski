@@ -362,9 +362,6 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 	else if (BCType == "periodic"){
 		setPeriodicBoundaryCondition(locID);
 	} 
-	else if (BCType == "free flow"){
-		setGeneralBoundaryCondition(BCType, locID, specID, bc);
-	}
 	else{
 		std::string errorMessage = 
 			" You have selected an invalid boundary condition ";
@@ -419,14 +416,6 @@ void speciesDriver::setBoundaryCondition(std::string BCType, std::string loc,
 	else if (BCType == "periodic"){
 		setPeriodicBoundaryCondition(locID);
 	} 
-	else if (BCType == "free flow"){
-		for (int index = 0; index < ids.size(); index++){
-			bc = 0.0;
-			specID = ids[index];
-			if (not bcs.empty()){ bc = bcs[index];};
-			setGeneralBoundaryCondition(BCType, locID, specID, bc);
-		}
-	}
 	else{
 		std::string errorMessage = 
 			" You have selected an invalid boundary condition ";
