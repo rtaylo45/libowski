@@ -9,6 +9,7 @@
 #include "matrixTypes.h"
 #include "vectorTypes.h"
 #include "utilBase.h"
+#include "constants.h"
 
 //*****************************************************************************
 // Prints vector
@@ -325,6 +326,17 @@ void testCSVReader(int myid){
 	std::remove(fname.c_str());
 }
 
+//*****************************************************************************
+// Test constants
+//*****************************************************************************
+void testConstants(int myid){
+	double testAvog = 6.02214076e23;
+	double testR = 8.31446261815324;
+
+	assert(idealGasR == testR);
+	assert(avog == testAvog);
+}
+
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
@@ -335,6 +347,7 @@ int main(){
 	testArnoldi(myid);
 	testlineSpace(myid);
 	testCSVReader(myid);
+	testConstants(myid);
 
 	mpi.finalize();
 }
