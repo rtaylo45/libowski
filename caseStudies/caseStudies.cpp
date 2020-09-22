@@ -30,8 +30,8 @@
 //**************************************************************************
 void singleCellDepletion(int myid, std::string solverType){
 	double t = 0.0;
-	int steps = 1;
-	double depletionTime = 100.; // Days
+	int steps = 10;
+	double depletionTime = 500.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 1;
@@ -39,11 +39,12 @@ void singleCellDepletion(int myid, std::string solverType){
 	std::vector<int> ids;
 	std::string path = getDataPath();
 	std::string outputFileName = "caseStudy1.out";
-	std::string outputFileNameMatlab = "caseStudy1"+solverType+"Substeps12.csv";
+	//std::string outputFileNameMatlab = "caseStudy1"+solverType+"Substeps12.csv";
+	std::string outputFileNameMatlab = "caseStudy1"+solverType+".csv";
 	std::ofstream outputFile, outputFileMatlab;
 	outputFile.open(outputFileName, std::ios_base::app);
-	outputFileMatlab.open(outputFileNameMatlab);
-	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
+	MatrixD refSolData;
+
 
 	// Sets file paths for the input data	
 	std::string speciesNamesFile = path + "speciesInputNames.dat";
@@ -67,6 +68,9 @@ void singleCellDepletion(int myid, std::string solverType){
 	// Sets the species sources
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
 
+	// Get solution
+	readCSV(refSolData, std::string(getDataPath()+"caseStudy1Solution.csv"));
+
 	outputFile << "solverName: " << solverType << std::endl;
 	outputFile.precision(16); 
 
@@ -77,21 +81,32 @@ void singleCellDepletion(int myid, std::string solverType){
 
 	// Loops over the time steps to solve
 	for (int k = 0; k < steps; k++){
+		auto start = std::chrono::high_resolution_clock::now();
 		t = t + dt;
 		spec.solve(t);
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+			end - start);
 		if (myid == 0){
 			outputFile << "Time: " << t << std::endl;
-			std::cout << "Time: " << t << std::endl;
+			std::cout << "Time: " << t << " Solve Time: "
+			<< duration.count()/1.e6 << std::endl;
 			for (int id = 0; id < ids.size(); id++){
 				std::string name = spec.getSpeciesName(0, 0, ids[id]);
 				double con = spec.getSpecies(0, 0, ids[id]);
 				outputFile << name << " " << con << std::endl;
 				solData(id, k) = con;
+				double error = std::abs(refSolData(id, k) - con)/refSolData(id,k);
+				//std::cout << k << " " << id << " " << error << std::endl;
 			}
 		}
 	}
+	if (myid == 0){
+		double rmse = computeRelativeRMSE(refSolData, solData);
+		assert(rmse < 1.e-7);
+		printf("%s RMSE %e\n", solverType.c_str(), rmse);
+	}
 	outputFile << " " << std::endl;
-	outputFileMatlab << solData.format(CSVFormat);
 }
 
 //**************************************************************************
@@ -149,7 +164,7 @@ void pipeDepletion(int myid, std::string solverType){
 	// Sets all the decay and transmutation sources
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
 	VectorD solData = VectorD::Zero(xCells*yCells*ids.size()+1);
-	readCSV(refSolData, std::string("CaseStudy2Solution.csv"));
+	readCSV(refSolData, std::string(getDataPath()+"caseStudy2Solution.csv"));
 
 	// Sets the neutron flux
 	for (int i = 0; i < xCells; i++){
@@ -256,14 +271,15 @@ void pipeDepletion(int myid, std::string solverType){
 //**************************************************************************
 void neutronPrecursors(int myid, std::string solverType){
 	double t = 0.0;
-	int steps = 60;
+	int steps = 6;
 	double totalTime = 60.0;
 	double dt = totalTime/steps;
 	//std::vector<double> timeSteps = {0.1, 0.5, 1.0, 10.0, 20.0};
-	//int xCells = 50, yCells = 100;
+	//int xCells = 5, yCells = 20;
 	int xCells = 5, yCells = 20;
 	double xLength = 50.0, yLength = 400.0;
 	double v_y = 25.0, v_x = 0.0;
+	//double v_y = 60.0, v_x = 0.0;
 	double xc, yc, s, g;
 	MatrixD refSolData;
 	std::vector<int> ids;
@@ -271,9 +287,10 @@ void neutronPrecursors(int myid, std::string solverType){
 	std::vector<double> beta = {0.06, 0.364, 0.349, 0.628, 0.179, 0.07};
 	std::vector<double> bcs = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 	std::string speciesNamesFile = getDataPath() + "neutronPrecursorsInputNames.dat";
-	std::string limiter = "muscl";
+	std::string limiter = "First order upwind";
 	std::string outputFileName = "caseStudyNeutronPrecursors.out";
 	std::string outputFileNameMatrix = "caseStudyNeutronprecursors"
+		//+solverType+"Substeps4.csv";
 		+solverType+".csv";
 	FILE * pOutputFile;
 	meshCell* cell = nullptr;
@@ -316,7 +333,8 @@ void neutronPrecursors(int myid, std::string solverType){
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
 
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
-	//readCSV(refSolData, std::string(getDataPath()+"NeutronPrecursorSolution.csv"));
+	readCSV(refSolData, std::string(getDataPath()+
+		"caseStudyNeutronprecursorsSolution.csv"));
 
 	// Adds the boundary conditions
 	spec.setBoundaryCondition("newmann","east", ids, bcs);
@@ -324,6 +342,33 @@ void neutronPrecursors(int myid, std::string solverType){
 	spec.setBoundaryCondition("periodic","south", ids);
 	spec.setBoundaryCondition("periodic","north", ids);
 
+	// Sets the source terms
+	for (int id = 0; id < ids.size(); id++){
+		for (int i = 0; i < xCells; i++){
+			for (int j = 0; j < yCells; j++){
+				std::vector<double> coeffs(ids.size(), 0.0);
+				coeffs[id] = -decay[id];
+				meshCell* cell = model.getCellByLoc(i,j);
+				double y = cell->y, x = cell->x;
+				double y1 = y - model.dy/2., x1 = x - model.dx/2.;
+				double y2 = y + model.dy/2., x2 = x + model.dx/2.;
+				double sy = (1./model.dy)*(100./M_PI)*(cos(M_PI*y1/100.) - 
+				cos(M_PI*y2/100.));
+				double sx = (1./model.dx)*(50./M_PI)*(cos(M_PI*x1/50.) - 
+				cos(M_PI*x2/50.));
+
+				if (y < 100.){
+					s = 1.e13*sy*sx;
+				}
+				else{
+					s = 0.0;
+				}
+				model.setCellNeutronFlux(i, j, s);
+				spec.setSpeciesSource(i, j, id, coeffs, beta[id]*s);
+				//std::cout << i << " " << j << " " << id << " " << s << std::endl;
+			}
+		}
+	}
 
 
 	if (myid == 0){
@@ -336,41 +381,14 @@ void neutronPrecursors(int myid, std::string solverType){
 	// Loops to solve the problem
 	for (int k = 0; k < steps; k++){
 		t = t + dt;
-		// Sets the source terms
-		for (int id = 0; id < ids.size(); id++){
-			for (int i = 0; i < xCells; i++){
-				for (int j = 0; j < yCells; j++){
-					std::vector<double> coeffs(ids.size(), 0.0);
-					coeffs[id] = -decay[id];
-					meshCell* cell = model.getCellByLoc(i,j);
-					double y = cell->y, x = cell->x;
-					double y1 = y - model.dy/2., x1 = x - model.dx/2.;
-					double y2 = y + model.dy/2., x2 = x + model.dx/2.;
-					double sy = (1./model.dy)*(100./M_PI)*(cos(M_PI*y1/100.) - 
-					cos(M_PI*y2/100.));
-					double sx = (1./model.dx)*(50./M_PI)*(cos(M_PI*x1/50.) - 
-					cos(M_PI*x2/50.));
-
-					if (y < 100.){
-						s = 1.e13*sy*sx;
-					}
-					else{
-						s = 0.0;
-					}
-					if (t > 30.0){
-						g = 0.0;
-					}
-					else{
-						g = 1.0;
-					}
-					model.setCellNeutronFlux(i, j, s*g);
-					spec.setSpeciesSource(i, j, id, coeffs, beta[id]*s*g);
-				}
-			}
-		}
 		//t = timeSteps[k];
-		if (myid == 0){std::cout << t << std::endl;};
+		auto start = std::chrono::high_resolution_clock::now();
 		spec.solve(t);
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+			end - start);
+		//std::cout << "Time: " << t << " Solve Time: "
+		//<< duration.count()/1.e6 << std::endl;
 
 		if (myid == 0){
 			int index = 0;
@@ -386,24 +404,30 @@ void neutronPrecursors(int myid, std::string solverType){
 					for (int id = 0; id < ids.size(); id++){
 						double con = spec.getSpecies(i, j, ids[id]);
 						fprintf(pOutputFile, "%17.16e ", con);
-						//solData(index, k) = con;
-						//index ++;
+						solData(index, k) = con;
+						index ++;
 					}
 					fprintf(pOutputFile, "\n");
 				}
 			}
 			fprintf(pOutputFile, "\n");
-			//VectorD refSol = refSolData.col(k);
-			//VectorD sol = solData.col(k);
-			//double rmse = computeRelativeRMSE(refSol, sol);
-			//printf("%s dt = %f RMSE %e\n", solverType.c_str(), t, 
-			//	rmse);
+			VectorD refSol = refSolData.col(k);
+			VectorD sol = solData.col(k);
+			double rmse = computeRelativeRMSE(refSol, sol);
+			printf("%s dt = %f RMSE %e\n", solverType.c_str(), t, 
+				rmse);
+			if (solverType != "pade-method1"){
+				assert(rmse < 1.e-10);
+			}
+			else{
+				assert(rmse < 1.e-2);
+			}
 		}
 	}
 	if (myid == 0){
 		fprintf(pOutputFile, "end\n");
-		fclose(pOutputFile);
-		//writeCSV(solData, outputFileNameMatrix);
+		//fclose(pOutputFile);
+		writeCSV(solData, outputFileNameMatrix);
 	}
 }
 
@@ -413,17 +437,16 @@ void neutronPrecursors(int myid, std::string solverType){
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
-	//std::vector<std::string> solvers {"taylor"};
-	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
-	//"pade-method2", "taylor"};
-	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
-	std::vector<std::string> solvers {"hyperbolic"};
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
+	"pade-method2", "taylor"};
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
 		if(myid == 0){std::cout << solverType << std::endl;};
-		//singleCellDepletion(myid, solverType);
-		//pipeDepletion(myid, solverType);
+		singleCellDepletion(myid, solverType);
+		if (solverType != "taylor"){
+			pipeDepletion(myid, solverType);
+		}
 		neutronPrecursors(myid, solverType);
 	}
 

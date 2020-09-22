@@ -234,7 +234,7 @@ derived computeRelativeRMSE(const Matrix<derived, Dynamic, Dynamic>& refMat,
 		for (int j = 0; j < cols; j++){
 			ref = refMat(i,j);
 			approx = approxMat(i,j);
-			if (ref >= eps){
+			if (ref >= eps and ref != 1.){
 				error += std::pow((ref - approx)/ref, 2.0);
 			}
 		}

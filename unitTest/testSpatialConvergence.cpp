@@ -65,7 +65,6 @@ void problem1x(int myid, std::string solverType){
 	std::string outputFileName = "fluxProblem1x.out";
 	//std::string limiter = "First order upwind";
 	std::string limiter = "muscl";
-	//std::string limiter = "superbee";
 	outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 	outputFile << "Total problem time: " << tEnd << "\n";
 	outputFile << "Total problem length: " << xLength << "\n";
@@ -166,8 +165,8 @@ void problem1x(int myid, std::string solverType){
 				linfVector[i], l1Vector[i], l2Vector[i], runtime);
 			l1Rate = round(l1Rate);
 			l2Rate = round(l2Rate);
-			//assert(l1Rate == 2);
-			//assert(l2Rate == 2);
+			assert(l1Rate == 2);
+			assert(l2Rate == 2);
 		}
 	}
 }
@@ -308,7 +307,6 @@ void problem1y(int myid, std::string solverType){
 void problem2(int myid){
 	int yCells = 1;
 	std::vector<int> numOfxCells{10, 20, 40, 80, 160, 320};
-	//std::vector<int> numOfxCells{100, 200, 400, 800, 1600};
 	double xLength = 100., yLength = 0.0;
 	double dx;
 	double tEnd = 20.0;
@@ -411,7 +409,6 @@ void problem2b(int myid){
 	int cID;
 	double velocity = 2.0;
 	double maxRelativeError = 0.0, relativeError = 0.0, rmse = 0.0;
-	//std::string outputFileName, solverType = "BDF2";
 	std::string outputFileName, solverType = "taylor";
 	meshCell* cell = nullptr;
 	// Sets the ouput file name
@@ -458,7 +455,6 @@ void problem2b(int myid){
 		for (int step = 1; step <= steps; step++){
 			t = step*dt;
 			spec.solve(t);
-			//spec.solveImplicit(t);
 		}
 		// Loops to get solution info
 		if (myid == 0){
@@ -499,8 +495,7 @@ void problem2b(int myid){
 //*****************************************************************************
 void problem3(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{200};
-	//std::vector<int> numOfxCells{100, 200, 400, 800, 1600};
+	std::vector<int> numOfxCells{100, 200, 400, 800, 1600};
 	std::vector<std::string> fluxLimiters {"First order upwind", "superbee",
 		"muscl"};
 	double xLength = 100., yLength = 0.0;
@@ -632,8 +627,7 @@ void problem3(int myid){
 //*****************************************************************************
 void problem4(int myid){
 	int yCells = 1;
-	std::vector<int> numOfxCells{200};
-	//std::vector<int> numOfxCells{100, 200, 400, 800, 1600};
+	std::vector<int> numOfxCells{100, 200, 400, 800, 1600};
 	std::vector<std::string> fluxLimiters {"First order upwind", "superbee",
 		"muscl"};
 	double xLength = 100., yLength = 0.0;
@@ -777,8 +771,7 @@ void problem4(int myid){
 //*****************************************************************************
 void problem5(int myid){
 	int yCells = 1;
-	//std::vector<int> numOfxCells{10, 20, 40, 80, 160, 320};
-	std::vector<int> numOfxCells{800};
+	std::vector<int> numOfxCells{10, 20, 40, 80, 160, 320};
 	double xLength = M_PI/2., yLength = 0.0;
 	double numOfSteps = 1;
 	double tEnd = 1.0;
@@ -803,9 +796,9 @@ void problem5(int myid){
 	for (std::string &solverType : solvers){
 		std::vector<double> linfVector, l1Vector, l2Vector, runTimeVector;
 
-		//std::ofstream outputFile;
-		//outputFileName = "problem5"+solverType+".out";
-		//outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
+		std::ofstream outputFile;
+		outputFileName = "problem5"+solverType+".out";
+		outputFile.open(outputFileName, std::ios::out | std::ios::trunc);
 		
 		// Loops over number of cells
 		for (int &xCells : numOfxCells){
@@ -895,19 +888,19 @@ void problem5(int myid){
 		}
 		// Loop through error vectors to check convergence
 		if (myid == 0){
-			for (int i = 0; i < linfVector.size(); i++){
+			for (int i = 1; i < linfVector.size(); i++){
 				runtime = runTimeVector[i];	
-				//linfRate = log2(linfVector[i-1]/linfVector[i]);
-				//l1Rate = log2(l1Vector[i-1]/l1Vector[i]);
-				//l2Rate = log2(l2Vector[i-1]/l2Vector[i]);
+				linfRate = log2(linfVector[i-1]/linfVector[i]);
+				l1Rate = log2(l1Vector[i-1]/l1Vector[i]);
+				l2Rate = log2(l2Vector[i-1]/l2Vector[i]);
 				int xCells = numOfxCells[i];
 				printf("%15s %4d %4.2f %4.2f %4.2f %8.7e %8.7e %8.7e %4.2e \n",
 					solverType.c_str(), xCells, linfRate, l1Rate, l2Rate, 
 					linfVector[i], l1Vector[i], l2Vector[i], runtime);
-				//l1Rate = round(l1Rate);
-				//l2Rate = round(l2Rate);
-				//assert(l1Rate == 2);
-				//assert(l2Rate == 2);
+				l1Rate = round(l1Rate);
+				l2Rate = round(l2Rate);
+				assert(l1Rate == 2);
+				assert(l2Rate == 2);
 			}
 		}
 	}
@@ -918,17 +911,17 @@ int main(){
 	int numprocs = mpi.size;
 	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
 		"pade-method1", "pade-method2", "taylor"};
-	//std::vector<std::string> solvers {"parabolic"};
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
-		//problem1x(myid, solverType);
-		//problem1y(myid, solverType);
+		problem1x(myid, solverType);
+		problem1y(myid, solverType);
 	}
-	//problem2(myid); problem3(myid); 
-	//problem4(myid); 
+	problem2b(myid);
+	problem2(myid); 
+	problem3(myid); 
+	problem4(myid); 
 	problem5(myid);
-	//problem2b(myid);
 
 	mpi.finalize();
 }
