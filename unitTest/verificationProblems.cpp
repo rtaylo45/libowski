@@ -886,8 +886,8 @@ void testXenonIodineYFlow(int myid){
 	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
 	spec.setBoundaryCondition("dirichlet", "south", xenonID, xenonInitCon);
 	spec.setBoundaryCondition("dirichlet","south", iodineID, iodineInitCon);
-	spec.setBoundaryCondition("free flow", "north", xenonID);
-	spec.setBoundaryCondition("free flow","north", iodineID);
+	spec.setBoundaryCondition("newmann", "north", xenonID, 0.0);
+	spec.setBoundaryCondition("newmann","north", iodineID, 0.0);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -975,8 +975,8 @@ void testXenonIodineXFlow(int myid){
 	iodineID = spec.addSpecies(iodineMM, N_I_0, D_I);
 	spec.setBoundaryCondition("dirichlet","west", xenonID, xenonInitCon);
 	spec.setBoundaryCondition("dirichlet","west", iodineID, iodineInitCon);
-	spec.setBoundaryCondition("free flow","east", xenonID);
-	spec.setBoundaryCondition("free flow","east", iodineID);
+	spec.setBoundaryCondition("newmann","east", xenonID, 0.0);
+	spec.setBoundaryCondition("newmann","east", iodineID, 0.0);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
@@ -1212,12 +1212,12 @@ void testNeutronPrecursorsFlow(int myid){
 	spec.setBoundaryCondition("dirichlet", "south", c5ID, c5InitCon);
 	spec.setBoundaryCondition("dirichlet", "south", c6ID, c6InitCon);
 
-	spec.setBoundaryCondition("free flow", "north", c1ID, c1InitCon);
-	spec.setBoundaryCondition("free flow", "north", c2ID, c2InitCon);
-	spec.setBoundaryCondition("free flow", "north", c3ID, c3InitCon);
-	spec.setBoundaryCondition("free flow", "north", c4ID, c4InitCon);
-	spec.setBoundaryCondition("free flow", "north", c5ID, c5InitCon);
-	spec.setBoundaryCondition("free flow", "north", c6ID, c6InitCon);
+	spec.setBoundaryCondition("newmann", "north", c1ID, 0.0);
+	spec.setBoundaryCondition("newmann", "north", c2ID, 0.0);
+	spec.setBoundaryCondition("newmann", "north", c3ID, 0.0);
+	spec.setBoundaryCondition("newmann", "north", c4ID, 0.0);
+	spec.setBoundaryCondition("newmann", "north", c5ID, 0.0);
+	spec.setBoundaryCondition("newmann", "north", c6ID, 0.0);
 	// Sets BCs
 	//spec.setBoundaryCondition("periodic","south", c1ID, c1InitCon);
 	//spec.setBoundaryCondition("periodic","south", c2ID, c2InitCon);
@@ -1568,7 +1568,7 @@ void testBenBenchmark(int myid){
 	// Adds xenon and iodine species
 	specID = spec.addSpecies(specMM, 0.0, D_spec);
 	spec.setBoundaryCondition("dirichlet", "south", specID, 1.0);
-	spec.setBoundaryCondition("free flow", "north", specID, 1.0);
+	spec.setBoundaryCondition("newmann", "north", specID, 0.0);
 
 	// Set source
 	for (int i = 0; i < xCells; i++){
