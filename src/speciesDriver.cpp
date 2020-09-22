@@ -593,7 +593,6 @@ void speciesDriver::solve(double solveTime){
 		//std::cout << dA  << std::endl;
 		//std::cout << dA.determinant() << std::endl;
 		//std::cout << dA.norm() << std::endl;
-		//std::cout << N0  << std::endl;
 		//matrixInit = true;
 	}
 	N0 = buildInitialConditionVector(augmented);

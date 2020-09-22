@@ -225,7 +225,8 @@ void moleProblem2(int myid){
 				cID = spec.addSpecies(1.0, 0.0, 0.0);
 
 				spec.setBoundaryCondition("dirichlet","west", cID, 1000.0);
-				spec.setBoundaryCondition("free flow","east", cID);
+				spec.setBoundaryCondition("newmann","east", cID, 0.0);
+				//spec.setBoundaryCondition("free flow","east", cID);
 
 				// sets the intial condition and sources
 				for (int i = 0; i < xCells; i++){
@@ -270,7 +271,8 @@ void moleProblem2(int myid){
 							}
 							//linfError = std::max(linfError, std::abs(cSol-cCon)/cSol);
 							outputFile << xc << " " << cSol << " " << cCon << "\n";
-							//std::cout << xc << std::endl; // << cSol << " " << cCon << std::endl;
+							//std::cout << xc << std::endl; 
+							// << cSol << " " << cCon << std::endl;
 							relativeError = std::abs(cSol-cCon)/cSol;
 							maxRelativeError = std::max(maxRelativeError, relativeError);
 							rmse += std::pow(relativeError,2.);
@@ -279,8 +281,10 @@ void moleProblem2(int myid){
 					outputFile << "\n";
 					//std::cout << solverType << " " << dx << " " << dt 
 					//	<< " " << percentError << "\n";
-					printf("%15s %2.3f %4.2E %4.2e %4.2e %3.5f \n", solverType.c_str(), dt, dx*100.,
-							maxRelativeError, std::pow(rmse/float(xCells), 0.5), duration.count()/1.e6);
+					dx = xLength/(double)xCells;
+					printf("%15s %2.3f %4.2E %4.2e %4.2e %3.5f \n", solverType.c_str(), 
+					dt, dx, maxRelativeError, std::pow(rmse/float(xCells), 
+					0.5), duration.count()/1.e6);
 				}
 				spec.clean();
 			}
@@ -330,7 +334,6 @@ void moleProblem3(int myid){
 	//std::vector<double> steps = {400};
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
-	//std::vector<std::string> solvers {"hyperbolic"};
 	double xLength = 100./100.; // m
 	double yLength = 0.0; // m
 	double tEnd = 20.0;	// seconds
@@ -388,8 +391,11 @@ void moleProblem3(int myid){
 				// Set BCs
 				spec.setBoundaryCondition("dirichlet","west", clID, 1000.0);
 				spec.setBoundaryCondition("dirichlet","west", cwID, 0.0);
-				spec.setBoundaryCondition("free flow","east", clID);
-				spec.setBoundaryCondition("free flow","east", cwID);
+				spec.setBoundaryCondition("newmann","east", clID, 0.0);
+				spec.setBoundaryCondition("newmann","east", cwID, 0.0);
+
+				//spec.setBoundaryCondition("free flow","east", clID);
+				//spec.setBoundaryCondition("free flow","east", cwID);
 
 				// sets the intial condition and sources
 				for (int i = 0; i < xCells; i++){
@@ -604,7 +610,7 @@ void moleProblem9(int myid){
 void moleProblem10(int myid){
 	double t;
 	int steps = 10;
-	double depletionTime = 10.*365.; // Days
+	double depletionTime = 500.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 1;
@@ -613,8 +619,8 @@ void moleProblem10(int myid){
 	std::vector<int> ids;
 	std::string path = getDataPath();
 	std::string outputFileName = "moleProblem10.out";
-	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", 
-	"pade-method1", "pade-method2", "taylor"};
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
+	//"pade-method1", "pade-method2", "taylor"};
 	const static IOFormat CSVFormat(FullPrecision, DontAlignCols, ", ", "\n");
 
 	// File names for setting up problems
@@ -648,7 +654,7 @@ void moleProblem10(int myid){
 			outputFile << "solverName: " << solverType << std::endl;
 		}
 		// name of the csv solution output file
-		std::string outputFileNameCSV = "moleProblem10"+solverType+".csv";
+		std::string outputFileNameCSV = "moleProblem10"+solverType+"Steps10.csv";
 		// Sets the matrix exp solver
 		spec.setMatrixExpSolver(solverType);
 		// sets init time
@@ -677,7 +683,7 @@ void moleProblem10(int myid){
 			writeCSV(solData, outputFileNameCSV);
 			double error = computeRelativeRMSE(anaSolution, solData);
 			std::cout << solverType << " " << error << std::endl;
-			assert(error < 1.e-9);
+			assert(error < 1.e-12);
 		}
 		// Cleans species
 		spec.clean();
@@ -737,7 +743,7 @@ void moleProblem11(int myid){
 void moleProblem12(int myid){
 	double t;
 	int steps = 10;
-	double depletionTime = 10.*365.; // Days
+	double depletionTime = 500.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps;
 	int xCells = 1, yCells = 1;
@@ -746,8 +752,8 @@ void moleProblem12(int myid){
 	std::vector<int> ids;
 	std::string path = getDataPath();
 	std::string outputFileName = "moleProblem12.out";
-	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", 
-	"pade-method1", "pade-method2", "taylor"};
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
+	//"pade-method1", "pade-method2", "taylor"};
 
 	// File names for setting up problems
 	std::string speciesNamesFile = path + "MoleP12SpeciesInputNames.dat";
@@ -781,7 +787,7 @@ void moleProblem12(int myid){
 			outputFile << "solverName: " << solverType << std::endl;
 		}
 		// name of the csv solution output file
-		std::string outputFileNameCSV = "moleProblem12"+solverType+".csv";
+		std::string outputFileNameCSV = "moleProblem12"+solverType+"Steps10.csv";
 		// Sets the matrix exp solver
 		spec.setMatrixExpSolver(solverType);
 		// sets init time
@@ -809,7 +815,8 @@ void moleProblem12(int myid){
 			// Write out solution to matrix 
 			writeCSV(solData, outputFileNameCSV);
 			double error = computeRelativeRMSE(anaSolution, solData);
-			assert(error < 1.e-9);
+			std::cout << solverType << " " << error << std::endl;
+			assert(error < 1.e-12);
 		}
 		// Cleans species
 		spec.clean();
@@ -841,6 +848,7 @@ int main(){
 	moleProblem1(myid); 
 	moleProblem2(myid);
 	moleProblem3(myid);
+	
 	//moleProblem4(myid);
 	//moleProblem5(myid);
 	//moleProblem6(myid);
