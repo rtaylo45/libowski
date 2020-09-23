@@ -29,6 +29,7 @@
 #include "vectorTypes.h"
 #include "exception.h"
 #include "ODEintegrator.h"
+#include "massTransfer.h"
 
 class speciesDriver {
 
