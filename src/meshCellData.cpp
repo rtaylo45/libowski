@@ -123,6 +123,15 @@ void meshCell::setNeutronFlux(double phi_){
 }
 
 //*****************************************************************************
+// Sets the cells interfacial area concentration
+//
+// @param intAreaCon_	Interfacial area concentration 1/m
+//*****************************************************************************
+void meshCell::setInterfacialAreaCon(double intAreaCon_){
+	intAreaCon = intAreaCon_;
+}
+
+//*****************************************************************************
 // Gets a pointer to a cell connection
 //
 // @param conID		ID of the connection

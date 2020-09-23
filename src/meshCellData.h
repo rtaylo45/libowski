@@ -44,6 +44,8 @@ class meshCell {
 	double P = -1.;
 	// Scalar neutron flux 1/cm^2/s
 	double phi  = 0.0;
+	// Interfacial area concentration [1/m]
+	double intAreaCon = -1.;
 	// Vector of cell connections
 	std::vector<connection> connections;
 	// Flag to set if the second order convective upwind flux is used
@@ -71,6 +73,8 @@ class meshCell {
 	void setPressure(double);
 	// Sets the cells scalar neutron flux
 	void setNeutronFlux(double);
+	// Sets the cells interfacial area concentration 
+	void setInterfacialAreaCon(double);
 	// Gets a pointer to the connection
 	connection* getConnection(int);
 	// Adds a surface 
