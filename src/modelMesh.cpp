@@ -313,6 +313,21 @@ void modelMesh::setSystemNeutronFlux(double phi){
 		}
 	}
 }
+
+//*****************************************************************************
+// Sets the neutron flux in the whole problem
+//
+// @param intAreaCon	Interfacial area concentration [1/m]
+//*****************************************************************************
+void modelMesh::setSystemInterfacialAreaCon(double intAreaCon){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setInterfacialAreaCon(intAreaCon);
+		}
+	}
+}
+
 //*****************************************************************************
 // Set cell temperature
 //
@@ -347,6 +362,18 @@ void modelMesh::setCellPressure(int i, int j, double pressure){
 void modelMesh::setCellNeutronFlux(int i, int j, double phi){
 	meshCell* cell = getCellByLoc(i,j);
 	cell->setNeutronFlux(phi);
+}
+
+//*****************************************************************************
+// Set cell interfacial area conentration
+//
+// @param i				x cell index
+// @param j				y cell index
+// @param intAreaCon	Interfacial area concentration 1/m
+//*****************************************************************************
+void modelMesh::setCellInterfacialAreaCon(int i, int j, double intAreaCon){
+	meshCell* cell = getCellByLoc(i,j);
+	cell->setInterfacialAreaCon(intAreaCon);
 }
 
 //*****************************************************************************
