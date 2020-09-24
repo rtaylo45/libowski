@@ -32,6 +32,14 @@ class species {
 	// species IDs [cm^2]. These values need to be multiplied by the scalar 
 	// neutron flux in the cell.
 	std::vector<double> transCoeffs;
+	// Array that holds linear source term coefficients. The number of rows 
+	// is equal to the number of species in the system. The number of columns
+	// is a minimal of 1. The second row will hold coefficients for neutron 
+	// induced reactions [cm^2]. These values need to be multiplied by the 
+	// scalar neutron flux before 
+	// The frist row holds
+	// generice source coefficients which the user can define. 
+	ArrayD coeffs;
 
 	// Class methods
 	public:

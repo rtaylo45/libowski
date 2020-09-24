@@ -20,8 +20,7 @@ target_include_directories(liblibowski PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(liblibowski PUBLIC utillibowski)
 
 # Adds sub source directories
-add_subdirectory(massTransferModels)
-
+add_subdirectory(sourceTermPhysicsModels)
 
 # The main program
 add_executable(libowski main.cpp)

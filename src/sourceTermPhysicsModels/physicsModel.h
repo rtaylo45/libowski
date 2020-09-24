@@ -16,7 +16,7 @@ class massTransfer {
 	// Constructor
 	massTransfer();	
 	// Computes the mass transfer coefficient [1/s]
-	virtual getMassTransferCoefficient(
+	virtual getMassTransferCoefficient();
 		
 
 
