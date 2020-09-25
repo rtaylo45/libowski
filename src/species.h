@@ -7,6 +7,7 @@
 #define SPECIES_H
 #include <vector>
 #include <string>
+#include "matrixTypes.h"
 
 class species {
 
@@ -26,19 +27,20 @@ class species {
 	double D = 0.0;
 	// Bool to set if the species is transported with the fluid velocity
 	bool transport = true;
-	// Vector of linear source term coefficients in order of species IDs [1/s]
-	std::vector<double> coeffs;
-	// Vector of linear source terms for neturon induces reactions in order of 
-	// species IDs [cm^2]. These values need to be multiplied by the scalar 
-	// neutron flux in the cell.
-	std::vector<double> transCoeffs;
 	// Array that holds linear source term coefficients. The number of rows 
 	// is equal to the number of species in the system. The number of columns
-	// is a minimal of 1. The second row will hold coefficients for neutron 
-	// induced reactions [cm^2]. These values need to be multiplied by the 
-	// scalar neutron flux before 
-	// The frist row holds
-	// generice source coefficients which the user can define. 
+	// is equal to the number of physics source term models in the system. 
+	// Each column represents a physical model, with coefficients for each 
+	// species in a row column index. Because difference physics can have
+	// different source term models the units in the coefficient array can
+	// very, but will be constant along rows. If the physics model is 
+	// generic the coefficient row will have units of [1/s]. If the physics
+	// is for neutron induced reactions, the coefficients will have units
+	// of [cm^2] and thus will be multiplied by the neutron flux before
+	// being added to the transition matrix. The neutron flux is housed in
+	// the mesh cell data object. These are only two examples. It is done
+	// in this way to separate terms in the sourse term models that are 
+	// constant and those that very as a function of time or space. 
 	ArrayD coeffs;
 
 	// Class methods
@@ -46,6 +48,9 @@ class species {
 	// Constructor
 	species(double, double = 0.0, double = 0.0, std::string = "None", 
 		bool = true);
+
+	// Adds a row of coeffs to the source term array
+	void addCoeffRow(ArrayD);
 
 	// Clean
 	void clean();

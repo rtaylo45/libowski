@@ -9,19 +9,10 @@
 #include "meshCellData.h"
 #include "species.h"
 #include "sys.h"
+#include "matrixTypes.h"
 
 using namespace Eigen;
 
-//*****************************************************************************
-//*****************************************************************************
-void print(std::vector<double> const &a) {
-
-   for(int i=0; i < a.size(); i++){
-      std::cout << a.at(i) << ' ';
-   }
-   std::cout << '\n';
-
-}
 //*****************************************************************************
 // test the init of the mesh class. For now i kinda just test to make sure
 // the function run.
@@ -50,8 +41,8 @@ void testSpeciesDriver(){
 	double spec1MM = 2.0, spec2MM = 3.0;
 	int specID1, specID2;
 	double spec1Con, spec2Con;
-	std::vector<double> spec1Coeffs = {5.0, 10.0};
-	std::vector<double> spec2Coeffs = {6.0, 11.0};
+	ArrayD spec1Coeffs(1,2); spec1Coeffs << 5.0, 10.0;
+	ArrayD spec2Coeffs(1,2); spec2Coeffs << 6.0, 11.0;
 	double spec1S = 50.0, spec2S = 100.0;
 
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -115,8 +106,7 @@ void testAddSpeciesFromFile(){
 		assert(thisSpec->name == testName[i]);
 		assert(thisSpec->MM == testMM[i]);
 		std::cout << thisSpec->name << std::endl;
-		print(thisSpec->coeffs);
-		print(thisSpec->transCoeffs);
+		std::cout << thisSpec->coeffs << std::endl;;
 	}
 }
 

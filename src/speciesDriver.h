@@ -12,6 +12,7 @@
 #include <string>
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
@@ -29,7 +30,6 @@
 #include "vectorTypes.h"
 #include "exception.h"
 #include "ODEintegrator.h"
-#include "massTransfer.h"
 
 class speciesDriver {
 
@@ -70,8 +70,7 @@ class speciesDriver {
 	// Sets the species concentration
 	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms
-	void setSpeciesSource(int, int, int, std::vector<double>, double = 0.0,
-		std::vector<double> = std::vector<double>());
+	void setSpeciesSource(int, int, int, ArrayD, double = 0.0);
 	// Sets the species source terms from files
 	void setSpeciesSourceFromFile(std::string, std::string = "None");
 	// Sets a boundary condition in a cell
@@ -107,9 +106,9 @@ class speciesDriver {
 
 	private:
 	// Sets the decay coefficients
-	void setDecaySource(int i, int j, int specID, std::string, std::vector<double>);
+	void setDecaySource(int i, int j, int specID, std::string, ArrayD);
 	// Sets the transmutation coefficients
-	void setTransSource(int i, int j, int specID, std::string, std::vector<double>);
+	void setTransSource(int i, int j, int specID, std::string, ArrayD);
 	// Solver step
 	int step = 0;
 	// Exponential solver

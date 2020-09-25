@@ -283,8 +283,8 @@ void neutronPrecursors(int myid, std::string solverType){
 	double xc, yc, s, g;
 	MatrixD refSolData;
 	std::vector<int> ids;
-	std::vector<double> decay = {0.0127, 0.0317, 0.115, 0.311, 1.4, 3.87};
-	std::vector<double> beta = {0.06, 0.364, 0.349, 0.628, 0.179, 0.07};
+	ArrayD decay(1,6); decay << 0.0127, 0.0317, 0.115, 0.311, 1.4, 3.87;
+	ArrayD beta(1,6); beta << 0.06, 0.364, 0.349, 0.628, 0.179, 0.07;
 	std::vector<double> bcs = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 	std::string speciesNamesFile = getDataPath() + "neutronPrecursorsInputNames.dat";
 	std::string limiter = "First order upwind";
@@ -346,8 +346,8 @@ void neutronPrecursors(int myid, std::string solverType){
 	for (int id = 0; id < ids.size(); id++){
 		for (int i = 0; i < xCells; i++){
 			for (int j = 0; j < yCells; j++){
-				std::vector<double> coeffs(ids.size(), 0.0);
-				coeffs[id] = -decay[id];
+				ArrayD coeffs = ArrayD::Zero(1, ids.size());
+				coeffs(id) = -decay(id);
 				meshCell* cell = model.getCellByLoc(i,j);
 				double y = cell->y, x = cell->x;
 				double y1 = y - model.dy/2., x1 = x - model.dx/2.;
@@ -364,7 +364,7 @@ void neutronPrecursors(int myid, std::string solverType){
 					s = 0.0;
 				}
 				model.setCellNeutronFlux(i, j, s);
-				spec.setSpeciesSource(i, j, id, coeffs, beta[id]*s);
+				spec.setSpeciesSource(i, j, id, coeffs, beta(id)*s);
 				//std::cout << i << " " << j << " " << id << " " << s << std::endl;
 			}
 		}

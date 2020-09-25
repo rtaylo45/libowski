@@ -207,24 +207,22 @@ std::string speciesDriver::getSpeciesName(int i, int j, int specID){
 }
 
 //*****************************************************************************
-// Sets the source terms for a species in a cell
+// Sets general source terms for a species in a cell
 //
 // @param i					x index
 // @param j					y index
 // @param specID			Species ID
-// @param coeffs			A vector of species source coefficients
+// @param coeffs			An array of species source coefficients
 //								[1/s]
-// @param transcoeffs	A vector of species souce coefficients for transmutation
-//								[cm^2]
 // @param s					Constant source in cell [kg/m^3/s]
 //*****************************************************************************
-void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<double>
-      coeffs, double s, std::vector<double> transCoeffs){
-   assert(coeffs.size() == numOfSpecs);
-	if (not transCoeffs.empty()){ assert(transCoeffs.size() == numOfSpecs);};
+void speciesDriver::setSpeciesSource(int i, int j, int specID, ArrayD
+      coeffs, double s){
+   assert(coeffs.cols() == numOfSpecs and coeffs.rows() == 1);
    species* spec = getSpeciesPtr(i, j, specID);
-   spec->coeffs = coeffs;
-	spec->transCoeffs = transCoeffs;
+	std::cout << "adding row" << std::endl;
+	spec->addCoeffRow(coeffs);
+	std::cout << "done adding row" << std::endl;
    spec->s = s;
 }
 
@@ -238,15 +236,15 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 // @param j					y index
 // @param specID			Species ID
 // @param name				Species name
-// @param coeffs			A vector of species source coefficients
+// @param coeffs			An array of species source coefficients
 //								[1/s]
 //*****************************************************************************
 void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
-		std::vector<double> coeffs){
-   assert(coeffs.size() == numOfSpecs);
+		ArrayD coeffs){
    species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
-   spec->coeffs = coeffs;
+	assert(numOfSpecs == coeffs.cols());
+   spec->addCoeffRow(coeffs);
 }
 
 //*****************************************************************************
@@ -263,11 +261,11 @@ void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
 //								[m^2]
 //*****************************************************************************
 void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
-		std::vector<double> coeffs){
-   assert(coeffs.size() == numOfSpecs);
+		ArrayD coeffs){
    species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
-   spec->transCoeffs = coeffs;
+	assert(numOfSpecs == coeffs.cols());
+   spec->addCoeffRow(coeffs);
 }
 
 //*****************************************************************************
@@ -303,7 +301,8 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
 		// Loops thought the lines of the file
 		for (std::string line; getline(infile, line);){
    	   std::istringstream iss(line);
-   	   std::vector<double> coeffVect;
+   	   std::vector<double> v;
+			ArrayD coeffArray;
    	   int l = 0;
 			// Loops though each line to split the string
    	   for (std::string s; iss >> s;){
@@ -313,19 +312,20 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
    	      if (l == 1){name = s;};
 				// the rest of the entries are the source terms
    	      if (l > 1){
-   	         coeffVect.push_back(stod(s));
+   	         v.push_back(stod(s));
    	      }
    	      l++;
    	   }
+			coeffArray = Eigen::Map<Eigen::ArrayXd>(v.data(), v.size()).transpose();	
 
 			// Loop over cells
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				for (int j = 0; j < modelPtr->numOfyCells; j++){
 					if (findex == 0){ 
-						setDecaySource(i, j, specID, name, coeffVect);
+						setDecaySource(i, j, specID, name, coeffArray);
 					}
 					else{
-						setTransSource(i, j, specID, name, coeffVect);
+						setTransSource(i, j, specID, name, coeffArray);
 					}
 				}
 			}
@@ -752,11 +752,11 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				aP += (-a + ab);
 			}
 			// Sets the coefficients for linear source terms
-			if (thisSpecPtr->coeffs.size()){
+			for (int phyModel = 0; phyModel < thisSpecPtr->coeffs.rows(); phyModel++){
 				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
-					coeff = thisSpecPtr->coeffs[specCounter];
-					if (not thisSpecPtr->transCoeffs.empty()){ 
-						coeff += thisSpecPtr->transCoeffs[specCounter]*thisCellPtr->phi;
+					coeff = thisSpecPtr->coeffs(phyModel, specCounter);
+					if (phyModel == 1){ 
+						coeff += thisSpecPtr->coeffs(phyModel, specCounter)*thisCellPtr->phi;
 					}
 					if (specCounter == specID){
 						thisCoeff += coeff;
