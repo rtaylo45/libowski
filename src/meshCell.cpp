@@ -101,7 +101,7 @@ void meshCell::setSpeciesConcentration(double con, int specID){
 // @param pressure	Pressure in Pa
 //*****************************************************************************
 void meshCell::setPressure(double pressure){
-	P = pressure;
+	scalarVariables.setPressure(pressure);
 }
 
 //*****************************************************************************
@@ -110,7 +110,7 @@ void meshCell::setPressure(double pressure){
 // @param temp		Temperature in kelvin
 //*****************************************************************************
 void meshCell::setTemperature(double temp){
-	T = temp;
+	scalarVariables.setTemperature(temp);
 }
 
 //*****************************************************************************
@@ -119,7 +119,7 @@ void meshCell::setTemperature(double temp){
 // @param phi_		Neutron flux in 1/cm^2/s
 //*****************************************************************************
 void meshCell::setNeutronFlux(double phi_){
-	phi = phi_;
+	scalarVariables.setNeutronFlux(phi_);
 }
 
 //*****************************************************************************
@@ -128,7 +128,47 @@ void meshCell::setNeutronFlux(double phi_){
 // @param intAreaCon_	Interfacial area concentration 1/m
 //*****************************************************************************
 void meshCell::setInterfacialAreaCon(double intAreaCon_){
-	intAreaCon = intAreaCon_;
+	scalarVariables.setInterfacialAreaCon(intAreaCon_);
+}
+
+//*****************************************************************************
+// Gets the cells pressure in Pa
+//
+//*****************************************************************************
+double meshCell::getPressure(){
+	return scalarVariables.getPressure();
+}
+
+//*****************************************************************************
+// Gets the cells temperature in kelvin
+//
+//*****************************************************************************
+double meshCell::getTemperature(){
+	return scalarVariables.getTemperature();
+}
+
+//*****************************************************************************
+// Gets the cells scalar neutron flux in 1/cm^2/s
+//
+//*****************************************************************************
+double meshCell::getNeutronFlux(){
+	return scalarVariables.getNeutronFlux();
+}
+
+//*****************************************************************************
+// Gets the cells interfacial area concentration in 1/m
+//
+//*****************************************************************************
+double meshCell::getInterfacialAreaCon(){
+	return scalarVariables.getInterfacialAreaCon();
+}
+
+//*****************************************************************************
+// Gets a pointer to the scalar data object
+//
+//*****************************************************************************
+scalarData* meshCell::getScalarData(){
+	return &scalarVariables;	
 }
 
 //*****************************************************************************

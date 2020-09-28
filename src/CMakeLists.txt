@@ -12,6 +12,7 @@ set(PROJECT_SOURCES
 	ODEintegrator.cpp 
 	cellConnection.cpp
 	surface.cpp
+	scalarData.cpp
 )	
 
 # All sources that also need to be tested in unit tests go into a static library

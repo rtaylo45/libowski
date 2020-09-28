@@ -756,7 +756,8 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
 					coeff = thisSpecPtr->coeffs(phyModel, specCounter);
 					if (phyModel == 1){ 
-						coeff += thisSpecPtr->coeffs(phyModel, specCounter)*thisCellPtr->phi;
+						coeff += thisSpecPtr->coeffs(phyModel, 
+							specCounter)*thisCellPtr->getNeutronFlux();
 					}
 					if (specCounter == specID){
 						thisCoeff += coeff;
