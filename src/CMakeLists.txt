@@ -3,7 +3,7 @@ project(libowski_prog)
 set(PROJECT_SOURCES 
 	mpiProcess.cpp 
 	modelMesh.cpp 
-	meshCellData.cpp
+	meshCell.cpp
 	meshCellFace.cpp 
 	species.cpp 
 	speciesDriver.cpp 

@@ -5,7 +5,7 @@
 //*****************************************************************************
 #ifndef MODELMESH_H
 #define MODELMESH_H
-#include "meshCellData.h"
+#include "meshCell.h"
 #include "meshCellFace.h"
 #include "surface.h"
 #include <vector>

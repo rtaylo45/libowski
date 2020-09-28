@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include "matrixTypes.h"
+#include "physicsModels.h"
 
 class species {
 

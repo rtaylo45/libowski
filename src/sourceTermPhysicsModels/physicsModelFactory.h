@@ -1,20 +1,18 @@
 //*****************************************************************************
-// Author: Zack Taylor 
+// Author: Zack Taylor
 //
-// Gas sparging class that defines volumetric source terms for mass transfer
 //*****************************************************************************
-#ifndef MASSTRANSFER_H 
-#define MASSTRANSFER_H
+#ifndef PHYSICSMODELFACTORY_H
+#define PHYSICSMODELFACTORY_H
+#include <string>
+#include "physicsModelABC.h"
 
 //*****************************************************************************
-// Abstract base for mass transfer models
+// Physics model factory
 //*****************************************************************************
-class massTransfer {
-
-	// Class methods
+class	physicsModelFactory{
 	public:
-	// Constructor
-	massTransfer();	
+	static physicsModels * getPhysicsModel(std::string);
 
 };
 

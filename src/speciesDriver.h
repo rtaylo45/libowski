@@ -20,7 +20,7 @@
 #include <istream>
 #include <filesystem>
 #include "modelMesh.h"
-#include "meshCellData.h"
+#include "meshCell.h"
 #include "meshCellFace.h"
 #include "species.h"
 #include "matrixExponential.h"

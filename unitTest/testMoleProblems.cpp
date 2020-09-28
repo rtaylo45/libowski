@@ -9,7 +9,7 @@
 #include "mpiProcess.h"
 #include "modelMesh.h"
 #include "speciesDriver.h"
-#include "meshCellData.h"
+#include "meshCell.h"
 #include "species.h"
 #include "utilBase.h"
 #include "matrixTypes.h"
