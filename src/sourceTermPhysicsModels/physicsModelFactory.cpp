@@ -10,6 +10,19 @@ physicsModel *physicsModelFactory::getPhysicsModel(std::string type){
 		physicModel = new generic();
 		return physicModel;
 	}
+	else if (type == "neutronInduced"){
+		physicModel = new neutronInducedReactions();
+		return physicModel;
+	}
+	else {
+		std::string errorMessage =
+			" You have selected a physics type that is not\n"
+			" avaliable. Avaliable models are\n\n"
+			" generic\n"
+			" neutronInduced\n";
+		libowskiException::runtimeError(errorMessage);
+		return physicModel;
+	}
 
 	return physicModel;
 

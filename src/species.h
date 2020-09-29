@@ -9,6 +9,7 @@
 #include <string>
 #include "matrixTypes.h"
 #include "physicsModels.h"
+#include "scalarData.h"
 
 class species {
 
@@ -54,10 +55,18 @@ class species {
 		bool = true);
 	// Adds a row of coeffs to the source term array
 	void addCoeffRow(std::vector<double>);
-	// Adds a physics model to the source term coefficient vector
-	void addSourceTerm(physicsModel*);
-
+	// Gets the mass transfer coefficient 
+	double getMassTransferCoeff(int, int, scalarData*);
+	// Adds generic source term
+	void addGenericSourceTerm(std::vector<double>);
+	// Adds neutron induced reactions source term
+	void addNIRSourceTerm(std::vector<double>);
 	// Clean
 	void clean();
+
+	private:
+	// Adds a physics model to the source term coefficient vector
+	void addSourceTerm(physicsModel*);
+	
 };
 #endif

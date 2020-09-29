@@ -47,6 +47,45 @@ void species::addCoeffRow(std::vector<double> v){
 		coeffs = newCoeffs;
 	}
 }
+//**************************************************************************
+// Gets the mass transfer coefficient for a species pair
+//
+// @param otherSpecID	Species ID of the pair combindation
+// @param physicsID		Counter of the physcis model
+//**************************************************************************
+double species::getMassTransferCoeff(int otherSpecID, int physicsID, 
+	scalarData* scalarVariables){
+	physicsModel* model = sourceTerms[physicsID];
+	return model->getMassTransferCoeff(otherSpecID, scalarVariables);
+}
+
+//**************************************************************************
+// Adds a generic source term to the species
+//
+// @param coeffs	Vector of coefficients [1/s]
+//**************************************************************************
+void species::addGenericSourceTerm(std::vector<double> coeffs){
+	// Generate model
+	physicsModel* model = physicsModelFactory::getPhysicsModel("generic");
+	// Set model coefficients
+	model->setModel(coeffs);
+	// Add model 
+	addSourceTerm(model);	
+}
+
+//**************************************************************************
+// Adds a neutron induced source term to the species
+//
+// @param coeffs	Vector of coefficients [cm^2]
+//**************************************************************************
+void species::addNIRSourceTerm(std::vector<double> coeffs){
+	// Generate model
+	physicsModel* model = physicsModelFactory::getPhysicsModel("neutronInduced");
+	// Set model coefficients
+	model->setModel(coeffs);
+	// Add model 
+	addSourceTerm(model);	
+}
 
 //**************************************************************************
 // Addes a source term model 

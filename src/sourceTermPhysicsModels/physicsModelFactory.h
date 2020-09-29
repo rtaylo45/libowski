@@ -5,8 +5,10 @@
 #ifndef PHYSICSMODELFACTORY_H
 #define PHYSICSMODELFACTORY_H
 #include <string>
+#include "exception.h"
 #include "physicsModelABC.h"
 #include "generic.h"
+#include "neutronInducedReactions.h"
 
 //*****************************************************************************
 // Physics model factory

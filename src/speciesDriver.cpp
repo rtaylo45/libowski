@@ -220,7 +220,7 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
       coeffs, double s){
    assert(coeffs.size() == numOfSpecs);
    species* spec = getSpeciesPtr(i, j, specID);
-	spec->addCoeffRow(coeffs);
+	spec->addGenericSourceTerm(coeffs);
    spec->s = s;
 }
 
@@ -242,7 +242,7 @@ void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
    species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
 	assert(numOfSpecs == coeffs.size());
-   spec->addCoeffRow(coeffs);
+   spec->addGenericSourceTerm(coeffs);
 }
 
 //*****************************************************************************
@@ -263,7 +263,7 @@ void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
    species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
 	assert(numOfSpecs == coeffs.size());
-   spec->addCoeffRow(coeffs);
+   spec->addNIRSourceTerm(coeffs);
 }
 
 //*****************************************************************************
@@ -749,13 +749,10 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				aP += (-a + ab);
 			}
 			// Sets the coefficients for linear source terms
-			for (int phyModel = 0; phyModel < thisSpecPtr->coeffs.rows(); phyModel++){
+			for (int phyModel = 0; phyModel < thisSpecPtr->sourceTerms.size(); phyModel++){
 				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
-					coeff = thisSpecPtr->coeffs(phyModel, specCounter);
-					if (phyModel == 1){ 
-						coeff += thisSpecPtr->coeffs(phyModel, 
-							specCounter)*thisCellPtr->getNeutronFlux();
-					}
+					coeff = thisSpecPtr->getMassTransferCoeff(specCounter, phyModel,
+						thisCellPtr->getScalarData());
 					if (specCounter == specID){
 						thisCoeff += coeff;
 					}
