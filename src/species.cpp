@@ -1,5 +1,5 @@
-#include "species.h"
 #include <iostream>
+#include "species.h"
 
 //**************************************************************************
 // Constructor
@@ -47,6 +47,15 @@ void species::addCoeffRow(ArrayD coeffRow){
 }
 
 //**************************************************************************
+// Addes a source term model 
+//
+// @param sourceTermModel	Pointer to physics source term model
+//**************************************************************************
+void species::addSourceTerm(physicsModel* sourceTermModel){
+	sourceTerms.push_back(sourceTermModel);	
+}
+
+//**************************************************************************
 // Clean
 //**************************************************************************
 void species::clean(){
@@ -56,4 +65,8 @@ void species::clean(){
 	D = 0.0;
 	name = "None";
 	coeffs = ArrayD();
+	for (auto p : sourceTerms){
+		delete p;
+	}
+	sourceTerms.clear();
 }

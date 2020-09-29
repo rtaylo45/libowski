@@ -205,6 +205,9 @@ void meshCell::addSurface(int locID){
 // Cleans the species in the cell
 //*****************************************************************************
 void meshCell::cleanSpecies(){
+	for (auto spec : speciesVector){
+		spec.clean();
+	}
 	speciesVector.clear();
 	// loop over cell connections
 	for (int conCount = 0; conCount < connections.size(); conCount ++){

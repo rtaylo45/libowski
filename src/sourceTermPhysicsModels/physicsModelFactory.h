@@ -6,13 +6,14 @@
 #define PHYSICSMODELFACTORY_H
 #include <string>
 #include "physicsModelABC.h"
+#include "generic.h"
 
 //*****************************************************************************
 // Physics model factory
 //*****************************************************************************
 class	physicsModelFactory{
 	public:
-	static physicsModels * getPhysicsModel(std::string);
+	static physicsModel *getPhysicsModel(std::string);
 
 };
 

@@ -43,15 +43,19 @@ class species {
 	// in this way to separate terms in the sourse term models that are 
 	// constant and those that very as a function of time or space. 
 	ArrayD coeffs;
+	// Vector that holds the pointers to the physics models. These models
+	// generate source term coefficients for the transition matrix
+	std::vector<physicsModel*> sourceTerms;
 
 	// Class methods
 	public:
 	// Constructor
 	species(double, double = 0.0, double = 0.0, std::string = "None", 
 		bool = true);
-
 	// Adds a row of coeffs to the source term array
 	void addCoeffRow(ArrayD);
+	// Adds a physics model to the source term coefficient vector
+	void addSourceTerm(physicsModel*);
 
 	// Clean
 	void clean();

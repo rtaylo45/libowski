@@ -3,11 +3,11 @@
 //**************************************************************************
 // Methods for the factory
 //**************************************************************************
-physicsModels *physicsModelFactory::getPhysicsModel(std::string type){
-	physicsModels *physicModel = nullptr;
+physicsModel *physicsModelFactory::getPhysicsModel(std::string type){
+	physicsModel *physicModel = nullptr;
 
 	if (type == "generic"){
-		//physicModel = new generic(meshCell* species*);
+		physicModel = new generic();
 		return physicModel;
 	}
 
