@@ -216,13 +216,11 @@ std::string speciesDriver::getSpeciesName(int i, int j, int specID){
 //								[1/s]
 // @param s					Constant source in cell [kg/m^3/s]
 //*****************************************************************************
-void speciesDriver::setSpeciesSource(int i, int j, int specID, ArrayD
+void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<double>
       coeffs, double s){
-   assert(coeffs.cols() == numOfSpecs and coeffs.rows() == 1);
+   assert(coeffs.size() == numOfSpecs);
    species* spec = getSpeciesPtr(i, j, specID);
-	std::cout << "adding row" << std::endl;
 	spec->addCoeffRow(coeffs);
-	std::cout << "done adding row" << std::endl;
    spec->s = s;
 }
 
@@ -240,10 +238,10 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, ArrayD
 //								[1/s]
 //*****************************************************************************
 void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
-		ArrayD coeffs){
+		std::vector<double> coeffs){
    species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
-	assert(numOfSpecs == coeffs.cols());
+	assert(numOfSpecs == coeffs.size());
    spec->addCoeffRow(coeffs);
 }
 
@@ -258,13 +256,13 @@ void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
 // @param specID			Species ID
 // @param name				Species name
 // @param coeffs			A vector of species source coefficients
-//								[m^2]
+//								[cm^2]
 //*****************************************************************************
 void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
-		ArrayD coeffs){
+		std::vector<double> coeffs){
    species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
-	assert(numOfSpecs == coeffs.cols());
+	assert(numOfSpecs == coeffs.size());
    spec->addCoeffRow(coeffs);
 }
 
@@ -316,16 +314,15 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
    	      }
    	      l++;
    	   }
-			coeffArray = Eigen::Map<Eigen::ArrayXd>(v.data(), v.size()).transpose();	
 
 			// Loop over cells
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				for (int j = 0; j < modelPtr->numOfyCells; j++){
 					if (findex == 0){ 
-						setDecaySource(i, j, specID, name, coeffArray);
+						setDecaySource(i, j, specID, name, v);
 					}
 					else{
-						setTransSource(i, j, specID, name, coeffArray);
+						setTransSource(i, j, specID, name, v);
 					}
 				}
 			}

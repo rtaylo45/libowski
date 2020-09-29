@@ -53,7 +53,7 @@ void moleProblem1(int myid){
 	double maxRelativeError = 0.0, relativeError = 0.0, rmse = 0.0;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
-	ArrayD cCoeffs(1,1); cCoeffs << -lambda;
+	std::vector<double> cCoeffs = {-lambda};
 	// Sets the ouput file name
 	std::ofstream outputFile;
 	outputFileName = "moleProblem1.out";
@@ -186,7 +186,7 @@ void moleProblem2(int myid){
 	double maxRelativeError = 0.0, relativeError = 0.0, rmse = 0.0;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
-	ArrayD ccoeffs(1,1); ccoeffs << -lambda;
+	std::vector<double> ccoeffs = {-lambda};
 	// sets the ouput file name
 	std::ofstream outputFile;
 	outputFileName = "moleproblem2.out";
@@ -345,8 +345,8 @@ void moleProblem3(int myid){
 	double maxRelativeError = 0.0, relativeError = 0.0, rmse = 0.0;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
-	ArrayD clcoeffs(1,2); clcoeffs << -lambda, 0.0;
-	ArrayD cwcoeffs(1,2); cwcoeffs << lambda, 0.0;
+	std::vector<double> clcoeffs = {-lambda, 0.0};
+	std::vector<double> cwcoeffs = {lambda, 0.0};
 	// sets the ouput file name
 	std::ofstream outputFile;
 	outputFileName = "moleproblem3.out";

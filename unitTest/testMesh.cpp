@@ -41,8 +41,8 @@ void testSpeciesDriver(){
 	double spec1MM = 2.0, spec2MM = 3.0;
 	int specID1, specID2;
 	double spec1Con, spec2Con;
-	ArrayD spec1Coeffs(1,2); spec1Coeffs << 5.0, 10.0;
-	ArrayD spec2Coeffs(1,2); spec2Coeffs << 6.0, 11.0;
+	std::vector<double> spec1Coeffs = {5.0, 10.0};
+	std::vector<double> spec2Coeffs = {6.0, 11.0};
 	double spec1S = 50.0, spec2S = 100.0;
 
 	modelMesh model(xCells, yCells, xLength, yLength);

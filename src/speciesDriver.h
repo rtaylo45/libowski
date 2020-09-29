@@ -70,7 +70,7 @@ class speciesDriver {
 	// Sets the species concentration
 	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms
-	void setSpeciesSource(int, int, int, ArrayD, double = 0.0);
+	void setSpeciesSource(int, int, int, std::vector<double>, double = 0.0);
 	// Sets the species source terms from files
 	void setSpeciesSourceFromFile(std::string, std::string = "None");
 	// Sets a boundary condition in a cell
@@ -106,9 +106,9 @@ class speciesDriver {
 
 	private:
 	// Sets the decay coefficients
-	void setDecaySource(int i, int j, int specID, std::string, ArrayD);
+	void setDecaySource(int i, int j, int specID, std::string, std::vector<double>);
 	// Sets the transmutation coefficients
-	void setTransSource(int i, int j, int specID, std::string, ArrayD);
+	void setTransSource(int i, int j, int specID, std::string, std::vector<double>);
 	// Solver step
 	int step = 0;
 	// Exponential solver

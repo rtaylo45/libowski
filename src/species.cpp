@@ -25,7 +25,9 @@ species::species(double molarMass, double initCon, double diffCoeff,
 //
 // @param coeffs	Array of coefficients 
 //**************************************************************************
-void species::addCoeffRow(ArrayD coeffRow){
+void species::addCoeffRow(std::vector<double> v){
+	ArrayD coeffRow;
+	coeffRow = Eigen::Map<Eigen::ArrayXd>(v.data(), v.size()).transpose();	
 	if (coeffs.rows() != 0 and coeffs.cols() != 0){
 		assert(coeffs.cols() == coeffRow.cols() and coeffRow.rows() == 1);
 	}

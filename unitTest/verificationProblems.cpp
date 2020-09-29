@@ -77,9 +77,9 @@ void testProblem1(int myid){
 	double DN1 = 0.0, DN2 = 0.0, DN3 = 0.0;
 	int N1ID, N2ID, N3ID;
 	double N1Con, N2Con, N3Con;
-	ArrayD N1Coeffs(1,3); N1Coeffs << -lambda1, 0.0, lambda3;
-	ArrayD N2Coeffs(1,3); N2Coeffs << lambda1, -lambda2, 0.0;
-	ArrayD N3Coeffs(1,3); N3Coeffs << 0.0, lambda2, -lambda3;
+	std::vector<double> N1Coeffs = {-lambda1, 0.0, lambda3};
+	std::vector<double> N2Coeffs = {lambda1, -lambda2, 0.0};
+	std::vector<double> N3Coeffs = {0.0, lambda2, -lambda3};
 	std::string outputFileName;
 
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -185,8 +185,8 @@ void testProblem2(int myid){
 	double absError, linfError;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
-	ArrayD Ucoeffs(1,2); Ucoeffs << -a, 1.0;
-	ArrayD Vcoeffs(1,2);  Vcoeffs << 0.0, -b;
+	std::vector<double> Ucoeffs = {-a, 1.0};
+	std::vector<double> Vcoeffs = {0.0, -b};
 	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
 		"pade-method1", "pade-method2", "taylor"};
 
@@ -335,8 +335,8 @@ void testProblem2Krylov(int myid){
 	//std::string outputFileName;
 	std::string outputFileName = "problem2Krylov.out";
 	remove(outputFileName.c_str());
-	ArrayD Ucoeffs(1,2); Ucoeffs << -a, 1.0;
-	ArrayD Vcoeffs(1,2);  Vcoeffs << 0.0, -b;
+	std::vector<double> Ucoeffs = {-a, 1.0};
+	std::vector<double> Vcoeffs = {0.0, -b};
 	std::vector<std::string> solvers {"pade-method1", "pade-method2"};
 	//std::vector<std::string> solvers {"pade-method1", "pade-method2", 
 	//		"taylor"};
@@ -491,8 +491,8 @@ void testProblem2IntegratorMethods(int myid){
 	double linfErrorU, linfErrorV;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
-	ArrayD Ucoeffs(1,2); Ucoeffs << -a, 1.0;
-	ArrayD Vcoeffs(1,2); Vcoeffs << 0.0, -b;
+	std::vector<double> Ucoeffs = {-a, 1.0};
+	std::vector<double> Vcoeffs = {0.0, -b};
 	std::vector<std::string> solvers {"BDF4", "BDF5", "BDF6"};
 
 	// Build the Mesh
@@ -632,12 +632,12 @@ void testProblem3(int myid){
 	double a4 = 1.19610E-02, a5 = 3.47340E-03, a6 = 1.22760E-03;
    double lambdaC1 = 0.0125, lambdaC2 = 0.0318, lambdaC3 = 0.109;
 	double lambdaC4 = 0.3170, lambdaC5 = 1.3500, lambdaC6 = 8.640;
-	ArrayD c1Coeffs(1,6); c1Coeffs << -lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0;
-	ArrayD c2Coeffs(1,6); c2Coeffs << 0.0, -lambdaC2, 0.0, 0.0, 0.0, 0.0;
-	ArrayD c3Coeffs(1,6); c3Coeffs << 0.0, 0.0, -lambdaC3, 0.0, 0.0, 0.0;
-	ArrayD c4Coeffs(1,6); c4Coeffs << 0.0, 0.0, 0.0, -lambdaC4, 0.0, 0.0;
-	ArrayD c5Coeffs(1,6); c5Coeffs << 0.0, 0.0, 0.0, 0.0, -lambdaC5, 0.0;
-	ArrayD c6Coeffs(1,6); c6Coeffs << 0.0, 0.0, 0.0, 0.0, 0.0, -lambdaC6;
+	std::vector<double> c1Coeffs = {-lambdaC1, 0.0, 0.0, 0.0, 0.0, 0.0};
+	std::vector<double> c2Coeffs = {0.0, -lambdaC2, 0.0, 0.0, 0.0, 0.0};
+	std::vector<double> c3Coeffs = {0.0, 0.0, -lambdaC3, 0.0, 0.0, 0.0};
+	std::vector<double> c4Coeffs = {0.0, 0.0, 0.0, -lambdaC4, 0.0, 0.0};
+	std::vector<double> c5Coeffs = {0.0, 0.0, 0.0, 0.0, -lambdaC5, 0.0};
+	std::vector<double> c6Coeffs = {0.0, 0.0, 0.0, 0.0, 0.0, -lambdaC6};
 	//std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic"};
 	//std::vector<std::string> solvers {"pade-method1", "pade-method2"};
 	std::vector<std::string> solvers {"CRAM"};
@@ -781,8 +781,8 @@ void testXenonIodineNoFlow(int myid){
 	double N_xe_0 = 0.0, N_I_0 = 0.0;
 	int xenonID, iodineID;
 	double xenonCon, iodineCon;
-	ArrayD xenonCoeffs(1,2); xenonCoeffs << -lambda_xe-sigma_a*flux, lambda_I;
-	ArrayD iodineCoeffs(1,2); iodineCoeffs << 0.0, -lambda_I;
+	std::vector<double> xenonCoeffs = {-lambda_xe-sigma_a*flux, lambda_I};
+	std::vector<double> iodineCoeffs = {0.0, -lambda_I};
 	double xenonS = gamma_xe*Sigma_f*flux;
 	double iodineS = gamma_I*Sigma_f*flux;
 
@@ -864,8 +864,8 @@ void testXenonIodineYFlow(int myid){
 	double N_xe_0 = 0.0, N_I_0 = 0.0;
 	int xenonID, iodineID;
 	double xenonCon, iodineCon, error = 0.0;
-	ArrayD xenonCoeffs(1,2); xenonCoeffs << -lambda_xe-sigma_a*flux, lambda_I;
-	ArrayD iodineCoeffs(1,2); iodineCoeffs << 0.0, -lambda_I;
+	std::vector<double> xenonCoeffs = {-lambda_xe-sigma_a*flux, lambda_I};
+	std::vector<double> iodineCoeffs = {0.0, -lambda_I};
 	double xenonS = gamma_xe*Sigma_f*flux*xenonMM/AvogNum;
 	double iodineS = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
 
@@ -953,8 +953,8 @@ void testXenonIodineXFlow(int myid){
 	int xenonID, iodineID;
 	double xenonCon, iodineCon, error = 0.0;
 	double xenonError, iodineError;
-	ArrayD xenonCoeffs(1,2); xenonCoeffs << -lambda_xe-sigma_a*flux, lambda_I;
-	ArrayD iodineCoeffs(1,2); iodineCoeffs << 0.0, -lambda_I;
+	std::vector<double> xenonCoeffs = {-lambda_xe-sigma_a*flux, lambda_I};
+	std::vector<double> iodineCoeffs = {0.0, -lambda_I};
 	double xenonS = gamma_xe*Sigma_f*flux*xenonMM/AvogNum;
 	double iodineS = gamma_I*Sigma_f*flux*iodineMM/AvogNum;
 
@@ -1108,75 +1108,6 @@ void testDiffusion2D(int myid){
 	spec.clean();
 
 }
-//*****************************************************************************
-// Test benchmark for Ben
-//*****************************************************************************
-void testBenBenchmark(int myid){
-	int xCells = 1, yCells = 100;
-	double xLength = 1.0, yLength = 300.;
-	double yVelocity = 30.0;
-	double specInitCon = 0.0;
-	double specMM = 1.0;
-	double t = 10000000.0;
-   double lambda_spec = -.3;
-	double D_spec = 1.0;
-	double specS = 0.0, x = 0.0;
-	meshCell* cell;
-	int specID, specID2;
-	double specCon;
-	ArrayD specCoeffs(1,1); specCoeffs << lambda_spec;
-
-	// Builds the mesh
-	modelMesh model(xCells, yCells, xLength, yLength);
-	model.addBoundarySurface("south");
-	model.addBoundarySurface("north");
-
-	// Sets the x velocity
-	model.setConstantYVelocity(yVelocity);
-
-	// Sets species driver
-	speciesDriver spec = speciesDriver(&model);
-
-	// Adds xenon and iodine species
-	specID = spec.addSpecies(specMM, 0.0, D_spec);
-	spec.setBoundaryCondition("dirichlet", "south", specID, 1.0);
-	spec.setBoundaryCondition("newmann", "north", specID, 0.0);
-
-	// Set source
-	for (int i = 0; i < xCells; i++){
-		for (int j = 0; j < yCells; j++){
-			cell = model.getCellByLoc(i,j);
-			x = cell->x;
-			specS = (x < 100.) ? sin(M_PI*x/100.) : 0.0;
-			//std::cout << x << " " << specS << std::endl;
-			spec.setSpeciesSource(i, j, specID, specCoeffs, specS);
-		}
-	}
-
-	// Solve with CRAM
-	spec.solve(t);
-
-	std::ofstream outputFile;
-	outputFile.open("benBenchmark.out", std::ios_base::app);
-	outputFile << "Time: "+std::to_string(t)+"\n";
-	// Gets species Concentrations
-	if (myid==0){
-		for (int i = 0; i < xCells; i++){
-			for (int j = 0; j < yCells; j++){
-				specCon = spec.getSpecies(i, j, specID);
-
-				//std::cout << specCon << std::endl;
-				//printf (" %2i %2i %E \n", i, j, specCon);
-				outputFile << i << " " << j << " " << specCon << std::endl;
-			}
-		}
-	}
-
-	
-	model.clean();
-	spec.clean();
-
-}
 
 //*****************************************************************************
 // Main test
@@ -1194,7 +1125,6 @@ int main(){
 	testXenonIodineYFlow(myid);
 	testXenonIodineXFlow(myid);
 	testDiffusion2D(myid);
-	//testBenBenchmark(myid);
 
 	mpi.finalize();
 }

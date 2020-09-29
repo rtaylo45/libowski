@@ -53,7 +53,7 @@ class species {
 	species(double, double = 0.0, double = 0.0, std::string = "None", 
 		bool = true);
 	// Adds a row of coeffs to the source term array
-	void addCoeffRow(ArrayD);
+	void addCoeffRow(std::vector<double>);
 	// Adds a physics model to the source term coefficient vector
 	void addSourceTerm(physicsModel*);
 

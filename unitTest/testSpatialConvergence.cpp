@@ -787,8 +787,8 @@ void problem5(int myid){
 	double absError, runtime;
 	meshCell* cell = nullptr;
 	std::string outputFileName;
-	ArrayD Ucoeffs(1,2); Ucoeffs << -a, 1.0;
-	ArrayD Vcoeffs(1,2); Vcoeffs << 0.0, -b;
+	std::vector<double> Ucoeffs = {-a, 1.0};
+	std::vector<double> Vcoeffs = {0.0, -b};
 	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
 		"pade-method1", "pade-method2", "taylor"};
 

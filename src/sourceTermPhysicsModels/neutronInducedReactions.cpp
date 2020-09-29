@@ -1,24 +1,24 @@
 //*****************************************************************************
 // Author: Zack Taylor 
 //
-//	Defines the generic source term model
+//	Defines the source term for neutron induced reactions
 //*****************************************************************************
-#include "generic.h"
+#include "neutronInducedReactions.h"
 
 //**************************************************************************
 // Constructor
 //
 //**************************************************************************
-generic::generic(){
+neutronInducedReactions::neutronInducedReactions(){
 }
 
 //*****************************************************************************
 // Sets the coefficients for the model
 //
-// @param coefficientVector	Vector of coefficients for the source term [1/s]
+// @param coefficientVector	Vector of cross sections [cm^2]
 //*****************************************************************************
-void generic::setModel(std::vector<double> coefficientVector){
-	coeffs = coefficientVector;
+void neutronInducedReactions::setModel(std::vector<double> coefficientVector){
+	crossSections = coefficientVector;
 }
 
 //*****************************************************************************
@@ -27,6 +27,7 @@ void generic::setModel(std::vector<double> coefficientVector){
 // @param otherSpecID		specID of the mass transfer coefficient to find.
 // @param scalarVariables	Pointer to scalar data object for the mesh cell
 //*****************************************************************************
-double generic::getMassTransferCoeff(int otherSpecID, scalarData* scalarVariables){
-	return coeffs[otherSpecID];
+double neutronInducedReactions::getMassTransferCoeff(int otherSpecID, 
+	scalarData* scalarVariables){
+	return crossSections[otherSpecID]*scalarVariables->getNeutronFlux();
 }

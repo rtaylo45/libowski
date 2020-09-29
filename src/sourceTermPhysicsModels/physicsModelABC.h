@@ -4,14 +4,12 @@
 //*****************************************************************************
 #ifndef PHYSICSMODELABC_H 
 #define PHYSICSMODELABC_H
+#include <vector>
 #include "scalarData.h"
 
 //*****************************************************************************
 // Abstract base for mass transfer models
 //*****************************************************************************
-#include <vector>
-#include "scalarData.h"
-
 class physicsModel {
 
 	// Class methods
@@ -19,12 +17,11 @@ class physicsModel {
 	// Constructor
 	physicsModel();	
 	// Sets parameters for the generic and transmutation physics models
-	virtual void setModel(std::vector<double>) = 0;
+	virtual void setModel(std::vector<double>){};
 	// gets the coefficient
 	virtual double getMassTransferCoeff(int, scalarData*) = 0;
 	// Sets coefficients for the generic and transmutation physics models
-	//virtual void setModel(std::vector<int>, std::vector<double>) = 0;
-
+	virtual void setModel(std::vector<int>, std::vector<double>){};
 
 };
 
