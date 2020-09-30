@@ -29,21 +29,6 @@ class species {
 	double D = 0.0;
 	// Bool to set if the species is transported with the fluid velocity
 	bool transport = true;
-	// Array that holds linear source term coefficients. The number of rows 
-	// is equal to the number of species in the system. The number of columns
-	// is equal to the number of physics source term models in the system. 
-	// Each column represents a physical model, with coefficients for each 
-	// species in a row column index. Because difference physics can have
-	// different source term models the units in the coefficient array can
-	// very, but will be constant along rows. If the physics model is 
-	// generic the coefficient row will have units of [1/s]. If the physics
-	// is for neutron induced reactions, the coefficients will have units
-	// of [cm^2] and thus will be multiplied by the neutron flux before
-	// being added to the transition matrix. The neutron flux is housed in
-	// the mesh cell data object. These are only two examples. It is done
-	// in this way to separate terms in the sourse term models that are 
-	// constant and those that very as a function of time or space. 
-	ArrayD coeffs;
 	// Vector that holds the pointers to the physics models. These models
 	// generate source term coefficients for the transition matrix
 	std::vector<physicsModel*> sourceTerms;

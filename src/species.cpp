@@ -21,33 +21,6 @@ species::species(double molarMass, double initCon, double diffCoeff,
 }
 
 //**************************************************************************
-// Addes a row of source term coefficients to the source term array
-//
-// @param coeffs	Array of coefficients 
-//**************************************************************************
-void species::addCoeffRow(std::vector<double> v){
-	ArrayD coeffRow;
-	coeffRow = Eigen::Map<Eigen::ArrayXd>(v.data(), v.size()).transpose();	
-	if (coeffs.rows() != 0 and coeffs.cols() != 0){
-		assert(coeffs.cols() == coeffRow.cols() and coeffRow.rows() == 1);
-	}
-	// Coefficient array has not been set yet
-	if (coeffs.rows() == 0 and coeffs.cols() == 0){
-		coeffs = coeffRow;
-	}
-	// Coefficient array already has a row of values
-	else{
-		// Define the new coefficient array with 1+ row
-		ArrayD newCoeffs = ArrayD::Zero(coeffs.rows()+1, coeffs.cols());
-		// Sets the new coefficient array with the previous coefficients
-		newCoeffs.topRows(coeffs.rows()) = coeffs;
-		// Adds the new coeff row to the last row of the new coeff array
-		newCoeffs.row(coeffs.rows()) = coeffRow;
-		// Sets the coefficient array to the new coefficients
-		coeffs = newCoeffs;
-	}
-}
-//**************************************************************************
 // Gets the mass transfer coefficient for a species pair
 //
 // @param otherSpecID	Species ID of the pair combindation
@@ -105,7 +78,6 @@ void species::clean(){
 	s = 0.0;
 	D = 0.0;
 	name = "None";
-	coeffs = ArrayD();
 	for (auto p : sourceTerms){
 		delete p;
 	}
