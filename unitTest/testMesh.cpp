@@ -87,9 +87,25 @@ void testSpeciesDriver(){
 void testAddSpeciesFromFile(){
 	int xCells = 1, yCells = 1;
 	double xLength = 1.0, yLength = 1.0;
-	std::vector<int> ids;
+	std::vector<int> ids; std::vector<std::vector<double>> vectDecay;
+	std::vector<std::vector<double>> vectTran;
+	std::vector<double> decayVector;
+	std::vector<double> tranVector;
 	std::vector<std::string> testName = {"U-235", "Xe-135m", "Xe-135", "I-135"};
 	std::vector<double> testMM = {235.0439, 134.9072, 134.9072, 134.91};
+	// Decay vectors
+	std::vector<double> U235Decay = {-3.1209e-17, 0.0, 0.0, 0.0};
+	std::vector<double> Xe135mDecay = {0.0, -0.00075553, 0.0, 4.8381e-06};
+	std::vector<double> Xe135Decay = {0.0, 0.00075326, -2.1066e-05, 2.4468e-05};
+	std::vector<double> I135Decay = {0.0, 0.0, 0.0, -2.9306e-05};
+	vectDecay = {U235Decay, Xe135mDecay, Xe135Decay, I135Decay};
+	// Transition vectors
+	std::vector<double> U235Tran = {0.0, 0.0, 0.0, 0.0};
+	std::vector<double> Xe135mTran = {4.9184e-26, 0.0, 7.3058e-26, 0.0};
+	std::vector<double> Xe135Tran = {9.6002e-26, 0.0, 0.0, 0.0};
+	std::vector<double> I135Tran = {8.8728e-25, 0.0, 1.9667e-31, 0.0};
+	vectTran = {U235Tran, Xe135mTran, Xe135Tran, I135Tran};
+	
 	
 	std::string speciesNamesFile = getDataPath() + "speciesInputNamesSmall.txt";
 	std::string speciesDecayFile = getDataPath() + "speciesInputDecaySmall.txt";
@@ -98,15 +114,26 @@ void testAddSpeciesFromFile(){
 	modelMesh model(xCells, yCells, xLength, yLength);
 	speciesDriver spec = speciesDriver(&model);
 
+	model.setSystemNeutronFlux(1.0);
+
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
 
 	for (int i = 0; i < ids.size(); i++){
 		species* thisSpec = spec.getSpeciesPtr(0, 0, ids[i]);
+		meshCell* cell = model.getCellByLoc(0, 0);
 		assert(thisSpec->name == testName[i]);
 		assert(thisSpec->MM == testMM[i]);
-		std::cout << thisSpec->name << std::endl;
-		std::cout << thisSpec->coeffs << std::endl;;
+		decayVector = vectDecay[i];
+		tranVector = vectTran[i];
+		for (int otherID = 0; otherID < ids.size(); otherID++){
+			double testDecayCoeff = thisSpec->getMassTransferCoeff(otherID, 0, 
+				cell->getScalarData());
+			double testTranCoeff = thisSpec->getMassTransferCoeff(otherID, 1, 
+				cell->getScalarData());
+			assert(testDecayCoeff == decayVector[otherID]);
+			assert(testTranCoeff == tranVector[otherID]);
+		}
 	}
 }
 
