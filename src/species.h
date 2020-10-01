@@ -39,7 +39,7 @@ class species {
 	species(double, double = 0.0, double = 0.0, std::string = "None", 
 		bool = true);
 	// Gets the mass transfer coefficient 
-	double getMassTransferCoeff(int, int, scalarData*);
+	double getTransitionCoeff(int, int, scalarData*);
 	// Adds generic source term
 	void addGenericSourceTerm(std::vector<double>);
 	// Adds neutron induced reactions source term

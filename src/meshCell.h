@@ -71,6 +71,8 @@ class meshCell {
 	void setNeutronFlux(double);
 	// Sets the cells gas interfacial area concentration 
 	void setGasInterfacialAreaCon(double);
+	// Sets the cells wall interfacial area concentration 
+	void setWallInterfacialAreaCon(double);
 	// Gets the cells temperature
 	double getTemperature();
 	// Gets the cells pressure
@@ -79,6 +81,8 @@ class meshCell {
 	double getNeutronFlux();
 	// Gets the cells gas interfacial area concentration 
 	double getGasInterfacialAreaCon();
+	// Gets the cells wall interfacial area concentration 
+	double getWallInterfacialAreaCon();
 	// Gets a pointer to the scalar data object
 	scalarData* getScalarData();
 	// Gets a pointer to the connection

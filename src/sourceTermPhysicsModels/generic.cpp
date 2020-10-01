@@ -27,6 +27,6 @@ void generic::setModel(std::vector<double> coefficientVector){
 // @param otherSpecID		specID of the mass transfer coefficient to find.
 // @param scalarVariables	Pointer to scalar data object for the mesh cell
 //*****************************************************************************
-double generic::getMassTransferCoeff(int otherSpecID, scalarData* scalarVariables){
+double generic::getTransitionCoeff(int otherSpecID, scalarData* scalarVariables){
 	return coeffs[otherSpecID];
 }

@@ -26,10 +26,10 @@ species::species(double molarMass, double initCon, double diffCoeff,
 // @param otherSpecID	Species ID of the pair combindation
 // @param physicsID		Counter of the physcis model
 //**************************************************************************
-double species::getMassTransferCoeff(int otherSpecID, int physicsID, 
+double species::getTransitionCoeff(int otherSpecID, int physicsID, 
 	scalarData* scalarVariables){
 	physicsModel* model = sourceTerms[physicsID];
-	return model->getMassTransferCoeff(otherSpecID, scalarVariables);
+	return model->getTransitionCoeff(otherSpecID, scalarVariables);
 }
 
 //**************************************************************************

@@ -21,7 +21,7 @@ class neutronInducedReactions : public physicsModel {
 	// Sets the coefficients for reaction cross sections
 	void setModel(std::vector<double>);
 	// Gets the mass transfer coefficient
-	double getMassTransferCoeff(int, scalarData*);
+	double getTransitionCoeff(int, scalarData*);
 };
 
 #endif

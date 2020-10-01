@@ -35,7 +35,7 @@ void wallDeposition::setModel(double massTransferCoefficient, int lID,
 // @param otherSpecID		specID of the mass transfer coefficient to find.
 // @param scalarVariables	Pointer to scalar data object for the mesh cell
 //*****************************************************************************
-double wallDeposition::getMassTransferCoeff(int otherSpecID, scalarData* 
+double wallDeposition::getTransitionCoeff(int otherSpecID, scalarData* 
 	scalarVariables){
 	double coeff = 0.0;
 	double wallSurfaceAreaCon = scalarVariables->getWallInterfacialAreaCon();

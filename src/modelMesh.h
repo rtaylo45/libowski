@@ -60,6 +60,8 @@ class modelMesh {
 	void setSystemNeutronFlux(double);
 	// Sets the gas interfacial area concentation in the whole system
 	void setSystemGasInterfacialAreaCon(double);
+	// Sets the wall interfacial area concentation in the whole system
+	void setSystemWallInterfacialAreaCon(double);
 	// Set temperature in a cell
 	void setCellTemperature(int, int, double);
 	// Set pressure in a cell
@@ -68,6 +70,8 @@ class modelMesh {
 	void setCellNeutronFlux(int, int, double);
 	// Sets the gas interfacial area concentation in a cell
 	void setCellGasInterfacialAreaCon(int, int, double);
+	// Sets the wall interfacial area concentation in a cell
+	void setCellWallInterfacialAreaCon(int, int, double);
 	// Adds a physical surface to a cell
 	void addSurface(int, int, std::string);
 	// Adds a physical surface along a boundary

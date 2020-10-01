@@ -27,7 +27,7 @@ void neutronInducedReactions::setModel(std::vector<double> coefficientVector){
 // @param otherSpecID		specID of the mass transfer coefficient to find.
 // @param scalarVariables	Pointer to scalar data object for the mesh cell
 //*****************************************************************************
-double neutronInducedReactions::getMassTransferCoeff(int otherSpecID, 
+double neutronInducedReactions::getTransitionCoeff(int otherSpecID, 
 	scalarData* scalarVariables){
 	return crossSections[otherSpecID]*scalarVariables->getNeutronFlux();
 }

@@ -329,6 +329,20 @@ void modelMesh::setSystemGasInterfacialAreaCon(double intAreaCon){
 }
 
 //*****************************************************************************
+// Sets the surface interfacial area concentration
+//
+// @param intAreaCon	Interfacial area concentration [1/m]
+//*****************************************************************************
+void modelMesh::setSystemWallInterfacialAreaCon(double intAreaCon){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setWallInterfacialAreaCon(intAreaCon);
+		}
+	}
+}
+
+//*****************************************************************************
 // Set cell temperature
 //
 // @param i			x cell index
@@ -374,6 +388,18 @@ void modelMesh::setCellNeutronFlux(int i, int j, double phi){
 void modelMesh::setCellGasInterfacialAreaCon(int i, int j, double intAreaCon){
 	meshCell* cell = getCellByLoc(i,j);
 	cell->setGasInterfacialAreaCon(intAreaCon);
+}
+
+//*****************************************************************************
+// Set cell surface interfacial area conentration 
+//
+// @param i				x cell index
+// @param j				y cell index
+// @param intAreaCon	Interfacial area concentration 1/m
+//*****************************************************************************
+void modelMesh::setCellWallInterfacialAreaCon(int i, int j, double intAreaCon){
+	meshCell* cell = getCellByLoc(i,j);
+	cell->setWallInterfacialAreaCon(intAreaCon);
 }
 
 //*****************************************************************************

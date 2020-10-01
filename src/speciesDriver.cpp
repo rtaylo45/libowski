@@ -799,7 +799,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			// Sets the coefficients for linear source terms
 			for (int phyModel = 0; phyModel < thisSpecPtr->sourceTerms.size(); phyModel++){
 				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
-					coeff = thisSpecPtr->getMassTransferCoeff(specCounter, phyModel,
+					coeff = thisSpecPtr->getTransitionCoeff(specCounter, phyModel,
 						thisCellPtr->getScalarData());
 					if (specCounter == specID){
 						thisCoeff += coeff;

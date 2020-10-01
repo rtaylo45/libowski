@@ -127,9 +127,9 @@ void testAddSpeciesFromFile(){
 		decayVector = vectDecay[i];
 		tranVector = vectTran[i];
 		for (int otherID = 0; otherID < ids.size(); otherID++){
-			double testDecayCoeff = thisSpec->getMassTransferCoeff(otherID, 0, 
+			double testDecayCoeff = thisSpec->getTransitionCoeff(otherID, 0, 
 				cell->getScalarData());
-			double testTranCoeff = thisSpec->getMassTransferCoeff(otherID, 1, 
+			double testTranCoeff = thisSpec->getTransitionCoeff(otherID, 1, 
 				cell->getScalarData());
 			assert(testDecayCoeff == decayVector[otherID]);
 			assert(testTranCoeff == tranVector[otherID]);

@@ -132,6 +132,15 @@ void meshCell::setGasInterfacialAreaCon(double intAreaCon_){
 }
 
 //*****************************************************************************
+// Sets the cells interfacial area concentration for wall surface area
+//
+// @param intAreaCon_	Interfacial area concentration 1/m
+//*****************************************************************************
+void meshCell::setWallInterfacialAreaCon(double intAreaCon_){
+	scalarVariables.setWallInterfacialAreaCon(intAreaCon_);
+}
+
+//*****************************************************************************
 // Gets the cells pressure in Pa
 //
 //*****************************************************************************
@@ -161,6 +170,14 @@ double meshCell::getNeutronFlux(){
 //*****************************************************************************
 double meshCell::getGasInterfacialAreaCon(){
 	return scalarVariables.getGasInterfacialAreaCon();
+}
+
+//*****************************************************************************
+// Gets the cells wall interfacial area concentration in 1/m
+//
+//*****************************************************************************
+double meshCell::getWallInterfacialAreaCon(){
+	return scalarVariables.getWallInterfacialAreaCon();
 }
 
 //*****************************************************************************
