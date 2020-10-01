@@ -38,14 +38,14 @@ class species {
 	// Constructor
 	species(double, double = 0.0, double = 0.0, std::string = "None", 
 		bool = true);
-	// Adds a row of coeffs to the source term array
-	void addCoeffRow(std::vector<double>);
 	// Gets the mass transfer coefficient 
 	double getMassTransferCoeff(int, int, scalarData*);
 	// Adds generic source term
 	void addGenericSourceTerm(std::vector<double>);
 	// Adds neutron induced reactions source term
 	void addNIRSourceTerm(std::vector<double>);
+	// Add wall deposition source term
+	void addWallDepositionSourceTerm(double, int, int, bool);
 	// Clean
 	void clean();
 

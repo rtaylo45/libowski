@@ -267,6 +267,54 @@ void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
 }
 
 //*****************************************************************************
+// Function that sets the wall deposition model for a single cell
+//
+// @param i					x index
+// @param j					y index
+// @param coeffs			A vector of mass transfer coefficients
+// @param liquidIDs		Vector of liquid IDs
+// @param surfaceIDs		Vector of surface IDs must be the same order as 
+//								liquid IDs
+//	@param infSink			Bool for infinite sink assumption [false]
+//*****************************************************************************
+void speciesDriver::setWallDeposition(int i, int j, std::vector<double> coeffs,
+		std::vector<int> liquidIDs, std::vector<int> surfaceIDs, bool infSink){
+	assert(liquidIDs.size() == surfaceIDs.size());
+	assert(liquidIDs.size() == coeffs.size());
+
+	for (int index = 0; index < coeffs.size(); index++){
+		species* specLiq = getSpeciesPtr(i, j, liquidIDs[index]);
+		species* specSurf = getSpeciesPtr(i, j, surfaceIDs[index]);
+		specLiq->addWallDepositionSourceTerm(coeffs[index], liquidIDs[index], 
+			surfaceIDs[index], infSink);
+		specSurf->addWallDepositionSourceTerm(coeffs[index], liquidIDs[index], 
+			surfaceIDs[index], infSink);
+	}
+
+}
+
+//*****************************************************************************
+// Function that sets the wall deposition model for the whole system
+//
+// @param coeffs			A vector of mass transfer coefficients
+// @param liquidIDs		Vector of liquid IDs
+// @param surfaceIDs		Vector of surface IDs must be the same order as 
+//								liquid IDs
+//	@param infSink			Bool for infinite sink assumption [false]
+//*****************************************************************************
+void speciesDriver::setWallDeposition(std::vector<double> coeffs,
+		std::vector<int> liquidIDs, std::vector<int> surfaceIDs, bool infSink){
+
+	// Loop over cells
+	for (int i = 0; i < modelPtr->numOfxCells; i++){
+		for (int j = 0; j < modelPtr->numOfyCells; j++){
+			setWallDeposition(i, j, coeffs, liquidIDs, surfaceIDs, infSink);
+		}
+	}
+
+}
+
+//*****************************************************************************
 // Sets the source terms for a species in the entire problem domain
 //
 // @param decayfname		File location of the decay file

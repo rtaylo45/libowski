@@ -9,6 +9,7 @@
 #include "physicsModelABC.h"
 #include "generic.h"
 #include "neutronInducedReactions.h"
+#include "wallDeposition.h"
 
 //*****************************************************************************
 // Physics model factory

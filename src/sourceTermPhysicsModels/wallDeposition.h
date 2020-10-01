@@ -41,8 +41,10 @@ class wallDeposition : public physicsModel {
 
 	// Class methods
 	public:
+	// Constructor
+	wallDeposition();
 	// Sets the coefficients and ids for the model
-	void setModel(double, int, int, bool = true);
+	void setModel(double, int, int, bool);
 	// Gets the transition coefficient
 	double getMassTransferCoeff(int, scalarData*);
 

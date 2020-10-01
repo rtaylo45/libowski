@@ -14,12 +14,17 @@ physicsModel *physicsModelFactory::getPhysicsModel(std::string type){
 		physicModel = new neutronInducedReactions();
 		return physicModel;
 	}
+	else if (type == "wallDeposition"){
+		physicModel = new wallDeposition();
+		return physicModel;
+	}
 	else {
 		std::string errorMessage =
 			" You have selected a physics type that is not\n"
 			" avaliable. Avaliable models are\n\n"
 			" generic\n"
-			" neutronInduced\n";
+			" neutronInduced\n"
+			" wallDeposition\n";
 		libowskiException::runtimeError(errorMessage);
 		return physicModel;
 	}

@@ -71,6 +71,12 @@ class speciesDriver {
 	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms
 	void setSpeciesSource(int, int, int, std::vector<double>, double = 0.0);
+	// Sets the wall deposition model for the whole sytem
+	void setWallDeposition(std::vector<double>, std::vector<int>, std::vector<int>,
+		bool = false);
+	// Sets the wall deposition model for a cell
+	void setWallDeposition(int, int, std::vector<double>, std::vector<int>, 
+		std::vector<int>, bool = false);
 	// Sets the species source terms from files
 	void setSpeciesSourceFromFile(std::string, std::string = "None");
 	// Sets a boundary condition in a cell
