@@ -39,13 +39,23 @@ void scalarData::setNeutronFlux(double flux){
 }
 
 //*****************************************************************************
-// Sets the interfacial area concentration
+// Sets the interfacial area concentration for gas phase
 //
 // @param a		Interfacial area concentration 1/m
 //*****************************************************************************
-void scalarData::setInterfacialAreaCon(double a){
+void scalarData::setGasInterfacialAreaCon(double a){
 	assert(a >= 0.0);
-	intAreaCon = a;
+	gasIntAreaCon = a;
+}
+
+//*****************************************************************************
+// Sets the interfacial area concentration for wall surface
+//
+// @param a		Interfacial area concentration 1/m
+//*****************************************************************************
+void scalarData::setWallInterfacialAreaCon(double a){
+	assert(a >= 0.0);
+	wallIntAreaCon = a;
 }
 
 //*****************************************************************************
@@ -75,10 +85,18 @@ double scalarData::getNeutronFlux(){
 	return phi;
 }
 //*****************************************************************************
-// Gets the interfacial area concentration in 1/m
+// Gets the interfacial area concentration of gas phase in 1/m
 //
 //*****************************************************************************
-double scalarData::getInterfacialAreaCon(){
-	assert(intAreaCon >= 0.0);
-	return intAreaCon;
+double scalarData::getGasInterfacialAreaCon(){
+	assert(gasIntAreaCon >= 0.0);
+	return gasIntAreaCon;
+}
+//*****************************************************************************
+// Gets the interfacial area concentration wall surface in 1/m
+//
+//*****************************************************************************
+double scalarData::getWallInterfacialAreaCon(){
+	assert(wallIntAreaCon >= 0.0);
+	return wallIntAreaCon;
 }

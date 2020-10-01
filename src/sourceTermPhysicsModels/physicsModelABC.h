@@ -22,6 +22,8 @@ class physicsModel {
 	virtual double getMassTransferCoeff(int, scalarData*) = 0;
 	// Sets coefficients for the generic and transmutation physics models
 	virtual void setModel(std::vector<int>, std::vector<double>){};
+	// Sets coefficients for the wall deposition model
+	virtual void setModel(double, int, int, bool){};
 
 };
 

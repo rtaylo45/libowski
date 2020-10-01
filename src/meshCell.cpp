@@ -123,12 +123,12 @@ void meshCell::setNeutronFlux(double phi_){
 }
 
 //*****************************************************************************
-// Sets the cells interfacial area concentration
+// Sets the cells interfacial area concentration for bubble transport
 //
 // @param intAreaCon_	Interfacial area concentration 1/m
 //*****************************************************************************
-void meshCell::setInterfacialAreaCon(double intAreaCon_){
-	scalarVariables.setInterfacialAreaCon(intAreaCon_);
+void meshCell::setGasInterfacialAreaCon(double intAreaCon_){
+	scalarVariables.setGasInterfacialAreaCon(intAreaCon_);
 }
 
 //*****************************************************************************
@@ -156,11 +156,11 @@ double meshCell::getNeutronFlux(){
 }
 
 //*****************************************************************************
-// Gets the cells interfacial area concentration in 1/m
+// Gets the cells gas interfacial area concentration in 1/m
 //
 //*****************************************************************************
-double meshCell::getInterfacialAreaCon(){
-	return scalarVariables.getInterfacialAreaCon();
+double meshCell::getGasInterfacialAreaCon(){
+	return scalarVariables.getGasInterfacialAreaCon();
 }
 
 //*****************************************************************************

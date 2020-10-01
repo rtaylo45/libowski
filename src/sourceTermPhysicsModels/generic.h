@@ -20,7 +20,7 @@ class generic : public physicsModel {
 	generic();
 	// Sets the coefficients for generic source term.
 	void setModel(std::vector<double>);
-	// Gets the mass transfer coefficient
+	// Gets the transition coefficient
 	double getMassTransferCoeff(int, scalarData*);
 
 };
