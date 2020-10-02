@@ -23,7 +23,7 @@ class physicsModel {
 	// Sets coefficients for the generic and transmutation physics models
 	virtual void setModel(std::vector<int>, std::vector<double>){};
 	// Sets coefficients for the wall deposition model
-	virtual void setModel(double, int, int, bool){};
+	virtual void setModel(double, int, int, int, bool){};
 
 };
 

@@ -65,12 +65,12 @@ void species::addNIRSourceTerm(std::vector<double> coeffs){
 //
 // @param coeffs	Vector of coefficients [cm^2]
 //**************************************************************************
-void species::addWallDepositionSourceTerm(double h, int lID, int sID, bool
-		infSink){
+void species::addWallDepositionSourceTerm(double h, int mID, int lID, 
+		int sID, bool infSink){
 	// Generate model
 	physicsModel* model = physicsModelFactory::getPhysicsModel("wallDeposition");
 	// Set model coefficients
-	model->setModel(h, lID, sID, infSink);
+	model->setModel(h, mID, lID, sID, infSink);
 	// Add model 
 	addSourceTerm(model);	
 }

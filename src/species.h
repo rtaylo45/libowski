@@ -45,7 +45,7 @@ class species {
 	// Adds neutron induced reactions source term
 	void addNIRSourceTerm(std::vector<double>);
 	// Add wall deposition source term
-	void addWallDepositionSourceTerm(double, int, int, bool);
+	void addWallDepositionSourceTerm(double, int, int, int, bool);
 	// Clean
 	void clean();
 

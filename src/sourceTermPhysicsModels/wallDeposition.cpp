@@ -3,6 +3,7 @@
 //
 //*****************************************************************************
 #include "wallDeposition.h"
+#include <iostream>
 
 //**************************************************************************
 // Constructor
@@ -16,14 +17,16 @@ wallDeposition::wallDeposition(){
 //
 // @param massTransferCoefficient	Mass Transfer coefficient to the wall
 //												[m/s]
+//	@param mID								ID for spec that owns me
 // @param lID								ID for the liquid species
 // @param sID								ID for the surface spcies
 // @param infiniteSinkLogic			Logicical for the infinite sink 
 //												assumption
 //**************************************************************************
-void wallDeposition::setModel(double massTransferCoefficient, int lID,
-	int sID, bool infiniteSinkLogic){
+void wallDeposition::setModel(double massTransferCoefficient, int mID,
+	int lID, int sID, bool infiniteSinkLogic){
 	massTransferCoeff = massTransferCoefficient;
+	myID = mID;
 	liquidID = lID;
 	surfaceID = sID;
 	infiniteSink = infiniteSinkLogic;
@@ -40,14 +43,22 @@ double wallDeposition::getTransitionCoeff(int otherSpecID, scalarData*
 	double coeff = 0.0;
 	double wallSurfaceAreaCon = scalarVariables->getWallInterfacialAreaCon();
 
-	if (otherSpecID == surfaceID){
-		coeff = massTransferCoeff*wallSurfaceAreaCon;
+	//	dC_surface/dt = (h*A/V)*(C_liquid - C_surface)
+	if (myID == surfaceID){
+		if (otherSpecID == liquidID){
+			coeff = massTransferCoeff*wallSurfaceAreaCon;
+		}
+		else if (otherSpecID == surfaceID and infiniteSink){
+			coeff = -1.*massTransferCoeff*wallSurfaceAreaCon;
+		}
 	}
-	else if (otherSpecID == liquidID and infiniteSink){
-		coeff = -1.*massTransferCoeff*wallSurfaceAreaCon;
-	}
-	else {
-		coeff = 0.0;
+	else if (myID == liquidID){
+		if (otherSpecID == liquidID){
+			coeff = -1.*massTransferCoeff*wallSurfaceAreaCon;
+		}
+		else if (otherSpecID == surfaceID and infiniteSink){
+			coeff = massTransferCoeff*wallSurfaceAreaCon;
+		}
 	}
 	return coeff;
 }

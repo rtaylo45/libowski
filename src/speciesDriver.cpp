@@ -286,9 +286,10 @@ void speciesDriver::setWallDeposition(int i, int j, std::vector<double> coeffs,
 		species* specLiq = getSpeciesPtr(i, j, liquidIDs[index]);
 		species* specSurf = getSpeciesPtr(i, j, surfaceIDs[index]);
 		specLiq->addWallDepositionSourceTerm(coeffs[index], liquidIDs[index], 
-			surfaceIDs[index], infSink);
-		specSurf->addWallDepositionSourceTerm(coeffs[index], liquidIDs[index], 
-			surfaceIDs[index], infSink);
+			liquidIDs[index], surfaceIDs[index], infSink);
+		specSurf->addWallDepositionSourceTerm(coeffs[index], surfaceIDs[index],
+			liquidIDs[index], surfaceIDs[index], infSink);
+		specSurf->transport = false;
 	}
 
 }

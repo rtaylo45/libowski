@@ -4,9 +4,10 @@
 //	Defines the wall deposition souce term.
 //
 //	Model:
-//		m_dot = (h*A/V)*(C_liquid - C_surface)
+//		m_dot = dC_surface/dt = (h*A/V)*(C_liquid - C_surface)
+//				= dC_liquid/dt = (h*A/V)*(C_surface - C_liquid)
 //
-//		m_dot	 	 = Mass transfer rate [kg/m^3/s] i.e. dC_surface/dt
+//		m_dot	 	 = Mass transfer rate [kg/m^3/s] 
 //		h			 = Mass transfer coefficient [m/s]
 //		A			 = Area of the surface in the cell to which mass transfer is
 //					   taking place [m^2]
@@ -32,6 +33,8 @@ class wallDeposition : public physicsModel {
 	// means that the transfer is from the liquid to the wall. Negative
 	// is from the wall to the liquid
 	double massTransferCoeff;
+	// species ID of the species object that owns me
+	int myID;
 	// Parent species ID, this is the one that is the source term
 	int liquidID;	
 	// Daughter species ID, this would be the wall species ID
@@ -44,7 +47,7 @@ class wallDeposition : public physicsModel {
 	// Constructor
 	wallDeposition();
 	// Sets the coefficients and ids for the model
-	void setModel(double, int, int, bool);
+	void setModel(double, int, int, int, bool);
 	// Gets the transition coefficient
 	double getTransitionCoeff(int, scalarData*);
 
