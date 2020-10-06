@@ -21,6 +21,8 @@ class scalarData {
 	double gasIntAreaCon = -1.;
 	// Interfacial area concentration of the wall surface [1/m]
 	double wallIntAreaCon = -1.;
+	// Gas volume fraction [fraction]
+	double gasVoidFraction = -1.;
 
 	// Member functions
 	public:
@@ -36,6 +38,8 @@ class scalarData {
 	void setGasInterfacialAreaCon(double);
 	// Sets the interfacial area concentration of the wall surface
 	void setWallInterfacialAreaCon(double);
+	// Sets the gas void fraction 
+	void setGasVoidFraction(double);
 	// Gets the temperature
 	double getTemperature();
 	// Gets the pressure
@@ -46,7 +50,8 @@ class scalarData {
 	double getGasInterfacialAreaCon();
 	// Gets the interfacial area conentration of the wall surface
 	double getWallInterfacialAreaCon();
-
+	// Gets the gas void fraction 
+	double getGasVoidFraction();
 
 };
 

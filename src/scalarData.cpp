@@ -59,6 +59,16 @@ void scalarData::setWallInterfacialAreaCon(double a){
 }
 
 //*****************************************************************************
+// Sets the gas void fraction
+//
+// @param fract		Gas void fraction [fraction]
+//*****************************************************************************
+void scalarData::setGasVoidFraction(double fract){
+	assert(fract >= 0.0);
+	gasVoidFraction = fract;
+}
+
+//*****************************************************************************
 // Gets temperature in Kelvin
 //
 //*****************************************************************************
@@ -99,4 +109,12 @@ double scalarData::getGasInterfacialAreaCon(){
 double scalarData::getWallInterfacialAreaCon(){
 	assert(wallIntAreaCon >= 0.0);
 	return wallIntAreaCon;
+}
+//*****************************************************************************
+// Gets the gas void fraction [fraction]
+//
+//*****************************************************************************
+double scalarData::getGasVoidFraction(){
+	assert(gasVoidFraction >= 0.0);
+	return gasVoidFraction;
 }
