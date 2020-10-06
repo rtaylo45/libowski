@@ -141,6 +141,15 @@ void meshCell::setWallInterfacialAreaCon(double intAreaCon_){
 }
 
 //*****************************************************************************
+// Sets the cells gas void fraction
+//
+// @param fract	Gas void fraction
+//*****************************************************************************
+void meshCell::setGasVoidFraction(double fract){
+	scalarVariables.setGasVoidFraction(fract);
+}
+
+//*****************************************************************************
 // Gets the cells pressure in Pa
 //
 //*****************************************************************************
@@ -178,6 +187,14 @@ double meshCell::getGasInterfacialAreaCon(){
 //*****************************************************************************
 double meshCell::getWallInterfacialAreaCon(){
 	return scalarVariables.getWallInterfacialAreaCon();
+}
+
+//*****************************************************************************
+// Gets the cells gas void fraction
+//
+//*****************************************************************************
+double meshCell::getGasVoidFraction(){
+	return scalarVariables.getGasVoidFraction();
 }
 
 //*****************************************************************************

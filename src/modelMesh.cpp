@@ -343,6 +343,20 @@ void modelMesh::setSystemWallInterfacialAreaCon(double intAreaCon){
 }
 
 //*****************************************************************************
+// Sets the gas void fraction
+//
+// @param fract	Gas void fraction
+//*****************************************************************************
+void modelMesh::setSystemGasVoidFraction(double fract){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setGasVoidFraction(fract);
+		}
+	}
+}
+
+//*****************************************************************************
 // Set cell temperature
 //
 // @param i			x cell index
@@ -400,6 +414,18 @@ void modelMesh::setCellGasInterfacialAreaCon(int i, int j, double intAreaCon){
 void modelMesh::setCellWallInterfacialAreaCon(int i, int j, double intAreaCon){
 	meshCell* cell = getCellByLoc(i,j);
 	cell->setWallInterfacialAreaCon(intAreaCon);
+}
+
+//*****************************************************************************
+// Set cell gas void fraction
+//
+// @param i			x cell index
+// @param j			y cell index
+// @param fract	Gas void fraction
+//*****************************************************************************
+void modelMesh::setGasVoidFraction(int i, int j, double fract){
+	meshCell* cell = getCellByLoc(i,j);
+	cell->setGasVoidFraction(fract);
 }
 
 //*****************************************************************************
