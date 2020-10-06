@@ -24,6 +24,8 @@ class physicsModel {
 	virtual void setModel(std::vector<int>, std::vector<double>){};
 	// Sets coefficients for the wall deposition model
 	virtual void setModel(double, int, int, int, bool){};
+	// Sets coefficients for the gas sparging model
+	virtual void setModel(double, double, int, int, int){};
 
 };
 
