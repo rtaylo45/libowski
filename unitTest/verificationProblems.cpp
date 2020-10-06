@@ -1122,8 +1122,8 @@ void testGasTransport(int myid){
 	int steps = 1;
 	double dt = totalTime/steps;
 	std::string limiter = "First order upwind", solverType = "hyperbolic";
-	int liqID, gasID;
-	double liqCon, gasCon, x;
+	int liq1ID, gas1ID, liq2ID, gas2ID;
+	double liq1Con, gas1Con, liq2Con, gas2Con, x;
 	double temperature = 600.0;		// kelvin
 	double gasIntAreaCon = 50.0;		// 1/m
 	double gasVoidFraction = 0.001;	// fraction
@@ -1153,15 +1153,17 @@ void testGasTransport(int myid){
 	spec.setMatrixExpSolver(solverType);
 
 	// Adds gas and liquid spec
-	liqID = spec.addSpecies(1.0, 0.0, 0.0);
-	gasID = spec.addSpecies(1.0, 0.0, 0.0);
+	liq1ID = spec.addSpecies(1.0, 0.0, 0.0);
+	liq2ID = spec.addSpecies(1.0, 0.0, 0.0);
+	gas1ID = spec.addSpecies(1.0, 0.0, 0.0);
+	gas2ID = spec.addSpecies(1.0, 0.0, 0.0);
 
 	// Dirichlet Bc as the pipe inlet. Outflow Bc as the pipe exit
-	spec.setBoundaryCondition("dirichlet","west", {liqID, gasID}, {10.0, 0.0});
-	spec.setBoundaryCondition("newmann","east", {liqID, gasID}, {0.0, 0.0});
+	spec.setBoundaryCondition("dirichlet","west", {liq1ID, liq2ID, gas1ID, gas2ID}, {10.0, 5.0, 0.0, 0.0});
+	spec.setBoundaryCondition("newmann","east", {liq1ID, liq2ID, gas1ID, gas2ID}, {0.0, 0.0, 0.0, 0.0});
 
 	// Adds gas sparging model
-	spec.setGasSparging({k}, {H}, {liqID}, {gasID});
+	spec.setGasSparging({k, 0.5*k}, {H, 1.e-2*H}, {liq1ID, liq2ID}, {gas1ID, gas2ID});
 
 	for (int k = 0; k < steps; k++){
 		t = t + dt;
@@ -1173,11 +1175,14 @@ void testGasTransport(int myid){
 	if (myid==0){
 		for (int i = 0; i < xCells; i++){
 			for (int j = 0; j < yCells; j++){
-				liqCon = spec.getSpecies(i, j, liqID);
-				gasCon = spec.getSpecies(i, j, gasID);
+				liq1Con = spec.getSpecies(i, j, liq1ID);
+				gas1Con = spec.getSpecies(i, j, gas1ID);
+				liq2Con = spec.getSpecies(i, j, liq2ID);
+				gas2Con = spec.getSpecies(i, j, gas2ID);
 				meshCell* cell = model.getCellByLoc(i,j);
 				x = cell->x;
-				std::cout << x << " " << liqCon << " " << gasCon << std::endl;
+				assert(liq1Con < gas1Con);
+				assert(liq2Con < gas2Con);
 			}
 		}
 	}
@@ -1194,15 +1199,15 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	//testProblem1(myid);
-	//testProblem2(myid);
-	//testProblem2Krylov(myid);
-	//testProblem2IntegratorMethods(myid);
-	//testProblem3(myid);
-	//testXenonIodineNoFlow(myid);
-	//testXenonIodineYFlow(myid);
-	//testXenonIodineXFlow(myid);
-	//testDiffusion2D(myid);
+	testProblem1(myid);
+	testProblem2(myid);
+	testProblem2Krylov(myid);
+	testProblem2IntegratorMethods(myid);
+	testProblem3(myid);
+	testXenonIodineNoFlow(myid);
+	testXenonIodineYFlow(myid);
+	testXenonIodineXFlow(myid);
+	testDiffusion2D(myid);
 	testGasTransport(myid);
 
 	mpi.finalize();
