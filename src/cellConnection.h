@@ -5,8 +5,9 @@
 //*****************************************************************************
 #ifndef CELLCONNECTION_H
 #define CELLCONNECTION_H
-#include "meshCellData.h"
+#include "meshCell.h"
 #include "meshCellFace.h"
+#include "surface.h"
 #include <string>
 
 // Forward decleration

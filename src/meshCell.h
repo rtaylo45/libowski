@@ -6,14 +6,16 @@
 //*****************************************************************************
 #ifndef MESHCELLDATA_H
 #define MESHCELLDATA_H
-#include "cellConnection.h"
-#include "meshCellFace.h"
-#include "surface.h"
-#include "species.h"
 #include <vector>
 #include <iostream>
 #include <assert.h>
 #include <string>
+
+#include "cellConnection.h"
+#include "meshCellFace.h"
+#include "surface.h"
+#include "species.h"
+#include "scalarData.h"
 
 // Forward decleration
 class connection;
@@ -38,14 +40,6 @@ class meshCell {
 	double dy = -1.;
 	// cell volume [m^2] because its 2D
 	double volume = 0.0;
-	// Temperature of cell in kelvin
-	double T = -1.;
-	// Presure in Pa
-	double P = -1.;
-	// Scalar neutron flux 1/cm^2/s
-	double phi  = 0.0;
-	// Interfacial area concentration [1/m]
-	double intAreaCon = -1.;
 	// Vector of cell connections
 	std::vector<connection> connections;
 	// Flag to set if the second order convective upwind flux is used
@@ -54,6 +48,8 @@ class meshCell {
 	private:
 	// Vector of the species in the cell
 	std::vector<species> speciesVector;
+	// Scalar data object
+	scalarData scalarVariables;
 
 	public:
 	// Constructor
@@ -73,8 +69,26 @@ class meshCell {
 	void setPressure(double);
 	// Sets the cells scalar neutron flux
 	void setNeutronFlux(double);
-	// Sets the cells interfacial area concentration 
-	void setInterfacialAreaCon(double);
+	// Sets the cells gas interfacial area concentration 
+	void setGasInterfacialAreaCon(double);
+	// Sets the cells wall interfacial area concentration 
+	void setWallInterfacialAreaCon(double);
+	// Sets the cells gas void fraction
+	void setGasVoidFraction(double);
+	// Gets the cells temperature
+	double getTemperature();
+	// Gets the cells pressure
+	double getPressure();
+	// Gets the cells scalar neutron flux
+	double getNeutronFlux();
+	// Gets the cells gas interfacial area concentration 
+	double getGasInterfacialAreaCon();
+	// Gets the cells wall interfacial area concentration 
+	double getWallInterfacialAreaCon();
+	// Gets the cells gas void fraction
+	double getGasVoidFraction();
+	// Gets a pointer to the scalar data object
+	scalarData* getScalarData();
 	// Gets a pointer to the connection
 	connection* getConnection(int);
 	// Adds a surface 

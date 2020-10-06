@@ -9,9 +9,10 @@
 #include "mpiProcess.h"
 #include "modelMesh.h"
 #include "speciesDriver.h"
-#include "meshCellData.h"
+#include "meshCell.h"
 #include "species.h"
 #include "utilBase.h"
+#include "matrixTypes.h"
 
 //*****************************************************************************
 // Mole problem 1
@@ -330,6 +331,7 @@ void moleProblem2(int myid){
 void moleProblem3(int myid){
 	int yCells = 1;
 	std::vector<int> numOfxCells{10, 100, 1000};
+	//std::vector<int> numOfxCells{10};
 	//std::vector<double> steps = {400};
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
@@ -369,8 +371,8 @@ void moleProblem3(int myid){
 			speciesDriver spec = speciesDriver(&model);
 			// set x velocity
 			model.setConstantXVelocity(velocity);
-			// Sets the species matrix exp solver
-			spec.setMatrixExpSolver(solverType);
+			// Sets the interfacial area concentration on the wall
+			model.setSystemWallInterfacialAreaCon(1.0);
 
 			// loops over number of time steps
 			for (double &numofsteps	: steps){
@@ -384,23 +386,25 @@ void moleProblem3(int myid){
 					outputFile << "variables " << "x " << "clSol " << "clLib " << 
 						"cwSol " << "cwLib" << "\n";
 				}
+				// Sets the species matrix exp solver
+				spec.setMatrixExpSolver(solverType);
 				// add specs
-				clID = spec.addSpecies(1.0, 0.0, 0.0, "cliquid", true);
-				cwID = spec.addSpecies(1.0, 0.0, 0.0, "cwall", false);
+				clID = spec.addSpecies(1.0, 0.0, 0.0, "cliquid");
+				cwID = spec.addSpecies(1.0, 0.0, 0.0, "cwall");
 				// Set BCs
 				spec.setBoundaryCondition("dirichlet","west", clID, 1000.0);
 				spec.setBoundaryCondition("dirichlet","west", cwID, 0.0);
 				spec.setBoundaryCondition("newmann","east", clID, 0.0);
 				spec.setBoundaryCondition("newmann","east", cwID, 0.0);
 
+				// Sets the wall deposition model
+				spec.setWallDeposition({lambda}, {clID}, {cwID});
+
 				// sets the intial condition and sources
 				for (int i = 0; i < xCells; i++){
 					for (int j = 0; j < yCells; j++){
 						// calculates the initial concentration
 						spec.setSpeciesCon(i, j, clID, 1000.0);
-						// sets the sources
-						spec.setSpeciesSource(i, j, clID, clcoeffs);
-						spec.setSpeciesSource(i, j, cwID, cwcoeffs);
 					}
 				}
 				t = 0.0;

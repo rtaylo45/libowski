@@ -315,15 +315,43 @@ void modelMesh::setSystemNeutronFlux(double phi){
 }
 
 //*****************************************************************************
-// Sets the neutron flux in the whole problem
+// Sets the gas phase interfacial area concentration
 //
 // @param intAreaCon	Interfacial area concentration [1/m]
 //*****************************************************************************
-void modelMesh::setSystemInterfacialAreaCon(double intAreaCon){
+void modelMesh::setSystemGasInterfacialAreaCon(double intAreaCon){
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
-			cell->setInterfacialAreaCon(intAreaCon);
+			cell->setGasInterfacialAreaCon(intAreaCon);
+		}
+	}
+}
+
+//*****************************************************************************
+// Sets the surface interfacial area concentration
+//
+// @param intAreaCon	Interfacial area concentration [1/m]
+//*****************************************************************************
+void modelMesh::setSystemWallInterfacialAreaCon(double intAreaCon){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setWallInterfacialAreaCon(intAreaCon);
+		}
+	}
+}
+
+//*****************************************************************************
+// Sets the gas void fraction
+//
+// @param fract	Gas void fraction
+//*****************************************************************************
+void modelMesh::setSystemGasVoidFraction(double fract){
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setGasVoidFraction(fract);
 		}
 	}
 }
@@ -365,15 +393,39 @@ void modelMesh::setCellNeutronFlux(int i, int j, double phi){
 }
 
 //*****************************************************************************
-// Set cell interfacial area conentration
+// Set cell interfacial area conentration for gas phase
 //
 // @param i				x cell index
 // @param j				y cell index
 // @param intAreaCon	Interfacial area concentration 1/m
 //*****************************************************************************
-void modelMesh::setCellInterfacialAreaCon(int i, int j, double intAreaCon){
+void modelMesh::setCellGasInterfacialAreaCon(int i, int j, double intAreaCon){
 	meshCell* cell = getCellByLoc(i,j);
-	cell->setInterfacialAreaCon(intAreaCon);
+	cell->setGasInterfacialAreaCon(intAreaCon);
+}
+
+//*****************************************************************************
+// Set cell surface interfacial area conentration 
+//
+// @param i				x cell index
+// @param j				y cell index
+// @param intAreaCon	Interfacial area concentration 1/m
+//*****************************************************************************
+void modelMesh::setCellWallInterfacialAreaCon(int i, int j, double intAreaCon){
+	meshCell* cell = getCellByLoc(i,j);
+	cell->setWallInterfacialAreaCon(intAreaCon);
+}
+
+//*****************************************************************************
+// Set cell gas void fraction
+//
+// @param i			x cell index
+// @param j			y cell index
+// @param fract	Gas void fraction
+//*****************************************************************************
+void modelMesh::setGasVoidFraction(int i, int j, double fract){
+	meshCell* cell = getCellByLoc(i,j);
+	cell->setGasVoidFraction(fract);
 }
 
 //*****************************************************************************
@@ -389,13 +441,14 @@ void modelMesh::setCellInterfacialAreaCon(int i, int j, double intAreaCon){
 //*****************************************************************************
 void modelMesh::addSurface(int i, int j, std::string loc){
 	int locID = -1;
+	meshCell* cell = getCellByLoc(i,j);
+	
 	if (loc == "north"){locID = 0;};
 	if (loc == "south"){locID = 1;};
 	if (loc == "east"){locID = 2;};
 	if (loc == "west"){locID = 3;};
 	assert(locID != -1);
 
-	meshCell* cell = getCellByLoc(i,j);
 	cell->addSurface(locID);
 }
 

@@ -7,6 +7,9 @@
 #define SPECIES_H
 #include <vector>
 #include <string>
+#include "matrixTypes.h"
+#include "physicsModels.h"
+#include "scalarData.h"
 
 class species {
 
@@ -26,20 +29,31 @@ class species {
 	double D = 0.0;
 	// Bool to set if the species is transported with the fluid velocity
 	bool transport = true;
-	// Vector of linear source term coefficients in order of species IDs [1/s]
-	std::vector<double> coeffs;
-	// Vector of linear source terms for neturon induces reactions in order of 
-	// species IDs [cm^2]. These values need to be multiplied by the scalar 
-	// neutron flux in the cell.
-	std::vector<double> transCoeffs;
+	// Vector that holds the pointers to the physics models. These models
+	// generate source term coefficients for the transition matrix
+	std::vector<physicsModel*> sourceTerms;
 
 	// Class methods
 	public:
 	// Constructor
 	species(double, double = 0.0, double = 0.0, std::string = "None", 
 		bool = true);
-
+	// Gets the mass transfer coefficient 
+	double getTransitionCoeff(int, int, scalarData*);
+	// Adds generic source term
+	void addGenericSourceTerm(std::vector<double>);
+	// Adds neutron induced reactions source term
+	void addNIRSourceTerm(std::vector<double>);
+	// Add wall deposition source term
+	void addWallDepositionSourceTerm(double, int, int, int, bool);
+	// Add gas sparging source term
+	void addGasSpargingSourceTerm(double, double, int, int, int);
 	// Clean
 	void clean();
+
+	private:
+	// Adds a physics model to the source term coefficient vector
+	void addSourceTerm(physicsModel*);
+	
 };
 #endif

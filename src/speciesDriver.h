@@ -12,6 +12,7 @@
 #include <string>
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
@@ -19,7 +20,7 @@
 #include <istream>
 #include <filesystem>
 #include "modelMesh.h"
-#include "meshCellData.h"
+#include "meshCell.h"
 #include "meshCellFace.h"
 #include "species.h"
 #include "matrixExponential.h"
@@ -69,8 +70,19 @@ class speciesDriver {
 	// Sets the species concentration
 	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms
-	void setSpeciesSource(int, int, int, std::vector<double>, double = 0.0,
-		std::vector<double> = std::vector<double>());
+	void setSpeciesSource(int, int, int, std::vector<double>, double = 0.0);
+	// Sets the wall deposition model for the whole sytem
+	void setWallDeposition(std::vector<double>, std::vector<int>, std::vector<int>,
+		bool = false);
+	// Sets the gas transport model for the whole system
+	void setGasSparging(std::vector<double>, std::vector<double>, std::vector<int>,
+		std::vector<int>);
+	// Sets the wall deposition model for a cell
+	void setWallDeposition(int, int, std::vector<double>, std::vector<int>, 
+		std::vector<int>, bool = false);
+	// Sets the gas transport model for a cell
+	void setGasSparging(int, int, std::vector<double>, std::vector<double>,
+		std::vector<int>, std::vector<int>);
 	// Sets the species source terms from files
 	void setSpeciesSourceFromFile(std::string, std::string = "None");
 	// Sets a boundary condition in a cell

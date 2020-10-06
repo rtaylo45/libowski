@@ -207,24 +207,20 @@ std::string speciesDriver::getSpeciesName(int i, int j, int specID){
 }
 
 //*****************************************************************************
-// Sets the source terms for a species in a cell
+// Sets general source terms for a species in a cell
 //
 // @param i					x index
 // @param j					y index
 // @param specID			Species ID
-// @param coeffs			A vector of species source coefficients
+// @param coeffs			An array of species source coefficients
 //								[1/s]
-// @param transcoeffs	A vector of species souce coefficients for transmutation
-//								[cm^2]
 // @param s					Constant source in cell [kg/m^3/s]
 //*****************************************************************************
 void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<double>
-      coeffs, double s, std::vector<double> transCoeffs){
+      coeffs, double s){
    assert(coeffs.size() == numOfSpecs);
-	if (not transCoeffs.empty()){ assert(transCoeffs.size() == numOfSpecs);};
    species* spec = getSpeciesPtr(i, j, specID);
-   spec->coeffs = coeffs;
-	spec->transCoeffs = transCoeffs;
+	spec->addGenericSourceTerm(coeffs);
    spec->s = s;
 }
 
@@ -238,15 +234,15 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 // @param j					y index
 // @param specID			Species ID
 // @param name				Species name
-// @param coeffs			A vector of species source coefficients
+// @param coeffs			An array of species source coefficients
 //								[1/s]
 //*****************************************************************************
 void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
 		std::vector<double> coeffs){
-   assert(coeffs.size() == numOfSpecs);
    species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
-   spec->coeffs = coeffs;
+	assert(numOfSpecs == coeffs.size());
+   spec->addGenericSourceTerm(coeffs);
 }
 
 //*****************************************************************************
@@ -260,14 +256,114 @@ void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
 // @param specID			Species ID
 // @param name				Species name
 // @param coeffs			A vector of species source coefficients
-//								[m^2]
+//								[cm^2]
 //*****************************************************************************
 void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
 		std::vector<double> coeffs){
-   assert(coeffs.size() == numOfSpecs);
    species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
-   spec->transCoeffs = coeffs;
+	assert(numOfSpecs == coeffs.size());
+   spec->addNIRSourceTerm(coeffs);
+}
+
+//*****************************************************************************
+// Function that sets the wall deposition model for a single cell
+//
+// @param i					x index
+// @param j					y index
+// @param coeffs			A vector of mass transfer coefficients [m/s]
+// @param liquidIDs		Vector of liquid IDs
+// @param surfaceIDs		Vector of surface IDs must be the same order as 
+//								liquid IDs
+//	@param infSink			Bool for infinite sink assumption [false]
+//*****************************************************************************
+void speciesDriver::setWallDeposition(int i, int j, std::vector<double> coeffs,
+		std::vector<int> liquidIDs, std::vector<int> surfaceIDs, bool infSink){
+	assert(liquidIDs.size() == surfaceIDs.size());
+	assert(liquidIDs.size() == coeffs.size());
+
+	for (int index = 0; index < coeffs.size(); index++){
+		species* specLiq = getSpeciesPtr(i, j, liquidIDs[index]);
+		species* specSurf = getSpeciesPtr(i, j, surfaceIDs[index]);
+		specLiq->addWallDepositionSourceTerm(coeffs[index], liquidIDs[index], 
+			liquidIDs[index], surfaceIDs[index], infSink);
+		specSurf->addWallDepositionSourceTerm(coeffs[index], surfaceIDs[index],
+			liquidIDs[index], surfaceIDs[index], infSink);
+		specSurf->transport = false;
+	}
+
+}
+
+//*****************************************************************************
+// Function that sets the wall deposition model for the whole system
+//
+// @param coeffs			A vector of mass transfer coefficients [m/s]
+// @param liquidIDs		Vector of liquid IDs
+// @param surfaceIDs		Vector of surface IDs must be the same order as 
+//								liquid IDs
+//	@param infSink			Bool for infinite sink assumption [false]
+//*****************************************************************************
+void speciesDriver::setWallDeposition(std::vector<double> coeffs,
+		std::vector<int> liquidIDs, std::vector<int> surfaceIDs, bool infSink){
+
+	// Loop over cells
+	for (int i = 0; i < modelPtr->numOfxCells; i++){
+		for (int j = 0; j < modelPtr->numOfyCells; j++){
+			setWallDeposition(i, j, coeffs, liquidIDs, surfaceIDs, infSink);
+		}
+	}
+
+}
+
+//*****************************************************************************
+// Function that sets the gas sparging model for a single cell
+//
+// @param i					x index
+// @param j					y index
+// @param mCoeffs			A vector of mass transfer coefficients [m/s]
+// @param HCoeffs			A vector of Henry laws coefficients		[mol/m^3/Pa]
+// @param liquidIDs		Vector of liquid IDs
+// @param gasIDs			Vector of gas IDs must be the same order as 
+//								liquid IDs
+//*****************************************************************************
+void speciesDriver::setGasSparging(int i, int j, std::vector<double> mCoeffs,
+		std::vector<double> HCoeffs, std::vector<int> liquidIDs, 
+		std::vector<int> gasIDs){
+	assert(liquidIDs.size() == gasIDs.size());
+	assert(liquidIDs.size() == mCoeffs.size());
+	assert(liquidIDs.size() == HCoeffs.size());
+
+	for (int index = 0; index < mCoeffs.size(); index++){
+		species* specLiq = getSpeciesPtr(i, j, liquidIDs[index]);
+		species* specGas = getSpeciesPtr(i, j, gasIDs[index]);
+		specLiq->addGasSpargingSourceTerm(mCoeffs[index], HCoeffs[index], liquidIDs[index], 
+			liquidIDs[index], gasIDs[index]);
+		specGas->addGasSpargingSourceTerm(mCoeffs[index], HCoeffs[index], gasIDs[index],
+			liquidIDs[index], gasIDs[index]);
+	}
+
+}
+
+//*****************************************************************************
+// Function that sets the gas sparging model for the whole system
+//
+// @param mCoeffs			A vector of mass transfer coefficients [m/s]
+// @param HCoeffs			A vector of Henry laws coefficients		[mol/m^3/Pa]
+// @param liquidIDs		Vector of liquid IDs
+// @param gasIDs			Vector of gas IDs must be the same order as 
+//								liquid IDs
+//*****************************************************************************
+void speciesDriver::setGasSparging(std::vector<double> mCoeffs, 
+		std::vector<double> HCoeffs, std::vector<int> liquidIDs, 
+		std::vector<int> gasIDs){
+
+	// Loop over cells
+	for (int i = 0; i < modelPtr->numOfxCells; i++){
+		for (int j = 0; j < modelPtr->numOfyCells; j++){
+			setGasSparging(i, j, mCoeffs, HCoeffs, liquidIDs, gasIDs);
+		}
+	}
+
 }
 
 //*****************************************************************************
@@ -303,7 +399,8 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
 		// Loops thought the lines of the file
 		for (std::string line; getline(infile, line);){
    	   std::istringstream iss(line);
-   	   std::vector<double> coeffVect;
+   	   std::vector<double> v;
+			ArrayD coeffArray;
    	   int l = 0;
 			// Loops though each line to split the string
    	   for (std::string s; iss >> s;){
@@ -313,7 +410,7 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
    	      if (l == 1){name = s;};
 				// the rest of the entries are the source terms
    	      if (l > 1){
-   	         coeffVect.push_back(stod(s));
+   	         v.push_back(stod(s));
    	      }
    	      l++;
    	   }
@@ -322,10 +419,10 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
 			for (int i = 0; i < modelPtr->numOfxCells; i++){
 				for (int j = 0; j < modelPtr->numOfyCells; j++){
 					if (findex == 0){ 
-						setDecaySource(i, j, specID, name, coeffVect);
+						setDecaySource(i, j, specID, name, v);
 					}
 					else{
-						setTransSource(i, j, specID, name, coeffVect);
+						setTransSource(i, j, specID, name, v);
 					}
 				}
 			}
@@ -752,12 +849,10 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				aP += (-a + ab);
 			}
 			// Sets the coefficients for linear source terms
-			if (thisSpecPtr->coeffs.size()){
+			for (int phyModel = 0; phyModel < thisSpecPtr->sourceTerms.size(); phyModel++){
 				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
-					coeff = thisSpecPtr->coeffs[specCounter];
-					if (not thisSpecPtr->transCoeffs.empty()){ 
-						coeff += thisSpecPtr->transCoeffs[specCounter]*thisCellPtr->phi;
-					}
+					coeff = thisSpecPtr->getTransitionCoeff(specCounter, phyModel,
+						thisCellPtr->getScalarData());
 					if (specCounter == specID){
 						thisCoeff += coeff;
 					}

@@ -1,7 +1,7 @@
 //*****************************************************************************
 // Author: Zack Taylor
 //*****************************************************************************
-#include "meshCellData.h"
+#include "meshCell.h"
 
 //**************************************************************************
 // Constructor
@@ -101,7 +101,7 @@ void meshCell::setSpeciesConcentration(double con, int specID){
 // @param pressure	Pressure in Pa
 //*****************************************************************************
 void meshCell::setPressure(double pressure){
-	P = pressure;
+	scalarVariables.setPressure(pressure);
 }
 
 //*****************************************************************************
@@ -110,7 +110,7 @@ void meshCell::setPressure(double pressure){
 // @param temp		Temperature in kelvin
 //*****************************************************************************
 void meshCell::setTemperature(double temp){
-	T = temp;
+	scalarVariables.setTemperature(temp);
 }
 
 //*****************************************************************************
@@ -119,16 +119,90 @@ void meshCell::setTemperature(double temp){
 // @param phi_		Neutron flux in 1/cm^2/s
 //*****************************************************************************
 void meshCell::setNeutronFlux(double phi_){
-	phi = phi_;
+	scalarVariables.setNeutronFlux(phi_);
 }
 
 //*****************************************************************************
-// Sets the cells interfacial area concentration
+// Sets the cells interfacial area concentration for bubble transport
 //
 // @param intAreaCon_	Interfacial area concentration 1/m
 //*****************************************************************************
-void meshCell::setInterfacialAreaCon(double intAreaCon_){
-	intAreaCon = intAreaCon_;
+void meshCell::setGasInterfacialAreaCon(double intAreaCon_){
+	scalarVariables.setGasInterfacialAreaCon(intAreaCon_);
+}
+
+//*****************************************************************************
+// Sets the cells interfacial area concentration for wall surface area
+//
+// @param intAreaCon_	Interfacial area concentration 1/m
+//*****************************************************************************
+void meshCell::setWallInterfacialAreaCon(double intAreaCon_){
+	scalarVariables.setWallInterfacialAreaCon(intAreaCon_);
+}
+
+//*****************************************************************************
+// Sets the cells gas void fraction
+//
+// @param fract	Gas void fraction
+//*****************************************************************************
+void meshCell::setGasVoidFraction(double fract){
+	scalarVariables.setGasVoidFraction(fract);
+}
+
+//*****************************************************************************
+// Gets the cells pressure in Pa
+//
+//*****************************************************************************
+double meshCell::getPressure(){
+	return scalarVariables.getPressure();
+}
+
+//*****************************************************************************
+// Gets the cells temperature in kelvin
+//
+//*****************************************************************************
+double meshCell::getTemperature(){
+	return scalarVariables.getTemperature();
+}
+
+//*****************************************************************************
+// Gets the cells scalar neutron flux in 1/cm^2/s
+//
+//*****************************************************************************
+double meshCell::getNeutronFlux(){
+	return scalarVariables.getNeutronFlux();
+}
+
+//*****************************************************************************
+// Gets the cells gas interfacial area concentration in 1/m
+//
+//*****************************************************************************
+double meshCell::getGasInterfacialAreaCon(){
+	return scalarVariables.getGasInterfacialAreaCon();
+}
+
+//*****************************************************************************
+// Gets the cells wall interfacial area concentration in 1/m
+//
+//*****************************************************************************
+double meshCell::getWallInterfacialAreaCon(){
+	return scalarVariables.getWallInterfacialAreaCon();
+}
+
+//*****************************************************************************
+// Gets the cells gas void fraction
+//
+//*****************************************************************************
+double meshCell::getGasVoidFraction(){
+	return scalarVariables.getGasVoidFraction();
+}
+
+//*****************************************************************************
+// Gets a pointer to the scalar data object
+//
+//*****************************************************************************
+scalarData* meshCell::getScalarData(){
+	return &scalarVariables;	
 }
 
 //*****************************************************************************
@@ -165,6 +239,9 @@ void meshCell::addSurface(int locID){
 // Cleans the species in the cell
 //*****************************************************************************
 void meshCell::cleanSpecies(){
+	for (auto spec : speciesVector){
+		spec.clean();
+	}
 	speciesVector.clear();
 	// loop over cell connections
 	for (int conCount = 0; conCount < connections.size(); conCount ++){
