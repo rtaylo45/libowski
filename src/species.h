@@ -46,6 +46,8 @@ class species {
 	void addNIRSourceTerm(std::vector<double>);
 	// Add wall deposition source term
 	void addWallDepositionSourceTerm(double, int, int, int, bool);
+	// Add gas sparging source term
+	void addGasSpargingSourceTerm(double, double, int, int, int);
 	// Clean
 	void clean();
 

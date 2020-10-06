@@ -271,7 +271,7 @@ void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
 //
 // @param i					x index
 // @param j					y index
-// @param coeffs			A vector of mass transfer coefficients
+// @param coeffs			A vector of mass transfer coefficients [m/s]
 // @param liquidIDs		Vector of liquid IDs
 // @param surfaceIDs		Vector of surface IDs must be the same order as 
 //								liquid IDs
@@ -297,7 +297,7 @@ void speciesDriver::setWallDeposition(int i, int j, std::vector<double> coeffs,
 //*****************************************************************************
 // Function that sets the wall deposition model for the whole system
 //
-// @param coeffs			A vector of mass transfer coefficients
+// @param coeffs			A vector of mass transfer coefficients [m/s]
 // @param liquidIDs		Vector of liquid IDs
 // @param surfaceIDs		Vector of surface IDs must be the same order as 
 //								liquid IDs
@@ -310,6 +310,57 @@ void speciesDriver::setWallDeposition(std::vector<double> coeffs,
 	for (int i = 0; i < modelPtr->numOfxCells; i++){
 		for (int j = 0; j < modelPtr->numOfyCells; j++){
 			setWallDeposition(i, j, coeffs, liquidIDs, surfaceIDs, infSink);
+		}
+	}
+
+}
+
+//*****************************************************************************
+// Function that sets the gas sparging model for a single cell
+//
+// @param i					x index
+// @param j					y index
+// @param mCoeffs			A vector of mass transfer coefficients [m/s]
+// @param HCoeffs			A vector of Henry laws coefficients		[mol/m^3/Pa]
+// @param liquidIDs		Vector of liquid IDs
+// @param gasIDs			Vector of gas IDs must be the same order as 
+//								liquid IDs
+//*****************************************************************************
+void speciesDriver::setGasSparging(int i, int j, std::vector<double> mCoeffs,
+		std::vector<double> HCoeffs, std::vector<int> liquidIDs, 
+		std::vector<int> gasIDs){
+	assert(liquidIDs.size() == gasIDs.size());
+	assert(liquidIDs.size() == mCoeffs.size());
+	assert(liquidIDs.size() == HCoeffs.size());
+
+	for (int index = 0; index < mCoeffs.size(); index++){
+		species* specLiq = getSpeciesPtr(i, j, liquidIDs[index]);
+		species* specGas = getSpeciesPtr(i, j, gasIDs[index]);
+		specLiq->addGasSpargingSourceTerm(mCoeffs[index], HCoeffs[index], liquidIDs[index], 
+			liquidIDs[index], gasIDs[index]);
+		specGas->addGasSpargingSourceTerm(mCoeffs[index], HCoeffs[index], gasIDs[index],
+			liquidIDs[index], gasIDs[index]);
+	}
+
+}
+
+//*****************************************************************************
+// Function that sets the gas sparging model for the whole system
+//
+// @param mCoeffs			A vector of mass transfer coefficients [m/s]
+// @param HCoeffs			A vector of Henry laws coefficients		[mol/m^3/Pa]
+// @param liquidIDs		Vector of liquid IDs
+// @param gasIDs			Vector of gas IDs must be the same order as 
+//								liquid IDs
+//*****************************************************************************
+void speciesDriver::setGasSparging(std::vector<double> mCoeffs, 
+		std::vector<double> HCoeffs, std::vector<int> liquidIDs, 
+		std::vector<int> gasIDs){
+
+	// Loop over cells
+	for (int i = 0; i < modelPtr->numOfxCells; i++){
+		for (int j = 0; j < modelPtr->numOfyCells; j++){
+			setGasSparging(i, j, mCoeffs, HCoeffs, liquidIDs, gasIDs);
 		}
 	}
 

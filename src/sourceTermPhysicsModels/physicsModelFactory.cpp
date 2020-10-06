@@ -18,6 +18,10 @@ physicsModel *physicsModelFactory::getPhysicsModel(std::string type){
 		physicModel = new wallDeposition();
 		return physicModel;
 	}
+	else if (type == "gasSparging"){
+		physicModel = new gasSparging();
+		return physicModel;
+	}
 	else {
 		std::string errorMessage =
 			" You have selected a physics type that is not\n"

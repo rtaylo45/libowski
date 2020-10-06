@@ -10,6 +10,7 @@
 #include "generic.h"
 #include "neutronInducedReactions.h"
 #include "wallDeposition.h"
+#include "gasSparging.h"
 
 //*****************************************************************************
 // Physics model factory

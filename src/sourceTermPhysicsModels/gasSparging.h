@@ -59,6 +59,7 @@ class gasSparging : public physicsModel {
 	// Daughter species ID, this would be the wall species ID
 	int gasID;
 
+	public:
 	// Class methods
 	gasSparging();
 	// Sets the coefficients and ids for the model

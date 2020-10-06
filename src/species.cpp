@@ -63,7 +63,11 @@ void species::addNIRSourceTerm(std::vector<double> coeffs){
 //**************************************************************************
 // Adds a wall deposition source term to the species
 //
-// @param coeffs	Vector of coefficients [cm^2]
+// @param h				MassTransfer coefficient [m/s]
+// @param mID			My species ID
+// @param lID			ID of the liquid phase species
+// @param sID			ID of the surface species
+// @param infSink		Logical to set if infinite sink assumption
 //**************************************************************************
 void species::addWallDepositionSourceTerm(double h, int mID, int lID, 
 		int sID, bool infSink){
@@ -71,6 +75,26 @@ void species::addWallDepositionSourceTerm(double h, int mID, int lID,
 	physicsModel* model = physicsModelFactory::getPhysicsModel("wallDeposition");
 	// Set model coefficients
 	model->setModel(h, mID, lID, sID, infSink);
+	// Add model 
+	addSourceTerm(model);	
+}
+
+//**************************************************************************
+// Adds a gas sparging source term to the species
+//
+// @param k				MassTransfer coefficient [m/s]
+// @param H				Henrys law constant [mol/m^3/Pa]
+// @param mID			My species ID
+// @param lID			ID of the liquid phase species
+// @param gID			ID of the surface species
+// @param infSink		Logical to set if infinite sink assumption
+//**************************************************************************
+void species::addGasSpargingSourceTerm(double k, double H, int mID, int lID, 
+		int gID){
+	// Generate model
+	physicsModel* model = physicsModelFactory::getPhysicsModel("gasSparging");
+	// Set model coefficients
+	model->setModel(k, H, mID, lID, gID);
 	// Add model 
 	addSourceTerm(model);	
 }
