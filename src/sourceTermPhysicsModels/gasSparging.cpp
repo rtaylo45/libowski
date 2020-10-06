@@ -23,6 +23,7 @@ gasSparging::gasSparging(){
 //**************************************************************************
 void gasSparging::setModel(double massTransferCoefficient, double Hlc, int mID,
 	int lID, int gID){
+	assert(Hlc >= 0.0);
 	massTransferCoeff = massTransferCoefficient;
 	H = Hlc;
 	myID = mID;

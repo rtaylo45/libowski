@@ -40,6 +40,7 @@
 #ifndef PHYSICSMODELGASSPARGING_H
 #define PHYSICSMODELGASSPARGING_H
 #include <vector>
+#include <assert.h>
 #include "physicsModelABC.h"
 #include "constants.h"
 

@@ -65,6 +65,7 @@ void scalarData::setWallInterfacialAreaCon(double a){
 //*****************************************************************************
 void scalarData::setGasVoidFraction(double fract){
 	assert(fract >= 0.0);
+	assert(fract <= 1.0);
 	gasVoidFraction = fract;
 }
 
