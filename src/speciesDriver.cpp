@@ -147,10 +147,13 @@ std::vector<int> speciesDriver::addSpeciesFromFile(std::string fname){
       for (std::string s; iss >> s;){
          result.push_back(s);
       }
-		name = result.at(0); mm = stod(result.at(1)); initCon = stod(result.at(2)); 
-		D = stod(result.at(3));
-		// Adds the species
-		specIDs.push_back(addSpecies(mm, initCon, D, name, true));
+		// Skips comments
+		if (result.at(0) != "#"){
+			name = result.at(0); mm = stod(result.at(1)); initCon = stod(result.at(2)); 
+			D = stod(result.at(3));
+			// Adds the species
+			specIDs.push_back(addSpecies(mm, initCon, D, name, true));
+		}
    }
 	return specIDs;
 }
