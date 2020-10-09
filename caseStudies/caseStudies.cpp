@@ -37,7 +37,7 @@ void singleCellDepletion(int myid, std::string solverType){
 	int xCells = 1, yCells = 1;
 	double xLength = 220.0/1000., yLength = 220.0/1000.;
 	std::vector<int> ids;
-	std::string path = getDataPath();
+	std::string path = getDataPath() + "caseStudy/";
 	std::string outputFileName = "caseStudy1.out";
 	//std::string outputFileNameMatlab = "caseStudy1"+solverType+"Substeps12.csv";
 	std::string outputFileNameMatlab = "caseStudy1"+solverType+".csv";
@@ -69,7 +69,7 @@ void singleCellDepletion(int myid, std::string solverType){
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
 
 	// Get solution
-	readCSV(refSolData, std::string(getDataPath()+"caseStudy1Solution.csv"));
+	readCSV(refSolData, std::string(path+"caseStudy1Solution.csv"));
 
 	outputFile << "solverName: " << solverType << std::endl;
 	outputFile.precision(16); 
@@ -143,14 +143,15 @@ void pipeDepletion(int myid, std::string solverType){
 	double xLength = 1.0, yLength = 6.0;
 	std::vector<int> ids;
 	std::string outputFileName = "caseStudy2.out";
+	std::string path = getDataPath() + "caseStudy/";
 	std::ofstream outputFile;
 	VectorD refSolData;
 	outputFile.open(outputFileName, std::ios_base::app);
 
 	// Files for the source terms and species names	
-	std::string speciesNamesFile = getDataPath() + "speciesInputNames.dat";
-	std::string speciesDecayFile = getDataPath() + "speciesInputDecay.dat";
-	std::string speciesTransFile = getDataPath() + "speciesInputTrans.dat";
+	std::string speciesNamesFile = path + "speciesInputNames.dat";
+	std::string speciesDecayFile = path + "speciesInputDecay.dat";
+	std::string speciesTransFile = path + "speciesInputTrans.dat";
 
 	// Builds the model mesh
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -164,7 +165,7 @@ void pipeDepletion(int myid, std::string solverType){
 	// Sets all the decay and transmutation sources
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
 	VectorD solData = VectorD::Zero(xCells*yCells*ids.size()+1);
-	readCSV(refSolData, std::string(getDataPath()+"caseStudy2Solution.csv"));
+	readCSV(refSolData, std::string(path+"caseStudy2Solution.csv"));
 
 	// Sets the neutron flux
 	for (int i = 0; i < xCells; i++){
@@ -286,7 +287,8 @@ void neutronPrecursors(int myid, std::string solverType){
 	std::vector<double> decay = {0.0127, 0.0317, 0.115, 0.311, 1.4, 3.87};
 	std::vector<double> beta = {0.06, 0.364, 0.349, 0.628, 0.179, 0.07};
 	std::vector<double> bcs = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-	std::string speciesNamesFile = getDataPath() + "neutronPrecursorsInputNames.dat";
+	std::string path = getDataPath() + "caseStudy/";
+	std::string speciesNamesFile = path + "neutronPrecursorsInputNames.dat";
 	std::string limiter = "First order upwind";
 	std::string outputFileName = "caseStudyNeutronPrecursors.out";
 	std::string outputFileNameMatrix = "caseStudyNeutronprecursors"
@@ -333,7 +335,7 @@ void neutronPrecursors(int myid, std::string solverType){
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
 
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
-	readCSV(refSolData, std::string(getDataPath()+
+	readCSV(refSolData, std::string(path +
 		"caseStudyNeutronprecursorsSolution.csv"));
 
 	// Adds the boundary conditions

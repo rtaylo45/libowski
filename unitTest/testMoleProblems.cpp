@@ -617,7 +617,7 @@ void moleProblem10(int myid){
 	double xLength = 1.0, yLength = 4.0;
 	MatrixD anaSolution;
 	std::vector<int> ids;
-	std::string path = getDataPath();
+	std::string path = getDataPath() + "mole/";
 	std::string outputFileName = "moleProblem10.out";
 	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
 	//"pade-method1", "pade-method2", "taylor"};
@@ -750,7 +750,7 @@ void moleProblem12(int myid){
 	double xLength = 1.0, yLength = 4.0;
 	MatrixD anaSolution;
 	std::vector<int> ids;
-	std::string path = getDataPath();
+	std::string path = getDataPath() + "mole/";
 	std::string outputFileName = "moleProblem12.out";
 	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
 	//"pade-method1", "pade-method2", "taylor"};
