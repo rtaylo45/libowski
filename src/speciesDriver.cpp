@@ -129,6 +129,9 @@ int speciesDriver::addSpecies(double molarMass, double initCon,
 
 	// Map the specID to the spec name
 	specNameToID.insert(std::pair<std::string, int>(name, specID));
+	// Makes sure that the species name does not already exist. This would make
+	// the count 2.
+	assert(specNameToID.count(name) == 1);
 
    numOfSpecs++;
    return specID;
@@ -201,6 +204,8 @@ double speciesDriver::getSpecies(int i, int j, int specID){
 // @param name		Species name
 //*****************************************************************************
 int speciesDriver::getSpeciesID(std::string name){
+	// Makes sure the name is in the map
+	assert(specNameToID.count(name) == 1);
 	int id = specNameToID[name];
 	return id;
 }
