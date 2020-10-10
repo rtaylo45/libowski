@@ -112,6 +112,13 @@ void speciesDriver::setFluxLimiter(std::string limiterName){
 //*****************************************************************************
 int speciesDriver::addSpecies(double molarMass, double initCon,
 	double diffCoeff, std::string name, bool transport){
+	// the Species ID
+   int specID = numOfSpecs;
+
+	// Generates default name if none is given
+	if (name == "None"){
+		name = "spec" + std::to_string(specID);
+	}
    for (int i = 0; i < modelPtr->numOfxCells; i++){
       for (int j = 0; j < modelPtr->numOfyCells; j++){
          meshCell* cell = modelPtr->getCellByLoc(i,j);
@@ -119,7 +126,10 @@ int speciesDriver::addSpecies(double molarMass, double initCon,
          cell->addSpecies(molarMass, initCon, diffCoeff, name, transport);
       }
    }
-   int specID = numOfSpecs;
+
+	// Map the specID to the spec name
+	specNameToID.insert(std::pair<std::string, int>(name, specID));
+
    numOfSpecs++;
    return specID;
 }
@@ -182,6 +192,17 @@ double speciesDriver::getSpecies(int i, int j, int specID){
    species* spec = getSpeciesPtr(i, j, specID);
    double specCon = spec->c;
    return specCon;
+}
+
+//*****************************************************************************
+// Gets the species ID for a given species name. If there is not a match
+// then it throws an error
+//
+// @param name		Species name
+//*****************************************************************************
+int speciesDriver::getSpeciesID(std::string name){
+	int id = specNameToID[name];
+	return id;
 }
 
 //*****************************************************************************

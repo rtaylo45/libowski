@@ -47,8 +47,8 @@ void testSpeciesDriver(){
 
 	modelMesh model(xCells, yCells, xLength, yLength);
 	speciesDriver spec = speciesDriver(&model);
-	specID1 = spec.addSpecies(spec1MM, spec1InitCon, 0.0);
-	specID2 = spec.addSpecies(spec2MM, spec2InitCon, 0.0);
+	specID1 = spec.addSpecies(spec1MM, spec1InitCon, 0.0, "spec1");
+	specID2 = spec.addSpecies(spec2MM, spec2InitCon, 0.0, "spec2");
 
 	// Sets sourse terms for the model
 	for (int i = 0; i < xCells; i++){
@@ -75,6 +75,8 @@ void testSpeciesDriver(){
 			assert(spec2->MM == spec2MM);
 		}
 	}
+	assert(specID1 == spec.getSpeciesID("spec1"));
+	assert(specID2 == spec.getSpeciesID("spec2"));
 	
 	model.clean();
 	spec.clean();

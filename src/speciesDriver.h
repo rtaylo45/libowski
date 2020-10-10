@@ -67,6 +67,8 @@ class speciesDriver {
 	double getSpecies(int, int, int);
 	// Gets the species name
 	std::string getSpeciesName(int, int , int);
+	// Get species ID from name
+	int getSpeciesID(std::string);
 	// Sets the species concentration
 	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms
@@ -147,5 +149,7 @@ class speciesDriver {
 	double calcDefCor(meshCell*, connection*, int, double);
 	// Calculates a vector of source terms for the deferred corrections
 	VectorD calcDefSourceVector();
+	// Species name ID map
+	std::map<std::string, int> specNameToID;
 };
 #endif
