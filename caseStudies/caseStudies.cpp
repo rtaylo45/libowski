@@ -432,6 +432,76 @@ void neutronPrecursors(int myid, std::string solverType){
 		writeCSV(solData, outputFileNameMatrix);
 	}
 }
+//*****************************************************************************
+// MSR lump depletion
+//*****************************************************************************
+void msrLumpDepletion(int myid, std::string solverType){
+	double t = 0.0;
+	int steps = 1;
+	double depletionTime = 500.; // Days
+	double totalTime = depletionTime*24.*60.*60.;
+	double dt = totalTime/steps;
+	int xCells = 1, yCells = 1;
+	double xLength = 1., yLength = 1.;
+	std::vector<int> ids;
+	std::string path = getDataPath() + "msr/";
+	std::string outputFileName = "msrDepletion.out";
+	std::ofstream outputFile;
+	outputFile.open(outputFileName, std::ios_base::app);
+	MatrixD refSolData;
+
+	// Sets file paths for the input data	
+	std::string speciesNamesFile = path + "speciesInputNamesMSR.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSR.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSR.dat";
+
+	// Builds the model
+	modelMesh model(xCells, yCells, xLength, yLength);
+
+	// Builds the species object
+	speciesDriver spec = speciesDriver(&model);
+
+	// Sets the neutron flux
+	model.setSystemNeutronFlux(1.e13);
+
+	// Sets the matrix exp solver
+	spec.setMatrixExpSolver(solverType);
+
+	// Adds the speices
+	ids = spec.addSpeciesFromFile(speciesNamesFile);
+
+	// Sets the species sources
+	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
+
+	outputFile << "solverName: " << solverType << std::endl;
+	outputFile.precision(16); 
+
+	// Writes transition matrix and initial condition
+	spec.writeTransitionMatrixToFile("transitionMatrixMSRLumpDepletion.csv");
+	spec.writeInitialConditionToFile("initialConditionMSRLumpDepletion.csv");
+	MatrixD solData = MatrixD::Zero(ids.size()+1,steps);
+
+	// Loops over the time steps to solve
+	for (int k = 0; k < steps; k++){
+		auto start = std::chrono::high_resolution_clock::now();
+		t = t + dt;
+		spec.solve(t);
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+			end - start);
+		if (myid == 0){
+			outputFile << "Time: " << t << std::endl;
+			std::cout << "Time: " << t << " Solve Time: "
+			<< duration.count()/1.e6 << std::endl;
+			for (int id = 0; id < ids.size(); id++){
+				std::string name = spec.getSpeciesName(0, 0, ids[id]);
+				double con = spec.getSpecies(0, 0, ids[id]);
+				std::cout << name << " " << con << std::endl;
+			}
+		}
+	}
+	outputFile << " " << std::endl;
+}
 
 //*****************************************************************************
 // Main test
@@ -442,15 +512,16 @@ int main(){
 	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
 	"pade-method2", "taylor"};
 
-	// Loops over different solvers
-	for (std::string &solverType : solvers){
-		if(myid == 0){std::cout << solverType << std::endl;};
-		singleCellDepletion(myid, solverType);
-		if (solverType != "taylor"){
-			pipeDepletion(myid, solverType);
-		}
-		neutronPrecursors(myid, solverType);
-	}
+	//// Loops over different solvers
+	//for (std::string &solverType : solvers){
+	//	if(myid == 0){std::cout << solverType << std::endl;};
+	//	singleCellDepletion(myid, solverType);
+	//	if (solverType != "taylor"){
+	//		pipeDepletion(myid, solverType);
+	//	}
+	//	neutronPrecursors(myid, solverType);
+	//}
+	msrLumpDepletion(myid, "CRAM");
 
 	mpi.finalize();
 }

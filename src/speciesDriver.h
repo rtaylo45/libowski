@@ -75,18 +75,22 @@ class speciesDriver {
 	void setSpeciesSource(int, int, int, std::vector<double>, double = 0.0);
 	// Sets the wall deposition model for the whole sytem
 	void setWallDeposition(std::vector<double>, std::vector<int>, std::vector<int>,
-		bool = false);
+		std::vector<bool> = {});
 	// Sets the gas transport model for the whole system
 	void setGasSparging(std::vector<double>, std::vector<double>, std::vector<int>,
 		std::vector<int>);
 	// Sets the wall deposition model for a cell
 	void setWallDeposition(int, int, std::vector<double>, std::vector<int>, 
-		std::vector<int>, bool = false);
+		std::vector<int>, std::vector<bool> = {});
 	// Sets the gas transport model for a cell
 	void setGasSparging(int, int, std::vector<double>, std::vector<double>,
 		std::vector<int>, std::vector<int>);
 	// Sets the species source terms from files
 	void setSpeciesSourceFromFile(std::string, std::string = "None");
+	// Sets up gas transport model from a file
+	void setGasSpargingFromFile(std::string);
+	// Sets up wall deposition from a file
+	void setWallDepositionFromFile(std::string);
 	// Sets a boundary condition in a cell
 	void setBoundaryCondition(std::string, std::string, int, double = 0);
 	// Sets a boundary condition in a cell for a list of isotopes

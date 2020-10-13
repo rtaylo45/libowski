@@ -304,20 +304,29 @@ void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
 // @param liquidIDs		Vector of liquid IDs
 // @param surfaceIDs		Vector of surface IDs must be the same order as 
 //								liquid IDs
-//	@param infSink			Bool for infinite sink assumption [false]
+//	@param infSink			Bools for infinite sink assumption [false]
 //*****************************************************************************
 void speciesDriver::setWallDeposition(int i, int j, std::vector<double> coeffs,
-		std::vector<int> liquidIDs, std::vector<int> surfaceIDs, bool infSink){
+		std::vector<int> liquidIDs, std::vector<int> surfaceIDs, 
+		std::vector<bool> infSinks){
+	std::vector<bool> infSinks_;
 	assert(liquidIDs.size() == surfaceIDs.size());
 	assert(liquidIDs.size() == coeffs.size());
+	if (infSinks.size() != 0){
+		assert(infSinks.size() == liquidIDs.size());
+		infSinks_ = infSinks;
+	}
+	else {
+		for (int i = 0; i < coeffs.size(); i++){infSinks_.push_back(false);};
+	}
 
 	for (int index = 0; index < coeffs.size(); index++){
 		species* specLiq = getSpeciesPtr(i, j, liquidIDs[index]);
 		species* specSurf = getSpeciesPtr(i, j, surfaceIDs[index]);
 		specLiq->addWallDepositionSourceTerm(coeffs[index], liquidIDs[index], 
-			liquidIDs[index], surfaceIDs[index], infSink);
+			liquidIDs[index], surfaceIDs[index], infSinks_[index]);
 		specSurf->addWallDepositionSourceTerm(coeffs[index], surfaceIDs[index],
-			liquidIDs[index], surfaceIDs[index], infSink);
+			liquidIDs[index], surfaceIDs[index], infSinks_[index]);
 		specSurf->transport = false;
 	}
 
@@ -330,15 +339,16 @@ void speciesDriver::setWallDeposition(int i, int j, std::vector<double> coeffs,
 // @param liquidIDs		Vector of liquid IDs
 // @param surfaceIDs		Vector of surface IDs must be the same order as 
 //								liquid IDs
-//	@param infSink			Bool for infinite sink assumption [false]
+//	@param infSinks		Bool for infinite sink assumption 
 //*****************************************************************************
 void speciesDriver::setWallDeposition(std::vector<double> coeffs,
-		std::vector<int> liquidIDs, std::vector<int> surfaceIDs, bool infSink){
+		std::vector<int> liquidIDs, std::vector<int> surfaceIDs, std::vector<bool> 
+		infSinks){
 
 	// Loop over cells
 	for (int i = 0; i < modelPtr->numOfxCells; i++){
 		for (int j = 0; j < modelPtr->numOfyCells; j++){
-			setWallDeposition(i, j, coeffs, liquidIDs, surfaceIDs, infSink);
+			setWallDeposition(i, j, coeffs, liquidIDs, surfaceIDs, infSinks);
 		}
 	}
 
@@ -429,7 +439,6 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
 		for (std::string line; getline(infile, line);){
    	   std::istringstream iss(line);
    	   std::vector<double> v;
-			ArrayD coeffArray;
    	   int l = 0;
 			// Loops though each line to split the string
    	   for (std::string s; iss >> s;){
@@ -457,6 +466,92 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
 			}
    	}
 	}
+}
+//*****************************************************************************
+// Sets up gas sparging for species in the entire problem domain
+//
+// @param gasfname		File location of the gas transport file
+//*****************************************************************************
+void speciesDriver::setGasSpargingFromFile(std::string gasfname){
+	int liqID, gasID;
+	double k, H;
+	std::vector<int> liqIDs, gasIDs;
+	std::vector<double> mCoeffs, hCoeffs;
+	// Checks to see if the files exists. throws error if not
+	checkFileExists(gasfname);
+	
+	// Loops thought the lines of the file
+	std::ifstream infile(gasfname);	
+	for (std::string line; getline(infile, line);){
+      std::istringstream iss(line);
+      std::vector<double> v;
+      int l = 0;
+		// Loops though each line to split the string
+      for (std::string s; iss >> s;){
+			// liquid spec name is the first entry
+         if (l == 0){liqID = getSpeciesID(s);};
+			// gas spec name is the second entry
+         if (l == 1){gasID = getSpeciesID(s);};
+			// the third entry is the mass transfer coefficient
+         if (l == 2){k = stod(s);};
+			// the last entry is the hentrys law coefficient
+			if (l == 3){H = stod(s);};
+         l++;
+      }
+		liqIDs.push_back(liqID); gasIDs.push_back(gasID);
+		mCoeffs.push_back(k); hCoeffs.push_back(H);
+
+   }
+	setGasSparging(mCoeffs, hCoeffs, liqIDs, gasIDs);
+}
+
+//*****************************************************************************
+// Sets up wall deposition for species in the entire problem domain
+//
+// @param wallfname		File location of the gas transport file
+//*****************************************************************************
+void speciesDriver::setWallDepositionFromFile(std::string wallfname){
+	int liqID, surfID, integer;
+	double k, H;
+	bool infsink;
+	std::vector<int> liqIDs, surfIDs;
+	std::vector<double> mCoeffs, hCoeffs;
+	std::vector<bool> infSinks;
+	// Checks to see if the files exists. throws error if not
+	checkFileExists(wallfname);
+	
+	// Loops thought the lines of the file
+	std::ifstream infile(wallfname);	
+	for (std::string line; getline(infile, line);){
+      std::istringstream iss(line);
+      std::vector<double> v;
+      int l = 0;
+		// Loops though each line to split the string
+      for (std::string s; iss >> s;){
+			// liquid spec name is the first entry
+         if (l == 0){liqID = getSpeciesID(s);};
+			// surface spec name is the second entry
+         if (l == 1){surfID = getSpeciesID(s);};
+			// the third entry is the mass transfer coefficient
+         if (l == 2){k = stod(s);};
+			// the last entry is integer representing the bool
+			// for the infinite sink assumption. 1 = true, 0 = false
+			if (l == 3){
+				integer = stoi(s);
+				if (integer == 0){
+					infsink = false;
+				}
+				else {
+					infsink = true;
+				}
+			}
+         l++;
+      }
+		liqIDs.push_back(liqID); surfIDs.push_back(surfID);
+		mCoeffs.push_back(k); infSinks.push_back(infsink);
+
+   }
+	setWallDeposition(mCoeffs, liqIDs, surfIDs, infSinks);
 }
 
 //*****************************************************************************
