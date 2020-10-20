@@ -92,7 +92,7 @@ void singleCellDepletion(int myid, std::string solverType){
 			std::cout << "Time: " << t << " Solve Time: "
 			<< duration.count()/1.e6 << std::endl;
 			for (int id = 0; id < ids.size(); id++){
-				std::string name = spec.getSpeciesName(0, 0, ids[id]);
+				std::string name = spec.getSpeciesName(ids[id]);
 				double con = spec.getSpecies(0, 0, ids[id]);
 				outputFile << name << " " << con << std::endl;
 				solData(id, k) = con;
@@ -213,7 +213,7 @@ void pipeDepletion(int myid, std::string solverType){
 			for (int j = 0; j < yCells; j++){
 				// Loops over the species 
 				for (int id = 0; id < ids.size(); id++){
-					std::string name = spec.getSpeciesName(i, j, ids[id]);
+					std::string name = spec.getSpeciesName(ids[id]);
 					double con = spec.getSpecies(i, j, ids[id]);
 					outputFile << i << " " << j << " " << id << " " << name 
 						<< " " << con << std::endl;
@@ -437,23 +437,41 @@ void neutronPrecursors(int myid, std::string solverType){
 //*****************************************************************************
 void msrLumpDepletion(int myid, std::string solverType){
 	double t = 0.0;
-	int steps = 1;
+	int steps = 10;
 	double depletionTime = 500.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
-	double dt = totalTime/steps;
+	double dt = totalTime/steps, solveTime;
 	int xCells = 1, yCells = 1;
-	double xLength = 1., yLength = 1.;
+	double xLength = 1., yLength = 1., xc, yc;
 	std::vector<int> ids;
 	std::string path = getDataPath() + "msr/";
-	std::string outputFileName = "msrDepletion.out";
+	std::string outputFileName = "msrLumpDepletion.out";
+	std::string limiter = "First order upwind";
 	std::ofstream outputFile;
 	outputFile.open(outputFileName, std::ios_base::app);
 	MatrixD refSolData;
+	FILE * pOutputFile;
+	meshCell* cell = nullptr;
+	pOutputFile = fopen(outputFileName.c_str(), "a");
+
+	if (myid == 0){
+		fprintf(pOutputFile, "Solver: %s \n", solverType.c_str());
+		fprintf(pOutputFile, "Total problem time: %4.3e\n", totalTime);
+		fprintf(pOutputFile, "yLength: %4.3e\n", yLength);
+		fprintf(pOutputFile, "xLength: %4.3e\n", xLength);
+		fprintf(pOutputFile, "dt: %8.7e\n", dt);
+		fprintf(pOutputFile, "yCells: %d\n", yCells);
+		fprintf(pOutputFile, "xCells: %d\n", xCells);
+		fprintf(pOutputFile, "%s %s %s %s \n", "variables", 
+			"x", "y", "Name");
+	fclose(pOutputFile);
+	}
 
 	// Sets file paths for the input data	
-	std::string speciesNamesFile = path + "speciesInputNamesMSR.dat";
-	std::string speciesDecayFile = path + "speciesInputDecayMSR.dat";
-	std::string speciesTransFile = path + "speciesInputTransMSR.dat";
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMassTransport.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMassTransport.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMassTransport.dat";
+
 
 	// Builds the model
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -473,15 +491,17 @@ void msrLumpDepletion(int myid, std::string solverType){
 	// Sets the species sources
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
 
-	outputFile << "solverName: " << solverType << std::endl;
-	outputFile.precision(16); 
-
 	// Writes transition matrix and initial condition
 	spec.writeTransitionMatrixToFile("transitionMatrixMSRLumpDepletion.csv");
 	spec.writeInitialConditionToFile("initialConditionMSRLumpDepletion.csv");
-	MatrixD solData = MatrixD::Zero(ids.size()+1,steps);
+	pOutputFile = fopen(outputFileName.c_str(), "a");
+
+	// Gets the solution
+	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
+	readCSV(refSolData, std::string(path + "msrLumpDepletionSolution.csv"));
 
 	// Loops over the time steps to solve
+	double totalSolveTime = 0;
 	for (int k = 0; k < steps; k++){
 		auto start = std::chrono::high_resolution_clock::now();
 		t = t + dt;
@@ -490,17 +510,301 @@ void msrLumpDepletion(int myid, std::string solverType){
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
 			end - start);
 		if (myid == 0){
-			outputFile << "Time: " << t << std::endl;
-			std::cout << "Time: " << t << " Solve Time: "
-			<< duration.count()/1.e6 << std::endl;
+			solveTime = duration.count()/1.e6;
+			totalSolveTime += solveTime;
+
+			cell = model.getCellByLoc(0,0); xc = cell->x; yc = cell->y;
+
+			fprintf(pOutputFile, "time: %5.4e\n", t);
+
 			for (int id = 0; id < ids.size(); id++){
-				std::string name = spec.getSpeciesName(0, 0, ids[id]);
+				std::string name = spec.getSpeciesName(ids[id]);
 				double con = spec.getSpecies(0, 0, ids[id]);
-				std::cout << name << " " << con << std::endl;
+				fprintf(pOutputFile, "%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
+				solData(id, k) = con;
+			}
+			fprintf(pOutputFile, "\n");
+			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
+			double rmse = computeRelativeRMSE(refSolVect, solVect);
+			printf("Solve Step: %d %s Solve Time: %f RMSE %e\n", k, solverType.c_str(), solveTime, rmse);
+		}
+	}
+	if (myid == 0){
+		fprintf(pOutputFile, "end\n");
+		double rmse = computeRelativeRMSE(refSolData, solData);
+		printf("%s Solve Time: %f RMSE %e\n", solverType.c_str(), totalSolveTime, rmse);
+	}
+}
+
+//*****************************************************************************
+// MSR pipe depletion
+//*****************************************************************************
+void msrPipDepletion(int myid, std::string solverType){
+	double t = 0.0;
+	int steps = 5;
+	double xLength = 0.0508, yLength = 1.7018;		// Meters
+	double v_y = 0.25;											// m/s
+	double depletionTime = 50.;							// Days
+	double totalTime = depletionTime*24.*60.*60.;
+	double dt = totalTime/steps, solveTime;
+	int xCells = 1, yCells = 10;
+	double xc, yc;
+	std::vector<int> ids;
+	std::string path = getDataPath() + "msr/";
+	std::string outputFileName = "msrPipDepletion.out";
+	std::ofstream outputFile;
+	outputFile.open(outputFileName, std::ios_base::app);
+	MatrixD refSolData;
+	FILE * pOutputFile;
+	meshCell* cell = nullptr;
+	pOutputFile = fopen(outputFileName.c_str(), "a");
+
+	if (myid == 0){
+		fprintf(pOutputFile, "Solver: %s \n", solverType.c_str());
+		fprintf(pOutputFile, "Total problem time: %4.3e\n", totalTime);
+		fprintf(pOutputFile, "yLength: %4.3e\n", yLength);
+		fprintf(pOutputFile, "xLength: %4.3e\n", xLength);
+		fprintf(pOutputFile, "dt: %8.7e\n", dt);
+		fprintf(pOutputFile, "yCells: %d\n", yCells);
+		fprintf(pOutputFile, "xCells: %d\n", xCells);
+		fprintf(pOutputFile, "%s %s %s %s \n", "variables", 
+			"x", "y", "Name");
+	fclose(pOutputFile);
+	}
+
+	// Sets file paths for the input data	
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMassTransport.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMassTransport.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMassTransport.dat";
+
+
+	// Builds the model
+	modelMesh model(xCells, yCells, xLength, yLength);
+
+	// Sets the neutron flux
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			meshCell* cell = model.getCellByLoc(i,j);
+			double y = cell->y;
+			double y1 = y - model.dy/2.;
+			double y2 = y + model.dy/2.;
+			double s = (1./model.dy)*(yLength/M_PI)*(cos(M_PI*y1/yLength) - 
+			cos(M_PI*y2/yLength));
+			model.setCellNeutronFlux(i, j, 1.e13*s);
+		}
+	}
+	// set y velocity
+	model.setConstantYVelocity(v_y);
+
+
+	// Builds the species object
+	speciesDriver spec = speciesDriver(&model);
+
+	// Sets the matrix exp solver
+	spec.setMatrixExpSolver(solverType);
+
+	// Adds the speices
+	ids = spec.addSpeciesFromFile(speciesNamesFile);
+
+	// Sets the species sources
+	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
+
+	// Adds periodic boundary condions to all isotopes
+	spec.setBoundaryCondition("periodic","south", ids);
+	spec.setBoundaryCondition("periodic","north", ids);
+
+	// Writes transition matrix and initial condition
+	spec.writeTransitionMatrixToFile("transitionMatrixMSRPipeDepletion.csv");
+	spec.writeInitialConditionToFile("initialConditionMSRPipeDepletion.csv");
+	pOutputFile = fopen(outputFileName.c_str(), "a");
+
+	// Gets the solution
+	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
+	readCSV(refSolData, std::string(path + "msrPipeDepletionSolution.csv"));
+
+	// Loops over the time steps to solve
+	double totalSolveTime = 0;
+	for (int k = 0; k < steps; k++){
+		auto start = std::chrono::high_resolution_clock::now();
+		t = t + dt;
+		spec.solve(t);
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+			end - start);
+		if (myid == 0){
+			solveTime = duration.count()/1.e6;
+			totalSolveTime += solveTime;
+
+			cell = model.getCellByLoc(0,0); xc = cell->x; yc = cell->y;
+
+			fprintf(pOutputFile, "time: %5.4e\n", t);
+
+			for (int id = 0; id < ids.size(); id++){
+				std::string name = spec.getSpeciesName(ids[id]);
+				double con = spec.getSpecies(0, 0, ids[id]);
+				fprintf(pOutputFile, "%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
+				solData(id, k) = con;
+			}
+			fprintf(pOutputFile, "\n");
+			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
+			double rmse = computeRelativeRMSE(refSolVect, solVect);
+			printf("Solve Step: %d %s Solve Time: %f RMSE %e\n", k, solverType.c_str(), solveTime, rmse);
+		}
+	}
+	if (myid == 0){
+		fprintf(pOutputFile, "end\n");
+		double rmse = computeRelativeRMSE(refSolData, solData);
+		printf("%s Solve Time: %f RMSE %e\n", solverType.c_str(), totalSolveTime, rmse);
+	}
+}
+
+//*****************************************************************************
+// MSR 2-D depletion
+//*****************************************************************************
+void msr2DDepletion(int myid, std::string solverType){
+	double t = 0.0;
+	int steps = 1;
+	double coreLength = 1.7018;
+	double xLength = 0.0508, yLength = 4.*coreLength;		// Meters
+	double v_y = 0.25;											// m/s
+	double depletionTime = 1.;							// Days
+	double totalTime = depletionTime*24.*60.*60.;
+	double dt = totalTime/steps, solveTime;
+	int xCells = 10, yCells = 20;
+	double xc, yc, s;
+	std::vector<int> ids;
+	std::string path = getDataPath() + "msr/";
+	std::string outputFileName = "msr2DDepletion.out";
+	std::string limiter = "First order upwind";
+	std::ofstream outputFile;
+	outputFile.open(outputFileName, std::ios_base::app);
+	MatrixD refSolData;
+	FILE * pOutputFile;
+	meshCell* cell = nullptr;
+	pOutputFile = fopen(outputFileName.c_str(), "a");
+
+	if (myid == 0){
+		fprintf(pOutputFile, "Solver: %s \n", solverType.c_str());
+		fprintf(pOutputFile, "Total problem time: %4.3e\n", totalTime);
+		fprintf(pOutputFile, "yLength: %4.3e\n", yLength);
+		fprintf(pOutputFile, "xLength: %4.3e\n", xLength);
+		fprintf(pOutputFile, "dt: %8.7e\n", dt);
+		fprintf(pOutputFile, "yCells: %d\n", yCells);
+		fprintf(pOutputFile, "xCells: %d\n", xCells);
+	}
+	fclose(pOutputFile);
+
+	// Sets file paths for the input data	
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMassTransportMedium.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMassTransportMedium.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMassTransportMedium.dat";
+
+	// Builds the model
+	modelMesh model(xCells, yCells, xLength, yLength);
+
+	// Adds boundary surface
+	model.addBoundarySurface("east");
+	model.addBoundarySurface("west");
+
+	// set y velocity
+	model.setConstantYVelocity(v_y);
+
+	// Builds the species object
+	speciesDriver spec = speciesDriver(&model);
+
+	// Sets the source terms
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			std::vector<double> coeffs(ids.size(), 0.0);
+			meshCell* cell = model.getCellByLoc(i,j);
+			double y = cell->y, x = cell->x;
+			double y1 = y - model.dy/2., x1 = x - model.dx/2.;
+			double y2 = y + model.dy/2., x2 = x + model.dx/2.;
+			double sy = (1./model.dy)*(coreLength/M_PI)*(cos(M_PI*y1/coreLength) - 
+			cos(M_PI*y2/coreLength));
+			double sx = (1./model.dx)*(xLength/M_PI)*(cos(M_PI*x1/xLength) - 
+			cos(M_PI*x2/xLength));
+
+			if (y < coreLength){
+				s = 1.e13*sy*sx;
+			}
+			else{
+				s = 0.0;
+			}
+			model.setCellNeutronFlux(i, j, s);
+		}
+	}
+
+	// Sets the matrix exp solver
+	spec.setMatrixExpSolver(solverType);
+
+	// Sets the flux limiter type
+	spec.setFluxLimiter(limiter);
+
+	// Adds the speices
+	ids = spec.addSpeciesFromFile(speciesNamesFile);
+	std::vector<double> bcs = {};
+
+	// Print species name to file
+	pOutputFile = fopen(outputFileName.c_str(), "a");
+	if (myid == 0){
+		fprintf(pOutputFile, "%s %s %s ", "variables", "x", "y");
+		for (int id; id < ids.size(); id++){
+			std::string name = spec.getSpeciesName(id);
+			fprintf(pOutputFile, "%s ", name.c_str());
+		}
+		fprintf(pOutputFile, "\n");
+	}
+	fclose(pOutputFile);
+
+	// Sets the species sources
+	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
+
+	// Adds the boundary conditions
+	spec.setBoundaryCondition("newmann","east", ids, bcs);
+	spec.setBoundaryCondition("newmann","west", ids, bcs);
+	spec.setBoundaryCondition("periodic","south", ids);
+	spec.setBoundaryCondition("periodic","north", ids);
+
+	// Writes transition matrix and initial condition
+	//spec.writeTransitionMatrixToFile("transitionMatrixMSRPipeDepletion.csv");
+	//spec.writeInitialConditionToFile("initialConditionMSRPipeDepletion.csv");
+	pOutputFile = fopen(outputFileName.c_str(), "a");
+
+	// Loops over the time steps to solve
+	double totalSolveTime = 0;
+	for (int k = 0; k < steps; k++){
+		auto start = std::chrono::high_resolution_clock::now();
+		t = t + dt;
+		std::cout << "solving" << std::endl;
+		spec.solve(t);
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+			end - start);
+		if (myid == 0){
+			solveTime = duration.count()/1.e6;
+			totalSolveTime += solveTime;
+
+			cell = model.getCellByLoc(0,0); xc = cell->x; yc = cell->y;
+
+			fprintf(pOutputFile, "time: %5.4e\n", t);
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					fprintf(pOutputFile, "%5.4e %5.4e ", xc, yc);
+
+					for (int id = 0; id < ids.size(); id++){
+						std::string name = spec.getSpeciesName(ids[id]);
+						double con = spec.getSpecies(0, 0, ids[id]);
+						fprintf(pOutputFile, "%17.16e ", con);
+					}
+					fprintf(pOutputFile, "\n");
+				}
 			}
 		}
 	}
-	outputFile << " " << std::endl;
+	if (myid == 0){
+		fprintf(pOutputFile, "end\n");
+	}
 }
 
 //*****************************************************************************
@@ -509,19 +813,22 @@ void msrLumpDepletion(int myid, std::string solverType){
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
-	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
-	"pade-method2", "taylor"};
+	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic", "pade-method1",
+	//"pade-method2", "taylor"};
+	std::vector<std::string> solvers {"pade-method1", "pade-method2"};
 
-	//// Loops over different solvers
-	//for (std::string &solverType : solvers){
-	//	if(myid == 0){std::cout << solverType << std::endl;};
-	//	singleCellDepletion(myid, solverType);
-	//	if (solverType != "taylor"){
-	//		pipeDepletion(myid, solverType);
-	//	}
-	//	neutronPrecursors(myid, solverType);
-	//}
-	msrLumpDepletion(myid, "CRAM");
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
+		//if(myid == 0){std::cout << solverType << std::endl;};
+		//singleCellDepletion(myid, solverType);
+		//if (solverType != "taylor"){
+		//	pipeDepletion(myid, solverType);
+		//		msrPipeDepletion(myid, solverType);
+		//}
+		//neutronPrecursors(myid, solverType);
+		//msrLumpDepletion(myid, solverType);
+		msr2DDepletion(myid, solverType);
+	}
 
 	mpi.finalize();
 }

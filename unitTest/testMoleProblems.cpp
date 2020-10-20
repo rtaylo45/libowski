@@ -670,7 +670,7 @@ void moleProblem10(int myid){
 			outputFile << "Time: " << t << std::endl;
 			// Loop over species to print solution
 				for (int id = 0; id < ids.size(); id++){
-					std::string name = spec.getSpeciesName(0, 0, ids[id]);
+					std::string name = spec.getSpeciesName(ids[id]);
 					double con = spec.getSpecies(0, 0, ids[id]);
 					outputFile << name << " " << con << std::endl;
 					solData(id, k) = con;
@@ -803,7 +803,7 @@ void moleProblem12(int myid){
 				outputFile << "Time: " << t << std::endl;
 				// Loop over species to print solution
 				for (int id = 0; id < ids.size(); id++){
-					std::string name = spec.getSpeciesName(0, 0, ids[id]);
+					std::string name = spec.getSpeciesName(ids[id]);
 					double con = spec.getSpecies(0, 0, ids[id]);
 					outputFile << name << " " << con << std::endl;
 					solData(id, k) = con;
