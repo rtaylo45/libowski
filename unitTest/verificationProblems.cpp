@@ -1024,7 +1024,7 @@ void testXenonIodineXFlow(int myid){
 //	internal ODE test, the ODE solution is provided and calculated using the 
 //	same problem units. 
 //*****************************************************************************
-void testDiffusion2D(int myid){
+void testDiffusion1(int myid){
 	int xCells = 50, yCells = 50;
 	double xLength = 15.0, yLength = 20.0;
 	double totalTime = 1000000.0;
@@ -1064,14 +1064,13 @@ void testDiffusion2D(int myid){
 	}
 
 	error = 0.0;
+	t = 0.0;
 	for (int k = 0; k < steps; k++){
 		t = t + dt;
-		//std::cout << t << std::endl;
-		// Solve with CRAM
 		spec.solve(t);
 
 		std::ofstream outputFile;
-		outputFile.open("Diffusion2D.out", std::ios::out | std::ios::trunc);
+		outputFile.open("Diffusion1.out", std::ios::out | std::ios::trunc);
 		outputFile << "Time: "+std::to_string(t)+"\n";
 
 		// Gets species Concentrations
@@ -1100,13 +1099,95 @@ void testDiffusion2D(int myid){
 		}
 		error = pow(error,0.5)/(xCells*yCells);
 		assert(error < 0.003);
-		//std::cout << "Error: " << error << std::endl;
 	}
 
 	
 	model.clean();
 	spec.clean();
+	
+}
+//*****************************************************************************
+// Test 2D diffusion
+//
+//*****************************************************************************
+void testDiffusion2(int myid){
+	int xCells = 50, yCells = 50;
+	double xLength = 1.0, yLength = 1.0;
+	double totalTime = 2.0;
+	double t = 0.0;
+	int steps = 1;
+	double dt = totalTime/steps;
+	double D_spec = 1./(4.*2.*M_PI*M_PI);
+	int specID;
+	double specCon;
+	double s, sx, sy, yc, y1, y2, xc, x1, x2, dx, dy;
+	double exact, temp1, temp2, temp3, error;
 
+	// Builds the mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+
+	// Sets species driver
+	speciesDriver spec = speciesDriver(&model);
+
+	// Sets the species matrix exp solver
+	//spec.setMatrixExpSolver("taylor");
+
+	// Adds xenon and iodine species
+	specID = spec.addSpecies(1.0, 0.0, D_spec);
+	spec.setBoundaryCondition("periodic","south", specID);
+	spec.setBoundaryCondition("periodic","east", specID);
+	spec.setBoundaryCondition("periodic","west", specID);
+	spec.setBoundaryCondition("periodic","north", specID);
+
+	// Set inital condition
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			meshCell* cell = model.getCellByLoc(i,j);
+			dx = cell->dx, dy = cell->dy;
+			xc = cell->x, yc = cell->y;
+			x2 = xc + dx/2, x1 = xc - dx/2;
+			y2 = yc + dy/2, y1 = yc - dy/2;
+			sx = 1./(2.*M_PI)*(cos(2.*M_PI*x1) - cos(2.*M_PI*x2));
+			sy = 1./(2.*M_PI)*(cos(2.*M_PI*y1) - cos(2.*M_PI*y2));
+			s = (1./dx)*(1./dy)*sx*sy;
+			spec.setSpeciesCon(i, j, specID, s);
+		}
+	}
+
+	error = 0.0;
+	t = 0.0;
+	for (int k = 0; k < steps; k++){
+		t = t + dt;
+		// Solve
+		spec.solve(t);
+
+		std::ofstream outputFile;
+		outputFile.open("Diffusion2.out", std::ios::out | std::ios::trunc);
+		outputFile << "Time: "+std::to_string(t)+"\n";
+
+		// Gets species Concentrations
+		if (myid==0){
+			for (int i = 0; i < xCells; i++){
+				for (int j = 0; j < yCells; j++){
+					specCon = spec.getSpecies(i, j, specID);
+					meshCell* cell = model.getCellByLoc(i,j);
+					xc = cell->x;
+					yc = cell->y;
+					exact = exp(-t)*sin(2.*M_PI*xc)*sin(2.*M_PI*yc);
+
+					error += pow(std::abs(specCon - exact), 2);
+					//std::cout << i << " " << j << " " << specCon << " " << exact << std::endl;
+				}
+			}
+		}
+		error = error/(xCells*yCells);
+		assert(error < 1.0e-8);
+	}
+
+	
+	model.clean();
+	spec.clean();
+	
 }
 //*****************************************************************************
 // Test gas sparging model 
@@ -1207,7 +1288,8 @@ int main(){
 	testXenonIodineNoFlow(myid);
 	testXenonIodineYFlow(myid);
 	testXenonIodineXFlow(myid);
-	testDiffusion2D(myid);
+	testDiffusion1(myid);
+	testDiffusion2(myid);
 	testGasTransport(myid);
 
 	mpi.finalize();
