@@ -789,7 +789,7 @@ void problem5(int myid){
 	std::string outputFileName;
 	std::vector<double> Ucoeffs = {-a, 1.0};
 	std::vector<double> Vcoeffs = {0.0, -b};
-	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
+	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic",
 		"pade-method1", "pade-method2", "taylor"};
 
 	// Loops over different solvers
@@ -906,6 +906,131 @@ void problem5(int myid){
 	}
 
 }
+//*****************************************************************************
+// Test 2D diffusion
+//
+// du/dt = k*uxx + k*uyy
+// u(x,y,0) = sin(2*pi*x)*sin(2*pi*y)
+// u(x,y,t) = e^(-t)*sin(2*pi*x)*sin(2*pi*y)
+//
+//*****************************************************************************
+void problem6(int myid){
+	double xLength = 1.0, yLength = 1.0;
+	double totalTime = 2.0;
+	double t = 0.0;
+	int steps = 1;
+	double dt = totalTime/steps;
+	double D_spec = 1./(4.*2.*M_PI*M_PI);
+	int specID;
+	double specCon;
+	double l1, l2, linf;
+	double linfRate=0, l2Rate=0, l1Rate=0;
+	double absError, runtime;
+	double s, sx, sy, yc, y1, y2, xc, x1, x2, dx, dy;
+	double exact, temp1, temp2, temp3, error;
+	std::vector<int> numOfCells{10, 20, 40, 80};
+	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
+		"pade-method1", "pade-method2","taylor"};
+
+	// Loops over different solvers
+	for (std::string &solverType : solvers){
+		std::vector<double> linfVector, l1Vector, l2Vector, runTimeVector;
+		
+		// Loops over number of cells
+		for (int &cells : numOfCells){
+
+			// Builds the mesh
+			modelMesh model(cells, cells, xLength, yLength);
+
+			// Sets species driver
+			speciesDriver spec = speciesDriver(&model);
+
+			// Sets the species matrix exp solver
+			spec.setMatrixExpSolver(solverType);
+
+			// Adds xenon and iodine species
+			specID = spec.addSpecies(1.0, 0.0, D_spec);
+			spec.setBoundaryCondition("periodic","south", specID);
+			spec.setBoundaryCondition("periodic","east", specID);
+			spec.setBoundaryCondition("periodic","west", specID);
+			spec.setBoundaryCondition("periodic","north", specID);
+
+			// Set inital condition
+			for (int i = 0; i < cells; i++){
+				for (int j = 0; j < cells; j++){
+					meshCell* cell = model.getCellByLoc(i,j);
+					dx = cell->dx, dy = cell->dy;
+					xc = cell->x, yc = cell->y;
+					x2 = xc + dx/2, x1 = xc - dx/2;
+					y2 = yc + dy/2, y1 = yc - dy/2;
+					sx = 1./(2.*M_PI)*(cos(2.*M_PI*x1) - cos(2.*M_PI*x2));
+					sy = 1./(2.*M_PI)*(cos(2.*M_PI*y1) - cos(2.*M_PI*y2));
+					s = (1./dx)*(1./dy)*sx*sy;
+					spec.setSpeciesCon(i, j, specID, s);
+				}
+			}
+
+			error = 0.0;
+			t = 0.0;
+			for (int k = 0; k < steps; k++){
+				t = t + dt;
+				auto start = std::chrono::high_resolution_clock::now();
+				spec.solve(t);
+				auto end = std::chrono::high_resolution_clock::now();
+				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+					end - start);
+
+				linf = 0.0; l1 = 0.0; l2 = 0.0;
+				// Gets species Concentrations
+				if (myid==0){
+					for (int i = 0; i < cells; i++){
+						for (int j = 0; j < cells; j++){
+							specCon = spec.getSpecies(i, j, specID);
+							meshCell* cell = model.getCellByLoc(i,j);
+							xc = cell->x;
+							yc = cell->y;
+							exact = exp(-t)*sin(2.*M_PI*xc)*sin(2.*M_PI*yc);
+
+							absError = std::abs(exact - specCon);
+							l1 += absError;
+							l2 += l1*l1;
+							linf = std::max(linf, absError);
+
+						}
+					}
+				}
+				linfVector.push_back(linf);
+				l1Vector.push_back(l1/float(cells*cells));
+				l2Vector.push_back(l2/float(cells*cells));
+				runTimeVector.push_back(duration.count()/1.e6);
+			}
+
+			
+			model.clean();
+			spec.clean();
+		}
+		// Loop through error vectors to check convergence
+		if (myid == 0){
+			for (int i = 1; i < linfVector.size(); i++){
+				runtime = runTimeVector[i];	
+				linfRate = log2(linfVector[i-1]/linfVector[i]);
+				l1Rate = log2(l1Vector[i-1]/l1Vector[i]);
+				l2Rate = log2(l2Vector[i-1]/l2Vector[i]);
+				int cells = numOfCells[i];
+				printf("%15s %4d %4.2f %4.2f %4.2f %8.7e %8.7e %8.7e %4.2e \n",
+					solverType.c_str(), cells*cells, linfRate, l1Rate, l2Rate, 
+					linfVector[i], l1Vector[i], l2Vector[i], runtime);
+				linfRate = round(linfRate);
+				l1Rate = round(l1Rate);
+				assert(linfRate == 2);
+				assert(l1Rate == 2);
+			}
+		}
+	}	
+}
+//*****************************************************************************
+// Main test
+//*****************************************************************************
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
@@ -922,6 +1047,7 @@ int main(){
 	problem3(myid); 
 	problem4(myid); 
 	problem5(myid);
+	problem6(myid);
 
 	mpi.finalize();
 }
