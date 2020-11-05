@@ -454,6 +454,7 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
    	         v.push_back(stod(s));
    	      }
    	      l++;
+				
    	   }
 
 			// Loop over cells
@@ -549,6 +550,7 @@ void speciesDriver::setWallDepositionFromFile(std::string wallfname){
 				}
 			}
          l++;
+			
       }
 		liqIDs.push_back(liqID); surfIDs.push_back(surfID);
 		mCoeffs.push_back(k); infSinks.push_back(infsink);
