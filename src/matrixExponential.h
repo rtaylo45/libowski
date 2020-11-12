@@ -214,7 +214,7 @@ class cauchy : public matrixExponential{
 	// Limit of r at infinity
 	long double alpha_0 = 0.0L;
 	// Number of sub steps to take during a solve
-	int substeps = 4;
+	int substeps = 1;
 
 	public:
 	//**************************************************************************
