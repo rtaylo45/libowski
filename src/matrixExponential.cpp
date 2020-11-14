@@ -216,6 +216,7 @@ VectorD taylor::expmv(const SparseMatrixD& A, const double t, const VectorD& v0,
 				if (c1 + c2 <= tol*f.lpNorm<Infinity>()){
 					break;
 				}
+			c1 = c2;
 			}
 		}
 		f = eta*f;
