@@ -66,25 +66,31 @@ class speciesDriver {
 	// Gets the species concentration
 	double getSpecies(int, int, int);
 	// Gets the species name
-	std::string getSpeciesName(int, int , int);
+	std::string getSpeciesName(int);
+	// Get species ID from name
+	int getSpeciesID(std::string);
 	// Sets the species concentration
 	void setSpeciesCon(int, int, int, double);
 	// Sets the species source terms
 	void setSpeciesSource(int, int, int, std::vector<double>, double = 0.0);
 	// Sets the wall deposition model for the whole sytem
 	void setWallDeposition(std::vector<double>, std::vector<int>, std::vector<int>,
-		bool = false);
+		std::vector<bool> = {});
 	// Sets the gas transport model for the whole system
 	void setGasSparging(std::vector<double>, std::vector<double>, std::vector<int>,
 		std::vector<int>);
 	// Sets the wall deposition model for a cell
 	void setWallDeposition(int, int, std::vector<double>, std::vector<int>, 
-		std::vector<int>, bool = false);
+		std::vector<int>, std::vector<bool> = {});
 	// Sets the gas transport model for a cell
 	void setGasSparging(int, int, std::vector<double>, std::vector<double>,
 		std::vector<int>, std::vector<int>);
 	// Sets the species source terms from files
 	void setSpeciesSourceFromFile(std::string, std::string = "None");
+	// Sets up gas transport model from a file
+	void setGasSpargingFromFile(std::string);
+	// Sets up wall deposition from a file
+	void setWallDepositionFromFile(std::string);
 	// Sets a boundary condition in a cell
 	void setBoundaryCondition(std::string, std::string, int, double = 0);
 	// Sets a boundary condition in a cell for a list of isotopes
@@ -147,5 +153,9 @@ class speciesDriver {
 	double calcDefCor(meshCell*, connection*, int, double);
 	// Calculates a vector of source terms for the deferred corrections
 	VectorD calcDefSourceVector();
+	// Species name to ID map
+	std::map<std::string, int> specNameToID;
+	// Species ID to name map
+	std::map<int, std::string> specIDToName;
 };
 #endif

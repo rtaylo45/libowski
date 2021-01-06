@@ -79,7 +79,7 @@ class taylor : public matrixExponential{
 	// Selects the Taylor series degree for the approximation
 	//**************************************************************************
 	void parameters(const SparseMatrixD&, const VectorD&, MatrixD&, int = 55, 
-		int = 8, bool = true, bool = false);
+		int = 8, bool = false, bool = false);
 	//**************************************************************************
 	// Internal fucntion that computes the action of a matrix exponential on 
 	// a vector. exp(A*t)v
@@ -214,7 +214,7 @@ class cauchy : public matrixExponential{
 	// Limit of r at infinity
 	long double alpha_0 = 0.0L;
 	// Number of sub steps to take during a solve
-	int substeps = 4;
+	int substeps = 1;
 
 	public:
 	//**************************************************************************

@@ -305,7 +305,7 @@ void moleProblem2(int myid){
 //
 //	Problem equations:
 //			dCi/dt = -v*dCi/dx - lambda*Ci
-//			dCw/dt = lambda*Cw
+//			dCw/dt = lambda*Ci
 //
 //	Domaine:
 //			x = [0, 100]	cm 
@@ -331,8 +331,6 @@ void moleProblem2(int myid){
 void moleProblem3(int myid){
 	int yCells = 1;
 	std::vector<int> numOfxCells{10, 100, 1000};
-	//std::vector<int> numOfxCells{10};
-	//std::vector<double> steps = {400};
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
 	double xLength = 100./100.; // m
@@ -617,7 +615,7 @@ void moleProblem10(int myid){
 	double xLength = 1.0, yLength = 4.0;
 	MatrixD anaSolution;
 	std::vector<int> ids;
-	std::string path = getDataPath();
+	std::string path = getDataPath() + "mole/";
 	std::string outputFileName = "moleProblem10.out";
 	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
 	//"pade-method1", "pade-method2", "taylor"};
@@ -670,7 +668,7 @@ void moleProblem10(int myid){
 			outputFile << "Time: " << t << std::endl;
 			// Loop over species to print solution
 				for (int id = 0; id < ids.size(); id++){
-					std::string name = spec.getSpeciesName(0, 0, ids[id]);
+					std::string name = spec.getSpeciesName(ids[id]);
 					double con = spec.getSpecies(0, 0, ids[id]);
 					outputFile << name << " " << con << std::endl;
 					solData(id, k) = con;
@@ -750,7 +748,7 @@ void moleProblem12(int myid){
 	double xLength = 1.0, yLength = 4.0;
 	MatrixD anaSolution;
 	std::vector<int> ids;
-	std::string path = getDataPath();
+	std::string path = getDataPath() + "mole/";
 	std::string outputFileName = "moleProblem12.out";
 	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
 	//"pade-method1", "pade-method2", "taylor"};
@@ -803,7 +801,7 @@ void moleProblem12(int myid){
 				outputFile << "Time: " << t << std::endl;
 				// Loop over species to print solution
 				for (int id = 0; id < ids.size(); id++){
-					std::string name = spec.getSpeciesName(0, 0, ids[id]);
+					std::string name = spec.getSpeciesName(ids[id]);
 					double con = spec.getSpecies(0, 0, ids[id]);
 					outputFile << name << " " << con << std::endl;
 					solData(id, k) = con;

@@ -19,7 +19,7 @@ gasSparging::gasSparging(){
 //	@param Hlc								Henrys law constant [mol/m^3/Pa]
 //	@param mID								ID for spec that owns me
 // @param lID								ID for the liquid species
-// @param sID								ID for the surface spcies
+// @param gID								ID for the gas species
 //**************************************************************************
 void gasSparging::setModel(double massTransferCoefficient, double Hlc, int mID,
 	int lID, int gID){
