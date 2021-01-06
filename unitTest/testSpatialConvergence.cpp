@@ -928,7 +928,7 @@ void problem6(int myid){
 	double absError, runtime;
 	double s, sx, sy, yc, y1, y2, xc, x1, x2, dx, dy;
 	double exact, temp1, temp2, temp3, error;
-	std::vector<int> numOfCells{10, 20, 40, 80};
+	std::vector<int> numOfCells{10, 20, 40};
 	std::vector<std::string> solvers {"CRAM", "parabolic", "hyperbolic", 
 		"pade-method1", "pade-method2","taylor"};
 
@@ -1038,16 +1038,24 @@ int main(){
 		"pade-method1", "pade-method2", "taylor"};
 
 	// Loops over different solvers
+	std::cout << "Starting test" << std::endl;
 	for (std::string &solverType : solvers){
 		problem1x(myid, solverType);
 		problem1y(myid, solverType);
 	}
+	std::cout << "Done with problem 1 " << std::endl;
 	problem2b(myid);
+	std::cout << "Done with problem 2b " << std::endl;
 	problem2(myid); 
+	std::cout << "Done with problem 2 " << std::endl;
 	problem3(myid); 
+	std::cout << "Done with problem 3 " << std::endl;
 	problem4(myid); 
+	std::cout << "Done with problem 4 " << std::endl;
 	problem5(myid);
+	std::cout << "Done with problem 5 " << std::endl;
 	problem6(myid);
+	std::cout << "Done with problem 6 " << std::endl;
 
 	mpi.finalize();
 }
