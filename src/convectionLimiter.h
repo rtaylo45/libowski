@@ -7,6 +7,7 @@
 #ifndef FLUXLIMITER_H
 #define FLUXLIMITER_H 
 #include <cmath>
+#include <math.h>
 #include <algorithm>
 #include <assert.h>
 

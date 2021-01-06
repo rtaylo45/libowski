@@ -80,6 +80,7 @@ double fluxLimiter::firstOrder(const double r){
 //*****************************************************************************
 double fluxLimiter::vanLeer(const double r){
 	double psi = (r + std::abs(r))/(1. + r);
+	if (isnan(psi)){psi = 0.0;};
 	return psi;
 }
 
@@ -90,6 +91,7 @@ double fluxLimiter::vanLeer(const double r){
 //*****************************************************************************
 double fluxLimiter::vanAlbada(const double r){
 	double psi = (r + std::pow(r, 2.))/(1. + std::pow(r,2.));
+	if (isnan(psi)){psi = 0.0;};
 	return psi;
 }
 
@@ -106,6 +108,7 @@ double fluxLimiter::minMod(const double r){
 	else{
 		psi = 0.0;
 	}
+	if (isnan(psi)){psi = 0.0;};
 	return psi;
 }
 
@@ -120,6 +123,7 @@ double fluxLimiter::superbee(const double r){
 	val2 = std::min(r, 2.);
 	psi = std::max(val1, val2);
 	psi = std::max(0., psi);
+	if (isnan(psi)){psi = 0.0;};
 	return psi;
 }
 
@@ -134,6 +138,7 @@ double fluxLimiter::sweby(const double r){
 	val2 = std::min(r, beta);
 	psi = std::max(val1, val2);
 	psi = std::max(0., psi);
+	if (isnan(psi)){psi = 0.0;};
 	return psi;
 }
 //*****************************************************************************
@@ -146,6 +151,7 @@ double fluxLimiter::muscl(const double r){
 	val1 = std::min(2.*r, (r+1.)/2.);
 	val2 = std::min(val1, 2.);
 	psi = std::max(0., val2);
+	if (isnan(psi)){psi = 0.0;};
 	return psi;
 }
 
