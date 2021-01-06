@@ -305,7 +305,7 @@ void moleProblem2(int myid){
 //
 //	Problem equations:
 //			dCi/dt = -v*dCi/dx - lambda*Ci
-//			dCw/dt = lambda*Cw
+//			dCw/dt = lambda*Ci
 //
 //	Domaine:
 //			x = [0, 100]	cm 
@@ -331,8 +331,6 @@ void moleProblem2(int myid){
 void moleProblem3(int myid){
 	int yCells = 1;
 	std::vector<int> numOfxCells{10, 100, 1000};
-	//std::vector<int> numOfxCells{10};
-	//std::vector<double> steps = {400};
 	std::vector<double> steps = {1, 2, 4, 8, 20, 40, 80, 200, 400};
 	std::vector<std::string> solvers {"hyperbolic","pade-method2", "taylor"};
 	double xLength = 100./100.; // m
