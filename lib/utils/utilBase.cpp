@@ -274,6 +274,36 @@ derived computeRelativeRMSE(const Matrix<derived, Dynamic, 1>& refVect,
 	return error;
 }
 
+//*****************************************************************************
+// Computes error function using the Faddeeva library
+// 
+// @param x		Value to be computed
+//*****************************************************************************
+template <typename derived>
+derived erf(derived x){
+	return Faddeeva::erf(x);	
+}
+
+//*****************************************************************************
+// Computes complementary error function using the Faddeeva library
+// 
+// @param x		Value to be computed
+//*****************************************************************************
+template <typename derived>
+derived erfc(derived x){
+	return Faddeeva::erfc(x);	
+}
+
+//*****************************************************************************
+// Computes imanginary error function using the Faddeeva library
+// 
+// @param x		Value to be computed
+//*****************************************************************************
+template <typename derived>
+derived erfi(derived x){
+	return Faddeeva::erfi(x);	
+}
+
 
 // Data types that can use the template functions
 template bool isApprox(double goalVal, double testVal, double rtol, double atol);
@@ -292,3 +322,9 @@ template void readCSV(MatrixD& A, const std::string path);
 template void readCSV(MatrixLD& A, const std::string path);
 template double computeRelativeRMSE(const MatrixD& refMat, const MatrixD& approxMat);
 template double computeRelativeRMSE(const VectorD& refVect, const VectorD& approxVect);
+template double erf(double x);
+template double erfc(double x);
+template double erfi(double x);
+template std::complex<double> erf(std::complex<double> x);
+template std::complex<double> erfc(std::complex<double> x);
+template std::complex<double> erfi(std::complex<double> x);

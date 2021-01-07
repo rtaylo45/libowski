@@ -12,6 +12,7 @@
 #include "sys.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
+#include "Faddeeva.hh"
 
 using namespace Eigen;
 
@@ -80,5 +81,30 @@ derived computeRelativeRMSE(const Matrix<derived, Dynamic, Dynamic>&,
 template <typename derived>
 derived computeRelativeRMSE(const Matrix<derived, Dynamic, 1>&, 
 	const Matrix<derived, Dynamic, 1>&);
+
+
+//*****************************************************************************
+// Computes error function using the Faddeeva library
+// 
+// @param x		Value to be computed
+//*****************************************************************************
+template <typename derived>
+derived erf(derived x);
+
+//*****************************************************************************
+// Computes complementary error function using the Faddeeva library
+// 
+// @param x		Value to be computed
+//*****************************************************************************
+template <typename derived>
+derived erfc(derived x);
+
+//*****************************************************************************
+// Computes imanginary error function using the Faddeeva library
+// 
+// @param x		Value to be computed
+//*****************************************************************************
+template <typename derived>
+derived erfi(derived x);
 
 #endif
