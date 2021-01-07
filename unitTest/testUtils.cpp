@@ -337,6 +337,38 @@ void testConstants(int myid){
 	assert(avog == testAvog);
 }
 
+//*****************************************************************************
+// Test error functions
+//
+// Test values were computed in matlab
+//*****************************************************************************
+void testErrorFunctions(int myid){
+	std::complex<double> xc(1.0, 2.5);
+	double erfGoalReal = -40.306200856366218;
+	double erfcGoalReal = 41.306200856366218;
+	double erfiGoalReal = -0.000846944543394;
+	double erfGoalImg = -6.412103948446194;
+	double erfcGoalImg = 6.412103948446194;
+	double erfiGoalImg = 0.999382685137800;
+	double x = 2.5;
+	double erfGoal = 0.999593047982555;
+	double erfcGoal = 4.069520174449589e-04;
+	double erfiGoal = 1.303957550132469e+02;
+
+	assert(isApprox(erfGoal, erf(x))); 
+	assert(isApprox(erfGoalReal, real(erf(xc))));
+	assert(isApprox(erfGoalImg, imag(erf(xc))));
+
+	assert(isApprox(erfcGoal, erfc(x))); 
+	assert(isApprox(erfcGoalReal, real(erfc(xc))));
+	assert(isApprox(erfcGoalImg, imag(erfc(xc))));
+
+	assert(isApprox(erfiGoal, erfi(x))); 
+	assert(isApprox(erfiGoalReal, real(erfi(xc))));
+	assert(isApprox(erfiGoalImg, imag(erfi(xc))));
+
+}
+
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
@@ -348,6 +380,7 @@ int main(){
 	testlineSpace(myid);
 	testCSVReader(myid);
 	testConstants(myid);
+	testErrorFunctions(myid);
 
 	mpi.finalize();
 }
