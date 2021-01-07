@@ -79,6 +79,9 @@ alt="\begin{equation*}
 
 This formula is exact and ETD methods approximate the integral in the expression. The problem lies in evaluating the exponential of the transition matrix. Currently there are 6 algorithms for solving the matrix exponential. One based on a truncated Taylor series (`Taylor`), two on the Pade approximation (`pade-method1` and `pade-method2`) and three on Cauchys integral formula (`CRAM`, `parabolic` and `hyperbolic`). The Krylov substace method is also avaliable as a preprocessing step.
 
+# Dependencies
+The eigen3 library was used extensivly in the creation of libowski and is included in the download. Additionally a number of different error functions were required for some of the initial conditions in the unit test. Some of these fucntions are not defined in the standard C++ library, therefor the Faddevva Package is included in `lib/utils` folder in the main directory. 
+
 # Usage
 Pull the code to your favorite place and create a `build` folder in the main `libowski` directory. `CD` into the `build` folder and run `cmake ..` to generate the make file. Then run `make all` to build the project. The only dependence is the eigen3 library. It is used for all matrix types and linear algebra functions. It is included in the download.
 
