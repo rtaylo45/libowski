@@ -1190,12 +1190,91 @@ void testDiffusion2(int myid){
 	
 }
 //*****************************************************************************
-// Test gas sparging model 
+// Test gas sparging model with no flow
+//
+// dC_gas/dt = [K*a/V* (C*_a - C_liq/(1-alpha)) ]
+// dC_liq/dt = [K*a/V* (C_liq/(1-alpha) - C*_a) ]
+//*****************************************************************************
+void testGasTransportNoFlow(int myid){
+	int xCells = 10, yCells = 1;
+	double xLength = 500.0, yLength = 0.0;
+	double totalTime = 100.0; // seconds
+	double t = 0.0;
+	int steps = 1;
+	double dt = totalTime/steps;
+	std::string limiter = "First order upwind", solverType = "hyperbolic";
+	int liq1ID, gas1ID, liq2ID, gas2ID;
+	double liq1Con, gas1Con, liq2Con, gas2Con, x;
+	double temperature = 600.0;		// kelvin
+	double gasIntAreaCon = 50.0;		// 1/m
+	double gasVoidFraction = 0.001;	// fraction
+	double pressure = 101325.0;		// Pa
+	double k = 3.0;						// m/s
+	double H = 2.71e-8;					// mol/m^3/Pa
+	double spec1InitCon = 10., spec2InitCon = 5.;
+
+	// Builds the mesh
+	modelMesh model(xCells, yCells, xLength, yLength);
+	model.addBoundarySurface("east");
+	model.addBoundarySurface("west");
+
+	// Sets scalar data
+	model.setSystemTemperature(temperature);
+	model.setSystemPressure(pressure);
+	model.setSystemGasInterfacialAreaCon(gasIntAreaCon);
+	model.setSystemGasVoidFraction(gasVoidFraction);
+
+	// Sets species driver
+	speciesDriver spec = speciesDriver(&model);
+
+	// Sets the flux limiter type
+	spec.setFluxLimiter(limiter);
+	// Sets the Matrix expential solver
+	spec.setMatrixExpSolver(solverType);
+
+	// Adds gas and liquid spec
+	liq1ID = spec.addSpecies(1.0, spec1InitCon, 0.0);
+	liq2ID = spec.addSpecies(1.0, spec2InitCon, 0.0);
+	gas1ID = spec.addSpecies(1.0, 0.0, 0.0);
+	gas2ID = spec.addSpecies(1.0, 0.0, 0.0);
+
+	// Adds gas sparging model
+	spec.setGasSparging({k, 0.5*k}, {H, 1.e-2*H}, {liq1ID, liq2ID}, {gas1ID, gas2ID});
+
+	for (int k = 0; k < steps; k++){
+		t = t + dt;
+		// Solve with CRAM
+		spec.solve(t);
+	}
+
+	// Gets species Concentrations
+	if (myid==0){
+		for (int i = 0; i < xCells; i++){
+			for (int j = 0; j < yCells; j++){
+				liq1Con = spec.getSpecies(i, j, liq1ID);
+				gas1Con = spec.getSpecies(i, j, gas1ID);
+				liq2Con = spec.getSpecies(i, j, liq2ID);
+				gas2Con = spec.getSpecies(i, j, gas2ID);
+				meshCell* cell = model.getCellByLoc(i,j);
+				x = cell->x;
+				assert(isApprox(spec1InitCon, liq1Con + gas1Con));
+				assert(isApprox(spec2InitCon, liq2Con + gas2Con));
+			}
+		}
+	}
+	
+	model.clean();
+	spec.clean();
+
+}
+
+//*****************************************************************************
+// Test gas sparging model with flow
 //
 // dC_gas/dt = (1/v_x)*[K*a/V* (C*_a - C_liq/(1-alpha)) ]
 // dC_liq/dt = (1/v_x)*[K*a/V* (C_liq/(1-alpha) - C*_a) ]
 //*****************************************************************************
-void testGasTransport(int myid){
+void testGasTransportFlow(int myid){
 	int xCells = 10, yCells = 1;
 	double xLength = 500.0, yLength = 0.0;
 	double totalTime = 100.0; // seconds
@@ -1291,7 +1370,8 @@ int main(){
 	//testXenonIodineXFlow(myid);
 	//testDiffusion1(myid);
 	//testDiffusion2(myid);
-	testGasTransport(myid);
+	testGasTransportNoFlow(myid);
+	//testGasTransportFlow(myid);
 
 	mpi.finalize();
 }
