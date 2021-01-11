@@ -148,10 +148,11 @@ void testSetGasSpargingAndWallDepositionFromFile(){
 	double xLength = 1.0, yLength = 1.0;
 	double intarea = 1./10., temp = 100., voidFract = 0.1, surfarea = 10.;
 	double k1 = 2.0, k2 = 1.0, h1 = 5.0e-1, h2 = 6.0e-2;
+	double mm1 = 2.0, mm2 = 3.0;
 	double liqCoeff1 = k1*intarea/(1.-voidFract);
 	double liqCoeff2 = k2*intarea/(1.-voidFract);
-	double gasCoeff1 = k1*intarea*h1*idealGasR*temp/voidFract;
-	double gasCoeff2 = k2*intarea*h2*idealGasR*temp/voidFract;
+	double gasCoeff1 = 1000*k1*intarea*h1*idealGasR*temp/voidFract/mm1;
+	double gasCoeff2 = 1000*k2*intarea*h2*idealGasR*temp/voidFract/mm2;
 	std::vector<int> ids;
 	std::string data = getDataPath() + "test/";
 	std::vector<double> testGas = {-liqCoeff2, 0, 0, gasCoeff2, 0, -liqCoeff1, 
@@ -159,7 +160,7 @@ void testSetGasSpargingAndWallDepositionFromFile(){
 	std::vector<double> testWall = {-20, 0, 20, 0, 0, -50, 0, 50, 20, 0, -20,
 		0, 0, 50, 0, -50};
 	
-	std::string speciesNamesFile = data + "speciesInputNamesSmall.txt";
+	std::string speciesNamesFile = data + "speciesInputNamesMassTransportSmall.txt";
 
 	modelMesh model(xCells, yCells, xLength, yLength);
 	speciesDriver spec = speciesDriver(&model);

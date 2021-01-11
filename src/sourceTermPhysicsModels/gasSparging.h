@@ -26,13 +26,13 @@
 //		If the current species ID is for the gas phase, the resulting 
 //		coefficients are:
 //
-//		otherSpecID = gasID:		-(h*A/V)*1/(gas_void_fraction)*H*R*T
+//		otherSpecID = gasID:		-(h*A/V)*1/(gas_void_fraction*molar_mass)*1000*H*R*T
 //		otherSpecID = liquidID:	(h*A/V)*1/(liq_void_fraction)
 //
 //		If the current species ID is for the liquid phase, the resulting 
 //		coefficients are:
 //
-//		otherSpecID = gasID:		(h*A/V)*1/(gas_void_fraction)*H*R*T
+//		otherSpecID = gasID:		(h*A/V)*1/(gas_void_fraction*molar_mass)*1000*H*R*T
 //		otherSpecID = liquidID:	-(h*A/V)*1/(liq_void_fraction)
 //
 //
@@ -53,6 +53,8 @@ class gasSparging : public physicsModel {
 	double massTransferCoeff;
 	// Henrys law constant [mol/m^3/Pa]
 	double H;
+	// species molar mass [g/mol]
+	double mm;
 	// species ID of the species object that owns me
 	int myID;
 	// Parent species ID, this is the one that is the source term
@@ -64,7 +66,7 @@ class gasSparging : public physicsModel {
 	// Class methods
 	gasSparging();
 	// Sets the coefficients and ids for the model
-	void setModel(double, double, int, int, int);
+	void setModel(double, double, double, int, int, int);
 	// Gets the transition coefficient
 	double getTransitionCoeff(int, scalarData*);
 

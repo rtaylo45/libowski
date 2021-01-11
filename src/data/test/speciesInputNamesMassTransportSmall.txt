@@ -1,0 +1,5 @@
+# (Name) (Molar mass [g/mol]) (initial condition [#/cm^]3) (diffusion coeff)
+spec1		3.0	1e10	0.0
+spec2		2.0	0.0	0.0
+spec3		2.0	0.0	0.0
+spec4		3.0	0.0	0.0
