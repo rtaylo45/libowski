@@ -1286,7 +1286,7 @@ void testGasTransportFlow(int myid){
 	double liq1Con, gas1Con, liq2Con, gas2Con, x;
 	double temperature = 600.0;		// kelvin
 	double gasIntAreaCon = 50.0;		// 1/m
-	double gasVoidFraction = 0.001;	// fraction
+	double gasVoidFraction = 0.01;	// fraction
 	double pressure = 101325.0;		// Pa
 	double k = 3.0;						// m/s
 	double H = 2.71e-8;					// mol/m^3/Pa
@@ -1341,9 +1341,8 @@ void testGasTransportFlow(int myid){
 				gas2Con = spec.getSpecies(i, j, gas2ID);
 				meshCell* cell = model.getCellByLoc(i,j);
 				x = cell->x;
-				printf("%i %i %f %f %f %f\n", i, j, liq1Con, gas1Con, liq2Con, gas2Con);
-				//assert(liq1Con < gas1Con);
-				//assert(liq2Con < gas2Con);
+				assert(liq1Con > gas1Con);
+				assert(liq2Con < gas2Con);
 			}
 		}
 	}
@@ -1360,18 +1359,18 @@ int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
 
-	//testProblem1(myid);
-	//testProblem2(myid);
-	//testProblem2Krylov(myid);
-	//testProblem2IntegratorMethods(myid);
-	//testProblem3(myid);
-	//testXenonIodineNoFlow(myid);
-	//testXenonIodineYFlow(myid);
-	//testXenonIodineXFlow(myid);
-	//testDiffusion1(myid);
-	//testDiffusion2(myid);
+	testProblem1(myid);
+	testProblem2(myid);
+	testProblem2Krylov(myid);
+	testProblem2IntegratorMethods(myid);
+	testProblem3(myid);
+	testXenonIodineNoFlow(myid);
+	testXenonIodineYFlow(myid);
+	testXenonIodineXFlow(myid);
+	testDiffusion1(myid);
+	testDiffusion2(myid);
 	testGasTransportNoFlow(myid);
-	//testGasTransportFlow(myid);
+	testGasTransportFlow(myid);
 
 	mpi.finalize();
 }
