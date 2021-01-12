@@ -25,7 +25,7 @@ class physicsModel {
 	// Sets coefficients for the wall deposition model
 	virtual void setModel(double, int, int, int, bool){};
 	// Sets coefficients for the gas sparging model
-	virtual void setModel(double, double, int, int, int){};
+	virtual void setModel(double, double, double, int, int, int){};
 
 };
 

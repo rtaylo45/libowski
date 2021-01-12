@@ -94,7 +94,7 @@ void species::addGasSpargingSourceTerm(double k, double H, int mID, int lID,
 	// Generate model
 	physicsModel* model = physicsModelFactory::getPhysicsModel("gasSparging");
 	// Set model coefficients
-	model->setModel(k, H, mID, lID, gID);
+	model->setModel(k, H, MM, mID, lID, gID);
 	// Add model 
 	addSourceTerm(model);	
 }

@@ -1,2 +1,2 @@
-Xe-135m	I-135		5.0	1
-U-235		Xe-135	2.0	1
+spec2		spec4		5.0	1
+spec1		spec3		2.0	1
