@@ -82,6 +82,26 @@ template <typename derived>
 derived computeRelativeRMSE(const Matrix<derived, Dynamic, 1>&, 
 	const Matrix<derived, Dynamic, 1>&);
 
+//*****************************************************************************
+// Computes the relative E infty between two vectors
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeEinfty(const Matrix<derived, Dynamic, 1>&, 
+	const Matrix<derived, Dynamic, 1>&);
+
+//*****************************************************************************
+// Computes the relative E1 between two vectors
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeE1(const Matrix<derived, Dynamic, 1>&, 
+	const Matrix<derived, Dynamic, 1>&);
+
+//*****************************************************************************
+// Computes the relative E2 between two vectors
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeE2(const Matrix<derived, Dynamic, 1>&, 
+	const Matrix<derived, Dynamic, 1>&);
 
 //*****************************************************************************
 // Computes error function using the Faddeeva library

@@ -275,6 +275,92 @@ derived computeRelativeRMSE(const Matrix<derived, Dynamic, 1>& refVect,
 }
 
 //*****************************************************************************
+// Computes the relative E infity error between two vectors
+// 
+// @param refVect
+// @param apporxVect
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeEinfty(const Matrix<derived, Dynamic, 1>& refVect,
+	const Matrix<derived, Dynamic, 1>& approxVect){
+	// make sure the mats are the same size
+	assert(refVect.rows() == approxVect.rows());
+	int rows = refVect.rows();
+	int cols = 1;
+	derived ref, approx, Einfty = 0.0, eps = 1.e-100, error = 0.0;
+
+	// Loop over mats	
+	for (int i = 0; i < rows; i++){
+		ref = refVect(i);
+		approx = approxVect(i);
+		if (ref >= eps and ref != 1.0){
+			error = std::abs(ref-approx)/ref;	
+			Einfty = std::max(error, Einfty);
+		}
+		
+	}
+	return Einfty;
+}
+
+//*****************************************************************************
+// Computes the relative E 1 error between two vectors
+// 
+// @param refVect
+// @param apporxVect
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeE1(const Matrix<derived, Dynamic, 1>& refVect,
+	const Matrix<derived, Dynamic, 1>& approxVect){
+	// make sure the mats are the same size
+	assert(refVect.rows() == approxVect.rows());
+	int rows = refVect.rows();
+	int cols = 1;
+	int N = rows*cols;
+	derived ref, approx, error = 0.0, eps = 1.e-100;
+
+	// Loop over mats	
+	for (int i = 0; i < rows; i++){
+		ref = refVect(i);
+		approx = approxVect(i);
+		if (ref >= eps and ref != 1.0){
+			error += std::abs(ref-approx)/ref;
+		}
+		
+	}
+	error = error/(derived)N;
+	return error;
+}
+
+//*****************************************************************************
+// Computes the relative E 2 error between two vectors
+// 
+// @param refVect
+// @param apporxVect
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeE2(const Matrix<derived, Dynamic, 1>& refVect,
+	const Matrix<derived, Dynamic, 1>& approxVect){
+	// make sure the mats are the same size
+	assert(refVect.rows() == approxVect.rows());
+	int rows = refVect.rows();
+	int cols = 1;
+	int N = rows*cols;
+	derived ref, approx, error = 0.0, eps = 1.e-100;
+
+	// Loop over mats	
+	for (int i = 0; i < rows; i++){
+		ref = refVect(i);
+		approx = approxVect(i);
+		if (ref >= eps and ref != 1.0){
+			error += std::pow(std::abs(ref-approx)/ref, 2.);
+		}
+		
+	}
+	error = std::sqrt(error)/(derived)N;
+	return error;
+}
+
+//*****************************************************************************
 // Computes error function using the Faddeeva library
 // 
 // @param x		Value to be computed
@@ -322,6 +408,9 @@ template void readCSV(MatrixD& A, const std::string path);
 template void readCSV(MatrixLD& A, const std::string path);
 template double computeRelativeRMSE(const MatrixD& refMat, const MatrixD& approxMat);
 template double computeRelativeRMSE(const VectorD& refVect, const VectorD& approxVect);
+template double computeRelativeEinfty(const VectorD& refVect, const VectorD& approxVect);
+template double computeRelativeE1(const VectorD& refVect, const VectorD& approxVect);
+template double computeRelativeE2(const VectorD& refVect, const VectorD& approxVect);
 template double erf(double x);
 template double erfc(double x);
 template double erfi(double x);
