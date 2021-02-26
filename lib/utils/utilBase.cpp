@@ -361,6 +361,98 @@ derived computeRelativeE2(const Matrix<derived, Dynamic, 1>& refVect,
 }
 
 //*****************************************************************************
+// Computes the relative E infity error between two matricies
+// 
+// @param refMat
+// @param apporxMat
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeEinfty(const Matrix<derived, Dynamic, Dynamic>& refMat,
+	const Matrix<derived, Dynamic, Dynamic>& approxMat){
+	// make sure the mats are the same size
+	assert(refMat.cols() == approxMat.cols());
+	assert(refMat.rows() == approxMat.rows());
+	int rows = refMat.rows();
+	int cols = refMat.cols();
+	derived ref, approx, Einfty = 0.0, eps = 1.e-100, error = 0.0;
+
+	// Loop over mats	
+	for (int i = 0; i < rows; i++){
+		for (int j = 0; j < cols; j++){
+			ref = refMat(i,j);
+			approx = approxMat(i,j);
+			if (ref >= eps and ref != 1.){
+				error = std::abs(ref-approx)/ref;
+				Einfty = std::max(error, Einfty);	
+			}
+		}
+	}
+	return Einfty;
+}
+
+//*****************************************************************************
+// Computes the relative E 1 error between two matricies
+// 
+// @param refMat
+// @param apporxMat
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeE1(const Matrix<derived, Dynamic, Dynamic>& refMat,
+	const Matrix<derived, Dynamic, Dynamic>& approxMat){
+	// make sure the mats are the same size
+	assert(refMat.cols() == approxMat.cols());
+	assert(refMat.rows() == approxMat.rows());
+	int rows = refMat.rows();
+	int cols = refMat.cols();
+	int N = rows*cols;
+	derived ref, approx, error = 0.0, eps = 1.e-100;
+
+	// Loop over mats	
+	for (int i = 0; i < rows; i++){
+		for (int j = 0; j < cols; j++){
+			ref = refMat(i,j);
+			approx = approxMat(i,j);
+			if (ref >= eps and ref != 1.){
+				error += std::abs(ref-approx)/ref;
+			}
+		}
+	}
+	error = error/(derived)N;
+	return error;
+}
+
+//*****************************************************************************
+// Computes the relative E 2 error between two matricies
+// 
+// @param refMat
+// @param apporxMat
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeE2(const Matrix<derived, Dynamic, Dynamic>& refMat,
+	const Matrix<derived, Dynamic, Dynamic>& approxMat){
+	// make sure the mats are the same size
+	assert(refMat.cols() == approxMat.cols());
+	assert(refMat.rows() == approxMat.rows());
+	int rows = refMat.rows();
+	int cols = refMat.cols();
+	int N = rows*cols;
+	derived ref, approx, error = 0.0, eps = 1.e-100;
+
+	// Loop over mats	
+	for (int i = 0; i < rows; i++){
+		for (int j = 0; j < cols; j++){
+			ref = refMat(i,j);
+			approx = approxMat(i,j);
+			if (ref >= eps and ref != 1.){
+				error += std::pow(std::abs(ref-approx)/ref, 2.);
+			}
+		}
+	}
+	error = std::sqrt(error)/(derived)N;
+	return error;
+}
+
+//*****************************************************************************
 // Computes error function using the Faddeeva library
 // 
 // @param x		Value to be computed
@@ -390,7 +482,6 @@ derived erfi(derived x){
 	return Faddeeva::erfi(x);	
 }
 
-
 // Data types that can use the template functions
 template bool isApprox(double goalVal, double testVal, double rtol, double atol);
 template bool isApprox(float goalVal, float testVal, float rtol, float atol);
@@ -411,6 +502,9 @@ template double computeRelativeRMSE(const VectorD& refVect, const VectorD& appro
 template double computeRelativeEinfty(const VectorD& refVect, const VectorD& approxVect);
 template double computeRelativeE1(const VectorD& refVect, const VectorD& approxVect);
 template double computeRelativeE2(const VectorD& refVect, const VectorD& approxVect);
+template double computeRelativeEinfty(const MatrixD& refMat, const MatrixD& approxMat);
+template double computeRelativeE1(const MatrixD& refMat, const MatrixD& approxMat);
+template double computeRelativeE2(const MatrixD& refMat, const MatrixD& approxMat);
 template double erf(double x);
 template double erfc(double x);
 template double erfi(double x);

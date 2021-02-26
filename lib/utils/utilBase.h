@@ -104,6 +104,27 @@ derived computeRelativeE2(const Matrix<derived, Dynamic, 1>&,
 	const Matrix<derived, Dynamic, 1>&);
 
 //*****************************************************************************
+// Computes the relative E infty between two matricies
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeEinfty(const Matrix<derived, Dynamic, Dynamic>&, 
+	const Matrix<derived, Dynamic, Dynamic>&);
+
+//*****************************************************************************
+// Computes the relative E1 between two matricies
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeE1(const Matrix<derived, Dynamic, Dynamic>&, 
+	const Matrix<derived, Dynamic, Dynamic>&);
+
+//*****************************************************************************
+// Computes the relative E2 between two matricies
+//*****************************************************************************
+template <typename derived>
+derived computeRelativeE2(const Matrix<derived, Dynamic, Dynamic>&, 
+	const Matrix<derived, Dynamic, Dynamic>&);
+
+//*****************************************************************************
 // Computes error function using the Faddeeva library
 // 
 // @param x		Value to be computed
