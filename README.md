@@ -1,5 +1,7 @@
 # libowski
-![The Dude](https://images2.minutemediacdn.com/image/upload/c_crop,h_1191,w_2118,x_41,y_0/f_auto,q_auto,w_1100/v1554931540/shape/mentalfloss/61708-gramercy_pictures.jpg "The Dude")
+<p align="center">
+    <img src="https://github.com/rtaylo45/libowski/blob/master/libowski.png">
+</p>
 
 This is a c++ library used to solve PDE's using exponential time differencing that is being build as part of my PhD work. The purpose is to solve the set of nuclear burnup equations along with mass transport. The species transport equation is shown below.
 
