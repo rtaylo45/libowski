@@ -90,3 +90,5 @@ Pull the code to your favorite place and create a `build` folder in the main `li
 Testing is done using `ctest`. To run the unit test run `make test` in your build directory. Some unit test require files that have not been uploaded into the reop and so some test will fail. I need to fix this going forward.
 
 This probject can be built with MPI if cmake detects it with the `Find MPI` command. Only the Cauchy algorithms are built to run in parallel and can run on up to 8 procs for CRAM and 16 for the parabolic and hyperbolic solvers. 
+
+This code is a work in progress and still may contain bugs, especially when trying to build and compile on different systems. If you run into an issue while trying to build this project, feel free to create an issue. 
