@@ -26,6 +26,8 @@ link_libraries(stdc++fs)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-O3")
 
+# Enable testing
+ENABLE_TESTING()
 
 # util directory
 add_subdirectory(${UTIL_DIR})
@@ -36,5 +38,3 @@ add_subdirectory(unitTest)
 # Add case studie directory
 add_subdirectory(caseStudies)
 
-# Enable testing
-ENABLE_TESTING()
