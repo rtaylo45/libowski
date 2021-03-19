@@ -853,9 +853,11 @@ int main(){
 	//moleProblem7(myid);
 	//moleProblem8(myid);
 	//moleProblem9(myid);
-	moleProblem10(myid);
+	//moleProblem10(myid); this test is commented out because it requires 
+	//						     information i can't put on github
 	//moleProblem11(myid);
-	moleProblem12(myid);
+	//moleProblem12(myid); this test is commented out because it requires 
+	//							  information i can't put on github
 	//moleProblem13(myid);
 
 	mpi.finalize();
