@@ -7,9 +7,12 @@
 #define MODELMESH_H
 #include "meshCell.h"
 #include "meshCellFace.h"
+#include "matrixTypes.h"
+#include "utilBase.h"
 #include "surface.h"
 #include <vector>
 #include <assert.h>
+#include <string>
 
 class modelMesh {
 
@@ -54,16 +57,28 @@ class modelMesh {
 	void setConstantYVelocity(double, int);
 	// Sets a temperature in the whole system
 	void setSystemTemperature(double);
+	// Sets a temperature in the whole system from a file
+	void setSystemTemperature(const std::string);
 	// Sets a pressure in the whole system
 	void setSystemPressure(double);
+	// Sets a pressure in the whole system from a file
+	void setSystemPressure(const std::string);
 	// Sets a neutron flux in the whole system
 	void setSystemNeutronFlux(double);
+	// Sets a neutron flux in the whole system from a file
+	void setSystemNeutronFlux(const std::string);
 	// Sets the gas interfacial area concentation in the whole system
 	void setSystemGasInterfacialAreaCon(double);
+	// Sets the gas interfacial area concentation in the whole system from a file
+	void setSystemGasInterfacialAreaCon(const std::string);
 	// Sets the wall interfacial area concentation in the whole system
 	void setSystemWallInterfacialAreaCon(double);
+	// Sets the wall interfacial area concentation in the whole system from a file
+	void setSystemWallInterfacialAreaCon(const std::string);
 	// Sets the gas void fraction in the whole system
 	void setSystemGasVoidFraction(double);
+	// Sets the gas void fraction in the whole system from a file
+	void setSystemGasVoidFraction(const std::string);
 	// Set temperature in a cell
 	void setCellTemperature(int, int, double);
 	// Set pressure in a cell

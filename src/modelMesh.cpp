@@ -287,6 +287,37 @@ void modelMesh::setSystemTemperature(double temp){
 }
 
 //*****************************************************************************
+// Sets the temperature in the whole problem from a csv file
+// The order of the values in the csv file is very important. For a 3x4 example
+// with 3 cells in the x-direction and 4 in the y-direction the format should
+// be
+//
+//		0   1   2
+// 0 v1  v2  v3
+// 1 v4  v5  v6
+// 2 v7  v8  v9
+// 3 v10 v11 v12
+//
+// Temperature in kelvin
+//
+// @param path	Path to the csv file
+//*****************************************************************************
+void modelMesh::setSystemTemperature(const std::string path){
+	// Init the matrix to hold the temp values
+	MatrixD tempatureMat = MatrixD::Zero(numOfyCells, numOfxCells);
+	// read in the csv file
+	readCSV(tempatureMat, path);	
+
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			double temp = tempatureMat(j,i);
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setTemperature(temp);
+		}
+	}
+}
+
+//*****************************************************************************
 // Sets the pressure in the whole problem
 //
 // @param pressure		Pressure in Pa
@@ -301,6 +332,37 @@ void modelMesh::setSystemPressure(double pressure){
 }
 
 //*****************************************************************************
+// Sets the pressure in the whole problem from a csv file
+// The order of the values in the csv file is very important. For a 3x4 example
+// with 3 cells in the x-direction and 4 in the y-direction the format should
+// be
+//
+//		0   1   2
+// 0 v1  v2  v3
+// 1 v4  v5  v6
+// 2 v7  v8  v9
+// 3 v10 v11 v12
+//
+// Presure in Pa
+//
+// @param path	Path to the csv file
+//*****************************************************************************
+void modelMesh::setSystemPressure(const std::string path){
+	// Init the matrix to hold the temp values
+	MatrixD pressureMat = MatrixD::Zero(numOfyCells, numOfxCells);
+	// read in the csv file
+	readCSV(pressureMat, path);	
+
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			double pres = pressureMat(j,i);
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setPressure(pres);
+		}
+	}
+}
+
+//*****************************************************************************
 // Sets the neutron flux in the whole problem
 //
 // @param phi		Neutron flux in 1/cm^2/s
@@ -308,6 +370,37 @@ void modelMesh::setSystemPressure(double pressure){
 void modelMesh::setSystemNeutronFlux(double phi){
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setNeutronFlux(phi);
+		}
+	}
+}
+
+//*****************************************************************************
+// Sets the neutron flux in the whole problem from a csv file
+// The order of the values in the csv file is very important. For a 3x4 example
+// with 3 cells in the x-direction and 4 in the y-direction the format should
+// be
+//
+//		0   1   2
+// 0 v1  v2  v3
+// 1 v4  v5  v6
+// 2 v7  v8  v9
+// 3 v10 v11 v12
+//
+// neutron flux in 1/cm^2/s
+//
+// @param path	Path to the csv file
+//*****************************************************************************
+void modelMesh::setSystemNeutronFlux(const std::string path){
+	// Init the matrix to hold the temp values
+	MatrixD neutronMat = MatrixD::Zero(numOfyCells, numOfxCells);
+	// read in the csv file
+	readCSV(neutronMat, path);	
+
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			double phi = neutronMat(j,i);
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setNeutronFlux(phi);
 		}
@@ -329,6 +422,38 @@ void modelMesh::setSystemGasInterfacialAreaCon(double intAreaCon){
 }
 
 //*****************************************************************************
+// Sets the gas phase interfacial area concentration in the whole problem 
+// from a csv file
+// The order of the values in the csv file is very important. For a 3x4 example
+// with 3 cells in the x-direction and 4 in the y-direction the format should
+// be
+//
+//		0   1   2
+// 0 v1  v2  v3
+// 1 v4  v5  v6
+// 2 v7  v8  v9
+// 3 v10 v11 v12
+//
+// intAreaCon in 1/m
+//
+// @param path	Path to the csv file
+//*****************************************************************************
+void modelMesh::setSystemGasInterfacialAreaCon(const std::string path){
+	// Init the matrix to hold the values
+	MatrixD gasIntAreaMat = MatrixD::Zero(numOfyCells, numOfxCells);
+	// read in the csv file
+	readCSV(gasIntAreaMat, path);	
+
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			double intAreaCon = gasIntAreaMat(j,i);
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setGasInterfacialAreaCon(intAreaCon);
+		}
+	}
+}
+
+//*****************************************************************************
 // Sets the surface interfacial area concentration
 //
 // @param intAreaCon	Interfacial area concentration [1/m]
@@ -343,6 +468,38 @@ void modelMesh::setSystemWallInterfacialAreaCon(double intAreaCon){
 }
 
 //*****************************************************************************
+// Sets the wall interfacial area concentration in the whole problem 
+// from a csv file
+// The order of the values in the csv file is very important. For a 3x4 example
+// with 3 cells in the x-direction and 4 in the y-direction the format should
+// be
+//
+//		0   1   2
+// 0 v1  v2  v3
+// 1 v4  v5  v6
+// 2 v7  v8  v9
+// 3 v10 v11 v12
+//
+// intAreaCon in 1/m
+//
+// @param path	Path to the csv file
+//*****************************************************************************
+void modelMesh::setSystemWallInterfacialAreaCon(const std::string path){
+	// Init the matrix to hold the values
+	MatrixD wallIntAreaMat = MatrixD::Zero(numOfyCells, numOfxCells);
+	// read in the csv file
+	readCSV(wallIntAreaMat, path);	
+
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			double wallAreaCon = wallIntAreaMat(j,i);
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setWallInterfacialAreaCon(wallAreaCon);
+		}
+	}
+}
+
+//*****************************************************************************
 // Sets the gas void fraction
 //
 // @param fract	Gas void fraction
@@ -350,6 +507,38 @@ void modelMesh::setSystemWallInterfacialAreaCon(double intAreaCon){
 void modelMesh::setSystemGasVoidFraction(double fract){
 	for (int i = 0; i < numOfxCells; i++){
 		for (int j = 0; j < numOfyCells; j++){
+			meshCell* cell = getCellByLoc(i,j);
+			cell->setGasVoidFraction(fract);
+		}
+	}
+}
+
+//*****************************************************************************
+// Sets the void fraction in the whole problem 
+// from a csv file
+// The order of the values in the csv file is very important. For a 3x4 example
+// with 3 cells in the x-direction and 4 in the y-direction the format should
+// be
+//
+//		0   1   2
+// 3 v1  v2  v3
+// 2 v4  v5  v6
+// 1 v7  v8  v9
+// 0 v10 v11 v12
+//
+// fract in void fraction
+//
+// @param path	Path to the csv file
+//*****************************************************************************
+void modelMesh::setSystemGasVoidFraction(const std::string path){
+	// Init the matrix to hold the values
+	MatrixD voidMat = MatrixD::Zero(numOfyCells, numOfxCells);
+	// read in the csv file
+	readCSV(voidMat, path);	
+
+	for (int i = 0; i < numOfxCells; i++){
+		for (int j = 0; j < numOfyCells; j++){
+			double fract = voidMat(j,i);
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setGasVoidFraction(fract);
 		}
