@@ -1366,29 +1366,6 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 	// Builds the species object
 	speciesDriver spec = speciesDriver(&model);
 
-	// Sets the source terms
-	for (int i = 0; i < xCells; i++){
-		for (int j = 0; j < yCells; j++){
-			std::vector<double> coeffs(ids.size(), 0.0);
-			meshCell* cell = model.getCellByLoc(i,j);
-			double y = cell->y, x = cell->x;
-			double y1 = y - model.dy/2., x1 = x - model.dx/2.;
-			double y2 = y + model.dy/2., x2 = x + model.dx/2.;
-			double sy = (1./model.dy)*(coreLength/M_PI)*(cos(M_PI*y1/coreLength) - 
-			cos(M_PI*y2/coreLength));
-			double sx = (1./model.dx)*(xLength/M_PI)*(cos(M_PI*x1/xLength) - 
-			cos(M_PI*x2/xLength));
-
-			if (y < coreLength){
-				s = 1.e13*sx*sy;
-			}
-			else{
-				s = 0.0;
-			}
-			model.setCellNeutronFlux(i, j, s);
-		}
-	}
-
 	// Sets the matrix exp solver
 	spec.setMatrixExpSolver(solverType);
 
