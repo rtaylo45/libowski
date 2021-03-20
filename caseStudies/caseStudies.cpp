@@ -301,9 +301,7 @@ void msrLumpDepletion(int myid, std::string solverType){
 			end - start);
 		solveTime = duration.count()/1.e6;
 		totalSolveTime += solveTime;
-	//}
 		if (myid == 0){
-			//int k = 0;
 
 			cell = model.getCellByLoc(0,0); xc = cell->x; yc = cell->y;
 
@@ -605,9 +603,12 @@ void msrDepletionSmallLumped(int myid, std::string solverType){
 			}
 			fprintf(pOutputFile, "\n");
 			VectorD refSol = refSolData.col(k), sol = solData.col(k);
-			double E1 = computeRelativeE1(refSol, sol);
-			double E2 = computeRelativeE2(refSol, sol);
-			double Einf = computeRelativeEinfty(refSol, sol);
+			//double E1 = computeRelativeE1(refSol, sol);
+			//double E2 = computeRelativeE2(refSol, sol);
+			//double Einf = computeRelativeEinfty(refSol, sol);
+			double E1 = 0.
+			double E2 = 0.
+			double Einf  = 0.
 			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
@@ -707,7 +708,6 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 		solveTime = duration.count()/1.e6;
 		totalSolveTime += solveTime;
 		if (myid == 0){
-			//int k = 0;
 
 			cell = model.getCellByLoc(0,0); xc = cell->x; yc = cell->y;
 
@@ -723,9 +723,12 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 			}
 			fprintf(pOutputFile, "\n");
 			VectorD refSol = refSolData.col(k), sol = solData.col(k);
-			double E1 = computeRelativeE1(refSol, sol);
-			double E2 = computeRelativeE2(refSol, sol);
-			double Einf = computeRelativeEinfty(refSol, sol);
+			//double E1 = computeRelativeE1(refSol, sol);
+			//double E2 = computeRelativeE2(refSol, sol);
+			//double Einf = computeRelativeEinfty(refSol, sol);
+			double E1 = 0.
+			double E2 = 0.
+			double Einf  = 0.
 			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
@@ -753,7 +756,7 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	double xc, yc, s;
 	std::vector<int> ids;
 	std::string path = getDataPath() + "msr/";
-	std::string solPath = getDataPath() + "caseStudy/msrLumpDepletion/";
+	std::string solPath = getDataPath() + "caseStudy/msr2DDepletion/";
 	std::string outputFileName = "msr2DDepletionSmall3x9.out";
 	std::string outputFileNameMatrix = solverType+"MSR2DDepletionSmall3x9.csv";
 	std::string limiter = "First order upwind";
@@ -762,6 +765,10 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	MatrixD refSolData;
 	FILE * pOutputFile;
 	meshCell* cell = nullptr;
+	std::vector<std::string> wallTransNames={"Nb-93", "Mo-95", "Tc-99", "Ru-106", "Rh-103",
+													     "Rh-105", "Ag-109"};
+	// {graphite, heat exchanger, piping}
+	std::vector<double> massTransCoeffs = {5.334e-6, 4.657e-5, 1.041e-4};
 
 	if (myid == 0){
 		pOutputFile = fopen(outputFileName.c_str(), "a");
@@ -808,6 +815,38 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 
 	// Adds the speices
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
+
+	// Loops through to build the liqIDs and wallIDs for wall deposition 
+	std::vector<int> liqIDs = {}, wallIDs = {};
+	std::vector<bool> infSinks = {};
+	for (int k = 0; k < wallTransNames.size(); k++){
+		std::string name = wallTransNames[k];
+		liqIDs.push_back(spec.getSpeciesID(name+"Liq"));
+		wallIDs.push_back(spec.getSpeciesID(name+"Wall"));
+		infSinks.push_back(true);
+	}
+
+	// Loops through the model to set the wall mass transport coefficients
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			// The core region. This contains graphite
+			if (j > 0 and j < 3){
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[0]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+			// Heat exchanger
+			else if (j == 4){
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[1]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+			else{
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[2]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+		}
+	}
+
+	// Boundary condition vector
 	std::vector<double> bcs = {};
 
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
@@ -871,14 +910,17 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 				}
 			}
 			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
-			double Einf = computeRelativeEinfty(refSolVect, solVect);
-			double rmse = 0;
-			printf("Solve Step: %d %s Solve Time: %f Einf %e\n", k, solverType.c_str(), solveTime, Einf);
+			//double E1 = computeRelativeE1(refSol, sol);
+			//double E2 = computeRelativeE2(refSol, sol);
+			//double Einf = computeRelativeEinfty(refSol, sol);
+			double E1 = 0.
+			double E2 = 0.
+			double Einf  = 0.
+			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
 	if (myid == 0){
-		double Einf = computeRelativeEinfty(refSolData, solData);
-		printf("%s Solve Time: %f Einf %e\n", solverType.c_str(), totalSolveTime, Einf);
+		printf("%s Solve Time: %f \n", solverType.c_str(), totalSolveTime);
 		fprintf(pOutputFile, "end\n");
 		writeCSV(solData, outputFileNameMatrix);
 	}
@@ -911,6 +953,12 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 	MatrixD refSolData;
 	FILE * pOutputFile;
 	meshCell* cell = nullptr;
+	std::vector<std::string> wallTransNames={"Nb-93", "Mo-95", "Mo-97", "Mo-98", "Mo-99",
+													     "Mo-100", "Tc-99", "Ru-101", "Ru-102", "Ru-103", 
+														  "Ru-104", "Ru-106", "Rh-105", "Rh-103", "Pd-105",
+														  "Pd-107", "Pd-108", "Ag-109"};
+	// {graphite, heat exchanger, piping}
+	std::vector<double> massTransCoeffs = {5.334e-6, 4.657e-5, 1.041e-4};
 
 	if (myid == 0){
 		pOutputFile = fopen(outputFileName.c_str(), "a");
@@ -957,6 +1005,38 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 
 	// Adds the speices
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
+
+	// Loops through to build the liqIDs and wallIDs for wall deposition 
+	std::vector<int> liqIDs = {}, wallIDs = {};
+	std::vector<bool> infSinks = {};
+	for (int k = 0; k < wallTransNames.size(); k++){
+		std::string name = wallTransNames[k];
+		liqIDs.push_back(spec.getSpeciesID(name+"Liq"));
+		wallIDs.push_back(spec.getSpeciesID(name+"Wall"));
+		infSinks.push_back(true);
+	}
+
+	// Loops through the model to set the wall mass transport coefficients
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			// The core region. This contains graphite
+			if (j > 0 and j < 3){
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[0]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+			// Heat exchanger
+			else if (j == 4){
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[1]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+			else{
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[2]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+		}
+	}
+
+	// boundary condition vector
 	std::vector<double> bcs = {};
 
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
@@ -1021,14 +1101,17 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 				}
 			}
 			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
-			double Einf = computeRelativeEinfty(refSolVect, solVect);
-			double rmse = 0;
-			printf("Solve Step: %d %s Solve Time: %f Einf %e\n", k, solverType.c_str(), solveTime, Einf);
+			//double E1 = computeRelativeE1(refSol, sol);
+			//double E2 = computeRelativeE2(refSol, sol);
+			//double Einf = computeRelativeEinfty(refSol, sol);
+			double E1 = 0.
+			double E2 = 0.
+			double Einf  = 0.
+			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
 	if (myid == 0){
-		double Einf = computeRelativeEinfty(refSolData, solData);
-		printf("%s Solve Time: %f Einf %e\n", solverType.c_str(), totalSolveTime, Einf);
+		printf("%s Solve Time: %f\n", solverType.c_str(), totalSolveTime);
 		fprintf(pOutputFile, "end\n");
 		writeCSV(solData, outputFileNameMatrix);
 	}
@@ -1060,6 +1143,10 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 	MatrixD refSolData;
 	FILE * pOutputFile;
 	meshCell* cell = nullptr;
+	std::vector<std::string> wallTransNames={"Nb-93", "Mo-95", "Tc-99", "Ru-106", "Rh-103",
+													     "Rh-105", "Ag-109"};
+	// {graphite, heat exchanger, piping}
+	std::vector<double> massTransCoeffs = {5.334e-6, 4.657e-5, 1.041e-4};
 
 	if (myid == 0){
 		pOutputFile = fopen(outputFileName.c_str(), "a");
@@ -1106,6 +1193,37 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 
 	// Adds the speices
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
+	// Loops through to build the liqIDs and wallIDs for wall deposition 
+	std::vector<int> liqIDs = {}, wallIDs = {};
+	std::vector<bool> infSinks = {};
+	for (int k = 0; k < wallTransNames.size(); k++){
+		std::string name = wallTransNames[k];
+		liqIDs.push_back(spec.getSpeciesID(name+"Liq"));
+		wallIDs.push_back(spec.getSpeciesID(name+"Wall"));
+		infSinks.push_back(true);
+	}
+
+	// Loops through the model to set the wall mass transport coefficients
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			// The core region. This contains graphite
+			if (j > 0 and j < 9){
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[0]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+			// Heat exchanger
+			else if (j >= 12 and j <= 14){
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[1]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+			else{
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[2]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+		}
+	}
+
+	// Sets the boundary condition values
 	std::vector<double> bcs = {};
 
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
@@ -1169,14 +1287,17 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 				}
 			}
 			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
-			double Einf = computeRelativeEinfty(refSolVect, solVect);
-			double rmse = 0;
-			printf("Solve Step: %d %s Solve Time: %f Einf %e\n", k, solverType.c_str(), solveTime, Einf);
+			//double E1 = computeRelativeE1(refSol, sol);
+			//double E2 = computeRelativeE2(refSol, sol);
+			//double Einf = computeRelativeEinfty(refSol, sol);
+			double E1 = 0.
+			double E2 = 0.
+			double Einf  = 0.
+			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
 	if (myid == 0){
-		double Einf = computeRelativeEinfty(refSolData, solData);
-		printf("%s Solve Time: %f Einf %e\n", solverType.c_str(), totalSolveTime, Einf);
+		printf("%s Solve Time: %f\n", solverType.c_str(), totalSolveTime);
 		fprintf(pOutputFile, "end\n");
 		writeCSV(solData, outputFileNameMatrix);
 	}
@@ -1208,6 +1329,12 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 	MatrixD refSolData;
 	FILE * pOutputFile;
 	meshCell* cell = nullptr;
+	std::vector<std::string> wallTransNames={"Nb-93", "Mo-95", "Mo-97", "Mo-98", "Mo-99",
+													     "Mo-100", "Tc-99", "Ru-101", "Ru-102", "Ru-103", 
+														  "Ru-104", "Ru-106", "Rh-105", "Rh-103", "Pd-105",
+														  "Pd-107", "Pd-108", "Ag-109"};
+	// {graphite, heat exchanger, piping}
+	std::vector<double> massTransCoeffs = {5.334e-6, 4.657e-5, 1.041e-4};
 
 	if (myid == 0){
 		pOutputFile = fopen(outputFileName.c_str(), "a");
@@ -1270,6 +1397,37 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 
 	// Adds the speices
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
+	// Loops through to build the liqIDs and wallIDs for wall deposition 
+	std::vector<int> liqIDs = {}, wallIDs = {};
+	std::vector<bool> infSinks = {};
+	for (int k = 0; k < wallTransNames.size(); k++){
+		std::string name = wallTransNames[k];
+		liqIDs.push_back(spec.getSpeciesID(name+"Liq"));
+		wallIDs.push_back(spec.getSpeciesID(name+"Wall"));
+		infSinks.push_back(true);
+	}
+
+	// Loops through the model to set the wall mass transport coefficients
+	for (int i = 0; i < xCells; i++){
+		for (int j = 0; j < yCells; j++){
+			// The core region. This contains graphite
+			if (j > 0 and j < 9){
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[0]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+			// Heat exchanger
+			else if (j >= 12 and j <= 14){
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[1]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+			else{
+				std::vector coeffs(wallTransNames.size(), massTransCoeffs[2]);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+			}
+		}
+	}
+	
+	// Sets the boundary condition values
 	std::vector<double> bcs = {};
 
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
@@ -1334,15 +1492,17 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 				}
 			}
 			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
-			//double rmse = computeRelativeRMSE(refSolVect, solVect);
-			double Einf = computeRelativeEinfty(refSolVect, solVect);
-			double rmse = 0;
-			printf("Solve Step: %d %s Solve Time: %f Einf %e\n", k, solverType.c_str(), solveTime, Einf);
+			//double E1 = computeRelativeE1(refSol, sol);
+			//double E2 = computeRelativeE2(refSol, sol);
+			//double Einf = computeRelativeEinfty(refSol, sol);
+			double E1 = 0.
+			double E2 = 0.
+			double Einf  = 0.
+			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
 	if (myid == 0){
-		double Einf = computeRelativeEinfty(refSolData, solData);
-		printf("%s Solve Time: %f Einf %e\n", solverType.c_str(), totalSolveTime, Einf);
+		printf("%s Solve Time: %f\n", solverType.c_str(), totalSolveTime);
 		fprintf(pOutputFile, "end\n");
 		//writeCSV(solData, outputFileNameMatrix);
 	}
@@ -1358,8 +1518,8 @@ int main(){
 	//std::vector<std::string> solvers {"BDF1", "BDF2", "BDF3", "BDF4", "BDF5", "BDF6"};
 	//std::vector<std::string> solvers {"forward euler", "explicit midpoint", "kutta third-order", 
 	//"classic fourth-order"};
-	std::vector<std::string> solvers {"taylor"};
-	//std::vector<std::string> solvers {"CRAM"};
+	//std::vector<std::string> solvers {"taylor"};
+	std::vector<std::string> solvers {"CRAM"};
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
@@ -1368,7 +1528,7 @@ int main(){
 		//msrLumpDepletion(myid, solverType);
 
 		// For my M&C paper this does not include mass transport
-		msr2DDepletion(myid, solverType);
+		//msr2DDepletion(myid, solverType);
 
 		// These are for my dissertation these include mass transport
 		msr2DDepletionSmallLumped(myid, solverType);
