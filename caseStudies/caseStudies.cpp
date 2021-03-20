@@ -267,10 +267,6 @@ void msrLumpDepletion(int myid, std::string solverType){
 
 	// Sets the neutron flux
 	model.setSystemNeutronFlux(1.e13);
-	//model.setSystemGasInterfacialAreaCon(150.0);
-	//model.setSystemTemperature(950.0);
-	//model.setSystemGasVoidFraction(0.003);
-	//model.setSystemWallInterfacialAreaCon(100.0);
 
 	// Sets the matrix exp solver
 	spec.setMatrixExpSolver(solverType);
@@ -512,8 +508,8 @@ void msr2DDepletion(int myid, std::string solverType){
 //*****************************************************************************
 void msrDepletionSmallLumped(int myid, std::string solverType){
 	double t = 0.0;
-	int steps = 20;
-	double depletionTime = 400.; // Days
+	int steps = 10;
+	double depletionTime = 200.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps, solveTime;
 	int xCells = 1, yCells = 1;
@@ -593,9 +589,7 @@ void msrDepletionSmallLumped(int myid, std::string solverType){
 			end - start);
 		solveTime = duration.count()/1.e6;
 		totalSolveTime += solveTime;
-	//}
 		if (myid == 0){
-			//int k = 0;
 
 			cell = model.getCellByLoc(0,0); xc = cell->x; yc = cell->y;
 
@@ -631,8 +625,8 @@ void msrDepletionSmallLumped(int myid, std::string solverType){
 //*****************************************************************************
 void msrDepletionMediumLumped(int myid, std::string solverType){
 	double t = 0.0;
-	int steps = 20;
-	double depletionTime = 400.; // Days
+	int steps = 10;
+	double depletionTime = 200.; // Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps, solveTime;
 	int xCells = 1, yCells = 1;
@@ -683,7 +677,6 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 
 	// Sets the matrix exp solver
 	spec.setMatrixExpSolver(solverType);
-	//spec.setIntegratorSolver("implicit", solverType);
 
 	// Adds the speices
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
@@ -713,7 +706,6 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 			end - start);
 		solveTime = duration.count()/1.e6;
 		totalSolveTime += solveTime;
-	//}
 		if (myid == 0){
 			//int k = 0;
 
@@ -740,7 +732,7 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 	if (myid == 0){
 		fprintf(pOutputFile, "end\n");
 		printf("%s Solve Time: %f \n", solverType.c_str(), totalSolveTime);
-		//writeCSV(solData, outputFileNameMatrix);
+		writeCSV(solData, outputFileNameMatrix);
 	}
 }
 //*****************************************************************************
@@ -761,9 +753,10 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	double xc, yc, s;
 	std::vector<int> ids;
 	std::string path = getDataPath() + "msr/";
-	std::string outputFileName = "msr2DDepletionSmall.out";
+	std::string solPath = getDataPath() + "caseStudy/msrLumpDepletion/";
+	std::string outputFileName = "msr2DDepletionSmall3x9.out";
+	std::string outputFileNameMatrix = solverType+"MSR2DDepletionSmall3x9.csv";
 	std::string limiter = "First order upwind";
-	std::string outputFileNameMatrix = solverType+"MSR2DDepletion.csv";
 	std::ofstream outputFile;
 	outputFile.open(outputFileName, std::ios_base::app);
 	MatrixD refSolData;
@@ -797,31 +790,15 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	// set y velocity
 	model.setConstantYVelocity(v_y);
 
+	// Sets the variables
+	model.setSystemTemperature(path + "temperatureMap3x9.csv");
+	model.setNeutronFlux(path + "neutronFluxMap3x9.csv");
+	model.setSystemGasVoidFraction(path + "voidMap3x9.csv");
+	model.setSystemGasInterfacialAreaCon(path + "gasIntAreaMap3x9.csv");
+	model.setSystemWallInterfacialAreaCon(path + "wallIntAreaMap3x9.csv");
+
 	// Builds the species object
 	speciesDriver spec = speciesDriver(&model);
-
-	// Sets the source terms
-	for (int i = 0; i < xCells; i++){
-		for (int j = 0; j < yCells; j++){
-			std::vector<double> coeffs(ids.size(), 0.0);
-			meshCell* cell = model.getCellByLoc(i,j);
-			double y = cell->y, x = cell->x;
-			double y1 = y - model.dy/2., x1 = x - model.dx/2.;
-			double y2 = y + model.dy/2., x2 = x + model.dx/2.;
-			double sy = (1./model.dy)*(coreLength/M_PI)*(cos(M_PI*y1/coreLength) - 
-			cos(M_PI*y2/coreLength));
-			double sx = (1./model.dx)*(xLength/M_PI)*(cos(M_PI*x1/xLength) - 
-			cos(M_PI*x2/xLength));
-
-			if (y < coreLength){
-				s = 1.e13*sx*sy;
-			}
-			else{
-				s = 0.0;
-			}
-			model.setCellNeutronFlux(i, j, s);
-		}
-	}
 
 	// Sets the matrix exp solver
 	spec.setMatrixExpSolver(solverType);
@@ -834,7 +811,7 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	std::vector<double> bcs = {};
 
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
-	readCSV(refSolData, std::string(path + "solutionMSR2DDepletionSmall.csv"));
+	//readCSV(refSolData, std::string(path + "solutionMSR2DDepletionSmall.csv"));
 
 	// Print species name to file
 	if (myid == 0){
@@ -859,8 +836,8 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 
 	// Writes transition matrix and initial condition
 	if (myid == 0){
-		spec.writeTransitionMatrixToFile("transitionMatrixMSR2DDepletion.csv");
-		spec.writeInitialConditionToFile("initialConditionMSR2DDepletion.csv");
+		spec.writeTransitionMatrixToFile("transitionMatrixMSR2DDepletionSmall3x9.csv");
+		spec.writeInitialConditionToFile("initialConditionMSR2DDepletionSmall3x9.csv");
 		pOutputFile = fopen(outputFileName.c_str(), "a");
 	}
 
@@ -869,7 +846,6 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	for (int k = 0; k < steps; k++){
 		auto start = std::chrono::high_resolution_clock::now();
 		t = t + dt;
-		//std::cout << "solving" << std::endl;
 		spec.solve(t);
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -895,7 +871,6 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 				}
 			}
 			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
-			//double rmse = computeRelativeRMSE(refSolVect, solVect);
 			double Einf = computeRelativeEinfty(refSolVect, solVect);
 			double rmse = 0;
 			printf("Solve Step: %d %s Solve Time: %f Einf %e\n", k, solverType.c_str(), solveTime, Einf);
@@ -905,7 +880,7 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 		double Einf = computeRelativeEinfty(refSolData, solData);
 		printf("%s Solve Time: %f Einf %e\n", solverType.c_str(), totalSolveTime, Einf);
 		fprintf(pOutputFile, "end\n");
-		//writeCSV(solData, outputFileNameMatrix);
+		writeCSV(solData, outputFileNameMatrix);
 	}
 }
 
@@ -923,13 +898,14 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 	double depletionTime = 200.;							// Days
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps, solveTime;
-	int xCells = 9, yCells = 27;
+	int xCells = 3, yCells = 9;
 	double xc, yc, s;
 	std::vector<int> ids;
 	std::string path = getDataPath() + "msr/";
-	std::string outputFileName = "msr2DDepletionSmall.out";
+	std::string solPath = getDataPath() + "caseStudy/msrLumpDepletion/";
+	std::string outputFileName = "msr2DDepletionMedium3x9.out";
+	std::string outputFileNameMatrix = solverType+"MSR2DDepletionMedium3x9.csv";
 	std::string limiter = "First order upwind";
-	std::string outputFileNameMatrix = solverType+"MSR2DDepletion.csv";
 	std::ofstream outputFile;
 	outputFile.open(outputFileName, std::ios_base::app);
 	MatrixD refSolData;
@@ -949,9 +925,9 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 	}
 
 	// Sets file paths for the input data	
-	std::string speciesNamesFile = path + "speciesInputNamesMSRSmall.dat";
-	std::string speciesDecayFile = path + "speciesInputDecayMSRSmall.dat";
-	std::string speciesTransFile = path + "speciesInputTransMSRSmall.dat";
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMedium.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMedium.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMedium.dat";
 
 	// Builds the model
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -966,28 +942,12 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 	// Builds the species object
 	speciesDriver spec = speciesDriver(&model);
 
-	// Sets the source terms
-	for (int i = 0; i < xCells; i++){
-		for (int j = 0; j < yCells; j++){
-			std::vector<double> coeffs(ids.size(), 0.0);
-			meshCell* cell = model.getCellByLoc(i,j);
-			double y = cell->y, x = cell->x;
-			double y1 = y - model.dy/2., x1 = x - model.dx/2.;
-			double y2 = y + model.dy/2., x2 = x + model.dx/2.;
-			double sy = (1./model.dy)*(coreLength/M_PI)*(cos(M_PI*y1/coreLength) - 
-			cos(M_PI*y2/coreLength));
-			double sx = (1./model.dx)*(xLength/M_PI)*(cos(M_PI*x1/xLength) - 
-			cos(M_PI*x2/xLength));
-
-			if (y < coreLength){
-				s = 1.e13*sx*sy;
-			}
-			else{
-				s = 0.0;
-			}
-			model.setCellNeutronFlux(i, j, s);
-		}
-	}
+	// Sets the variables
+	model.setSystemTemperature(path + "temperatureMap3x9.csv");
+	model.setNeutronFlux(path + "neutronFluxMap3x9.csv");
+	model.setSystemGasVoidFraction(path + "voidMap3x9.csv");
+	model.setSystemGasInterfacialAreaCon(path + "gasIntAreaMap3x9.csv");
+	model.setSystemWallInterfacialAreaCon(path + "wallIntAreaMap3x9.csv");
 
 	// Sets the matrix exp solver
 	spec.setMatrixExpSolver(solverType);
@@ -1000,7 +960,7 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 	std::vector<double> bcs = {};
 
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
-	readCSV(refSolData, std::string(path + "solutionMSR2DDepletionSmall.csv"));
+	//readCSV(refSolData, std::string(path + "solutionMSR2DDepletionSmall.csv"));
 
 	// Print species name to file
 	if (myid == 0){
@@ -1025,8 +985,8 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 
 	// Writes transition matrix and initial condition
 	if (myid == 0){
-		spec.writeTransitionMatrixToFile("transitionMatrixMSR2DDepletion.csv");
-		spec.writeInitialConditionToFile("initialConditionMSR2DDepletion.csv");
+		spec.writeTransitionMatrixToFile("transitionMatrixMSR2DDepletionMedium3x9.csv");
+		spec.writeInitialConditionToFile("initialConditionMSR2DDepletionMedium3x9.csv");
 		pOutputFile = fopen(outputFileName.c_str(), "a");
 	}
 
@@ -1061,7 +1021,6 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 				}
 			}
 			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
-			//double rmse = computeRelativeRMSE(refSolVect, solVect);
 			double Einf = computeRelativeEinfty(refSolVect, solVect);
 			double rmse = 0;
 			printf("Solve Step: %d %s Solve Time: %f Einf %e\n", k, solverType.c_str(), solveTime, Einf);
@@ -1071,7 +1030,7 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 		double Einf = computeRelativeEinfty(refSolData, solData);
 		printf("%s Solve Time: %f Einf %e\n", solverType.c_str(), totalSolveTime, Einf);
 		fprintf(pOutputFile, "end\n");
-		//writeCSV(solData, outputFileNameMatrix);
+		writeCSV(solData, outputFileNameMatrix);
 	}
 }
 
@@ -1093,9 +1052,9 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 	double xc, yc, s;
 	std::vector<int> ids;
 	std::string path = getDataPath() + "msr/";
-	std::string outputFileName = "msr2DDepletionSmall.out";
-	std::string limiter = "First order upwind";
-	std::string outputFileNameMatrix = solverType+"MSR2DDepletion.csv";
+	std::string solPath = getDataPath() + "caseStudy/msrLumpDepletion/";
+	std::string outputFileName = "msr2DDepletionSmall9x27.out";
+	std::string outputFileNameMatrix = solverType+"MSR2DDepletionSmall9x27.csv";
 	std::ofstream outputFile;
 	outputFile.open(outputFileName, std::ios_base::app);
 	MatrixD refSolData;
@@ -1132,28 +1091,12 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 	// Builds the species object
 	speciesDriver spec = speciesDriver(&model);
 
-	// Sets the source terms
-	for (int i = 0; i < xCells; i++){
-		for (int j = 0; j < yCells; j++){
-			std::vector<double> coeffs(ids.size(), 0.0);
-			meshCell* cell = model.getCellByLoc(i,j);
-			double y = cell->y, x = cell->x;
-			double y1 = y - model.dy/2., x1 = x - model.dx/2.;
-			double y2 = y + model.dy/2., x2 = x + model.dx/2.;
-			double sy = (1./model.dy)*(coreLength/M_PI)*(cos(M_PI*y1/coreLength) - 
-			cos(M_PI*y2/coreLength));
-			double sx = (1./model.dx)*(xLength/M_PI)*(cos(M_PI*x1/xLength) - 
-			cos(M_PI*x2/xLength));
-
-			if (y < coreLength){
-				s = 1.e13*sx*sy;
-			}
-			else{
-				s = 0.0;
-			}
-			model.setCellNeutronFlux(i, j, s);
-		}
-	}
+	// Sets the variables
+	model.setSystemTemperature(path + "temperatureMap9x27.csv");
+	model.setNeutronFlux(path + "neutronFluxMap9x27.csv");
+	model.setSystemGasVoidFraction(path + "voidMap9x27.csv");
+	model.setSystemGasInterfacialAreaCon(path + "gasIntAreaMap9x27.csv");
+	model.setSystemWallInterfacialAreaCon(path + "wallIntAreaMap9x27.csv");
 
 	// Sets the matrix exp solver
 	spec.setMatrixExpSolver(solverType);
@@ -1166,7 +1109,7 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 	std::vector<double> bcs = {};
 
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
-	readCSV(refSolData, std::string(path + "solutionMSR2DDepletionSmall.csv"));
+	//readCSV(refSolData, std::string(path + "solutionMSR2DDepletionSmall.csv"));
 
 	// Print species name to file
 	if (myid == 0){
@@ -1191,8 +1134,8 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 
 	// Writes transition matrix and initial condition
 	if (myid == 0){
-		spec.writeTransitionMatrixToFile("transitionMatrixMSR2DDepletion.csv");
-		spec.writeInitialConditionToFile("initialConditionMSR2DDepletion.csv");
+		spec.writeTransitionMatrixToFile("transitionMatrixMSR2DDepletionSmall9x27.csv");
+		spec.writeInitialConditionToFile("initialConditionMSR2DDepletionSmall9x27.csv");
 		pOutputFile = fopen(outputFileName.c_str(), "a");
 	}
 
@@ -1201,7 +1144,6 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 	for (int k = 0; k < steps; k++){
 		auto start = std::chrono::high_resolution_clock::now();
 		t = t + dt;
-		//std::cout << "solving" << std::endl;
 		spec.solve(t);
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -1227,7 +1169,6 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 				}
 			}
 			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
-			//double rmse = computeRelativeRMSE(refSolVect, solVect);
 			double Einf = computeRelativeEinfty(refSolVect, solVect);
 			double rmse = 0;
 			printf("Solve Step: %d %s Solve Time: %f Einf %e\n", k, solverType.c_str(), solveTime, Einf);
@@ -1237,7 +1178,7 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 		double Einf = computeRelativeEinfty(refSolData, solData);
 		printf("%s Solve Time: %f Einf %e\n", solverType.c_str(), totalSolveTime, Einf);
 		fprintf(pOutputFile, "end\n");
-		//writeCSV(solData, outputFileNameMatrix);
+		writeCSV(solData, outputFileNameMatrix);
 	}
 }
 
@@ -1432,10 +1373,10 @@ int main(){
 		// These are for my dissertation these include mass transport
 		msr2DDepletionSmallLumped(myid, solverType);
 		msr2DDepletionMediumLumped(myid, solverType);
-		//msr2DDepletionSmall3x9(myid, solverType);
-		//msr2DDepletionMedium3x9(myid, solverType);
-		//msr2DDepletionSmall9x27(myid, solverType);
-		//msr2DDepletionMedium9x27(myid, solverType);
+		msr2DDepletionSmall3x9(myid, solverType);
+		msr2DDepletionMedium3x9(myid, solverType);
+		msr2DDepletionSmall9x27(myid, solverType);
+		msr2DDepletionMedium9x27(myid, solverType);
 	}
 
 	mpi.finalize();
