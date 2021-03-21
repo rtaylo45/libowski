@@ -48,6 +48,8 @@ class species {
 	void addWallDepositionSourceTerm(double, int, int, int, bool);
 	// Add gas sparging source term
 	void addGasSpargingSourceTerm(double, double, int, int, int);
+	// Adds generic source term
+	void addGenericRemovalSourceTerm(double, int);
 	// Clean
 	void clean();
 

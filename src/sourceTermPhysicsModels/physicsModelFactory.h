@@ -11,6 +11,7 @@
 #include "neutronInducedReactions.h"
 #include "wallDeposition.h"
 #include "gasSparging.h"
+#include "genericRemoval.h"
 
 //*****************************************************************************
 // Physics model factory

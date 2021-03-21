@@ -91,6 +91,10 @@ class speciesDriver {
 	void setGasSpargingFromFile(std::string);
 	// Sets up wall deposition from a file
 	void setWallDepositionFromFile(std::string);
+	// Internal function that sets the generic removal for a single cell
+	void setRemovalSource(int, int, int, std::string, double);
+	// Function that sets the generic removal for a single cell
+	void setRemoval(int, int, int, double);
 	// Sets a boundary condition in a cell
 	void setBoundaryCondition(std::string, std::string, int, double = 0);
 	// Sets a boundary condition in a cell for a list of isotopes

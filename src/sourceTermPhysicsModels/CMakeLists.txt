@@ -3,6 +3,7 @@ target_sources(liblibowski
 	physicsModelABC.cpp
 	physicsModelFactory.cpp
 	generic.cpp
+	genericRemoval.cpp
 	neutronInducedReactions.cpp
 	wallDeposition.cpp
 	gasSparging.cpp

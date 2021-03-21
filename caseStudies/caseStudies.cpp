@@ -511,7 +511,7 @@ void msrDepletionSmallLumped(int myid, std::string solverType){
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps, solveTime;
 	int xCells = 1, yCells = 1;
-	double xLength = 1.92024., yLength = 0.6858., xc, yc;
+	double xLength = 1.92024, yLength = 0.6858, xc, yc;
 	std::vector<int> ids;
 	std::string path = getDataPath() + "msr/";
 	std::string solPath = getDataPath() + "caseStudy/msrLumpDepletion/";
@@ -606,9 +606,9 @@ void msrDepletionSmallLumped(int myid, std::string solverType){
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
-			double E1 = 0.
-			double E2 = 0.
-			double Einf  = 0.
+			double E1 = 0.;
+			double E2 = 0.;
+			double Einf  = 0.;
 			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
@@ -631,7 +631,7 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 	double totalTime = depletionTime*24.*60.*60.;
 	double dt = totalTime/steps, solveTime;
 	int xCells = 1, yCells = 1;
-	double xLength = 1.92024., yLength = 0.6858., xc, yc;
+	double xLength = 1.92024, yLength = 0.6858, xc, yc;
 	std::vector<int> ids;
 	std::string path = getDataPath() + "msr/";
 	std::string solPath = getDataPath() + "caseStudy/msrLumpDepletion/";
@@ -726,9 +726,9 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
-			double E1 = 0.
-			double E2 = 0.
-			double Einf  = 0.
+			double E1 = 0.;
+			double E2 = 0.;
+			double Einf  = 0.;
 			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
@@ -799,7 +799,7 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 
 	// Sets the variables
 	model.setSystemTemperature(path + "temperatureMap3x9.csv");
-	model.setNeutronFlux(path + "neutronFluxMap3x9.csv");
+	model.setSystemNeutronFlux(path + "neutronFluxMap3x9.csv");
 	model.setSystemGasVoidFraction(path + "voidMap3x9.csv");
 	model.setSystemGasInterfacialAreaCon(path + "gasIntAreaMap3x9.csv");
 	model.setSystemWallInterfacialAreaCon(path + "wallIntAreaMap3x9.csv");
@@ -832,16 +832,16 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 			// The core region. This contains graphite
 			if (j > 0 and j < 3){
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[0]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 			// Heat exchanger
 			else if (j == 4){
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[1]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 			else{
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[2]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 		}
 	}
@@ -913,9 +913,9 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
-			double E1 = 0.
-			double E2 = 0.
-			double Einf  = 0.
+			double E1 = 0.;
+			double E2 = 0.;
+			double Einf  = 0.;
 			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
@@ -992,7 +992,7 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 
 	// Sets the variables
 	model.setSystemTemperature(path + "temperatureMap3x9.csv");
-	model.setNeutronFlux(path + "neutronFluxMap3x9.csv");
+	model.setSystemNeutronFlux(path + "neutronFluxMap3x9.csv");
 	model.setSystemGasVoidFraction(path + "voidMap3x9.csv");
 	model.setSystemGasInterfacialAreaCon(path + "gasIntAreaMap3x9.csv");
 	model.setSystemWallInterfacialAreaCon(path + "wallIntAreaMap3x9.csv");
@@ -1022,16 +1022,16 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 			// The core region. This contains graphite
 			if (j > 0 and j < 3){
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[0]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 			// Heat exchanger
 			else if (j == 4){
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[1]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 			else{
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[2]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 		}
 	}
@@ -1104,9 +1104,9 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
-			double E1 = 0.
-			double E2 = 0.
-			double Einf  = 0.
+			double E1 = 0.;
+			double E2 = 0.;
+			double Einf  = 0.;
 			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
@@ -1138,6 +1138,7 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 	std::string solPath = getDataPath() + "caseStudy/msrLumpDepletion/";
 	std::string outputFileName = "msr2DDepletionSmall9x27.out";
 	std::string outputFileNameMatrix = solverType+"MSR2DDepletionSmall9x27.csv";
+	std::string limiter = "First order upwind";
 	std::ofstream outputFile;
 	outputFile.open(outputFileName, std::ios_base::app);
 	MatrixD refSolData;
@@ -1180,7 +1181,7 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 
 	// Sets the variables
 	model.setSystemTemperature(path + "temperatureMap9x27.csv");
-	model.setNeutronFlux(path + "neutronFluxMap9x27.csv");
+	model.setSystemNeutronFlux(path + "neutronFluxMap9x27.csv");
 	model.setSystemGasVoidFraction(path + "voidMap9x27.csv");
 	model.setSystemGasInterfacialAreaCon(path + "gasIntAreaMap9x27.csv");
 	model.setSystemWallInterfacialAreaCon(path + "wallIntAreaMap9x27.csv");
@@ -1209,16 +1210,16 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 			// The core region. This contains graphite
 			if (j > 0 and j < 9){
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[0]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 			// Heat exchanger
 			else if (j >= 12 and j <= 14){
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[1]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 			else{
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[2]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 		}
 	}
@@ -1290,9 +1291,9 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
-			double E1 = 0.
-			double E2 = 0.
-			double Einf  = 0.
+			double E1 = 0.;
+			double E2 = 0.;
+			double Einf  = 0.;
 			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
@@ -1321,9 +1322,10 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 	double xc, yc, s;
 	std::vector<int> ids;
 	std::string path = getDataPath() + "msr/";
-	std::string outputFileName = "msr2DDepletionSmall.out";
+	std::string solPath = getDataPath() + "caseStudy/msrLumpDepletion/";
+	std::string outputFileName = "msr2DDepletionMedium9x27.out";
+	std::string outputFileNameMatrix = solverType+"MSR2DDepletionMedium9x27.csv";
 	std::string limiter = "First order upwind";
-	std::string outputFileNameMatrix = solverType+"MSR2DDepletion.csv";
 	std::ofstream outputFile;
 	outputFile.open(outputFileName, std::ios_base::app);
 	MatrixD refSolData;
@@ -1366,6 +1368,14 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 	// Builds the species object
 	speciesDriver spec = speciesDriver(&model);
 
+	// Sets the variables
+	model.setSystemTemperature(path + "temperatureMap9x27.csv");
+	model.setSystemNeutronFlux(path + "neutronFluxMap9x27.csv");
+	model.setSystemGasVoidFraction(path + "voidMap9x27.csv");
+	model.setSystemGasInterfacialAreaCon(path + "gasIntAreaMap9x27.csv");
+	model.setSystemWallInterfacialAreaCon(path + "wallIntAreaMap9x27.csv");
+
+
 	// Sets the matrix exp solver
 	spec.setMatrixExpSolver(solverType);
 
@@ -1390,16 +1400,16 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 			// The core region. This contains graphite
 			if (j > 0 and j < 9){
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[0]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 			// Heat exchanger
 			else if (j >= 12 and j <= 14){
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[1]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 			else{
 				std::vector coeffs(wallTransNames.size(), massTransCoeffs[2]);
-				spec.setWallDeposition(i, j, coeffs, liqIDs, gasIDs, infSinks);
+				spec.setWallDeposition(i, j, coeffs, liqIDs, wallIDs, infSinks);
 			}
 		}
 	}
@@ -1472,9 +1482,9 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
-			double E1 = 0.
-			double E2 = 0.
-			double Einf  = 0.
+			double E1 = 0.;
+			double E2 = 0.;
+			double Einf  = 0.;
 			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
@@ -1508,8 +1518,8 @@ int main(){
 		//msr2DDepletion(myid, solverType);
 
 		// These are for my dissertation these include mass transport
-		msr2DDepletionSmallLumped(myid, solverType);
-		msr2DDepletionMediumLumped(myid, solverType);
+		msrDepletionSmallLumped(myid, solverType);
+		msrDepletionMediumLumped(myid, solverType);
 		msr2DDepletionSmall3x9(myid, solverType);
 		msr2DDepletionMedium3x9(myid, solverType);
 		msr2DDepletionSmall9x27(myid, solverType);
