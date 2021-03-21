@@ -567,12 +567,12 @@ void msrDepletionSmallLumped(int myid, std::string solverType){
 	// Sets the species sources
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
 	spec.setGasSpargingFromFile(path + "speciesInputGasSpargingSmall.txt");
-	spec.setWallDepositionFromFile(path + "speciesInputWallDepositionSmall.txt");
+	//spec.setWallDepositionFromFile(path + "speciesInputWallDepositionSmall.txt");
 
 	// Sets the gas removal
-	for (int k = 0; k < gasNames.size(); k++){
-		spec.setRemoval(0, 0, spec.getSpeciesID(gasNames[k]), 2.05e-4);
-	}
+	//for (int k = 0; k < gasNames.size(); k++){
+	//	spec.setRemoval(0, 0, spec.getSpeciesID(gasNames[k]), 2.05e-4);
+	//}
 
 	// Writes transition matrix and initial condition
 	spec.writeTransitionMatrixToFile("transitionMatrixMSRLumpDepletionSmall.csv");
