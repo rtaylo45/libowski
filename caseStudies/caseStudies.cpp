@@ -541,9 +541,9 @@ void msrDepletionSmallLumped(int myid, std::string solverType){
 	}
 
 	// Sets file paths for the input data	
-	std::string speciesNamesFile = path + "speciesInputNamesMSRSmall.dat";
-	std::string speciesDecayFile = path + "speciesInputDecayMSRSmall.dat";
-	std::string speciesTransFile = path + "speciesInputTransMSRSmall.dat";
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMassTransportSmall.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMassTransportSmall.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMassTransportSmall.dat";
 
 	// Builds the model
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -567,19 +567,19 @@ void msrDepletionSmallLumped(int myid, std::string solverType){
 	// Sets the species sources
 	spec.setSpeciesSourceFromFile(speciesDecayFile, speciesTransFile);
 	spec.setGasSpargingFromFile(path + "speciesInputGasSpargingSmall.txt");
-	//spec.setWallDepositionFromFile(path + "speciesInputWallDepositionSmall.txt");
+	spec.setWallDepositionFromFile(path + "speciesInputWallDepositionSmall.txt");
 
 	// Sets the gas removal
-	//for (int k = 0; k < gasNames.size(); k++){
-	//	spec.setRemoval(0, 0, spec.getSpeciesID(gasNames[k]), 2.05e-4);
-	//}
+	for (int k = 0; k < gasNames.size(); k++){
+		spec.setRemoval(0, 0, spec.getSpeciesID(gasNames[k]), -2.05e-4);
+	}
 
 	// Writes transition matrix and initial condition
 	spec.writeTransitionMatrixToFile("transitionMatrixMSRLumpDepletionSmall.csv");
 	spec.writeInitialConditionToFile("initialConditionMSRLumpDepletionSmall.csv");
 	pOutputFile = fopen(outputFileName.c_str(), "a");
 
-	// Gets the solution
+	//// Gets the solution
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
 	//readCSV(refSolData, std::string(solPath + "solutionMSRSmallLumpDepletion.csv"));
 
@@ -609,7 +609,7 @@ void msrDepletionSmallLumped(int myid, std::string solverType){
 				solData(id, k) = con;
 			}
 			fprintf(pOutputFile, "\n");
-			VectorD refSol = refSolData.col(k), sol = solData.col(k);
+			//VectorD refSol = refSolData.col(k), sol = solData.col(k);
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
@@ -668,9 +668,9 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 	}
 
 	// Sets file paths for the input data	
-	std::string speciesNamesFile = path + "speciesInputNamesMSRMedium.dat";
-	std::string speciesDecayFile = path + "speciesInputDecayMSRMedium.dat";
-	std::string speciesTransFile = path + "speciesInputTransMSRMedium.dat";
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMassTransportMedium.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMassTransportMedium.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMassTransportMedium.dat";
 
 	// Builds the model
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -698,7 +698,7 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 
 	// Sets the gas removal
 	for (int k = 0; k < gasNames.size(); k++){
-		spec.setRemoval(0, 0, spec.getSpeciesID(gasNames[k]), 2.05e-4);
+		spec.setRemoval(0, 0, spec.getSpeciesID(gasNames[k]), -2.05e-4);
 	}
 
 	// Writes transition matrix and initial condition
@@ -732,11 +732,11 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 				std::string name = spec.getSpeciesName(ids[id]);
 				double con = spec.getSpecies(0, 0, ids[id]);
 				fprintf(pOutputFile, "%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
-				//printf("%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
+				printf("%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
 				solData(id, k) = con;
 			}
 			fprintf(pOutputFile, "\n");
-			VectorD refSol = refSolData.col(k), sol = solData.col(k);
+			//VectorD refSol = refSolData.col(k), sol = solData.col(k);
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
@@ -780,7 +780,7 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	FILE * pOutputFile;
 	meshCell* cell = nullptr;
 	std::vector<std::string> wallTransNames={"Nb-93", "Mo-95", "Tc-99", "Ru-106", "Rh-103",
-													     "Rh-105", "Ag-109"};
+													     "Rh-105", "Ag-109", "Sn-126"};
 	std::vector<std::string> gasNames = {"H-1Gas", "N-14Gas", "O-16Gas", "Kr-83Gas", 
 													 "Xe-131Gas", "Xe-135Gas"};
 	// {graphite, heat exchanger, piping}
@@ -799,9 +799,9 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	}
 
 	// Sets file paths for the input data	
-	std::string speciesNamesFile = path + "speciesInputNamesMSRSmall.dat";
-	std::string speciesDecayFile = path + "speciesInputDecayMSRSmall.dat";
-	std::string speciesTransFile = path + "speciesInputTransMSRSmall.dat";
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMassTransportSmall.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMassTransportSmall.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMassTransportSmall.dat";
 
 	// Builds the model
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -831,6 +831,7 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 
 	// Adds the speices
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
+	spec.setGasSpargingFromFile(path + "speciesInputGasSpargingSmall.txt");
 
 	// Loops through to build the liqIDs and wallIDs for wall deposition 
 	std::vector<int> liqIDs = {}, wallIDs = {};
@@ -863,7 +864,7 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 			// Adds the gas removal
 			if (j == 3){
 				for (int k = 0; k < gasNames.size(); k++){
-					spec.setRemoval(i, j, spec.getSpeciesID(gasNames[k]), 2.05e-4);
+					spec.setRemoval(i, j, spec.getSpeciesID(gasNames[k]), -2.05e-4);
 				}
 			}
 
@@ -922,18 +923,20 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 			for (int i = 0; i < xCells; i++){
 				for (int j = 0; j < yCells; j++){
 					fprintf(pOutputFile, "%5.4e %5.4e ", xc, yc);
+					cell = model.getCellByLoc(i,j); xc = cell->x; yc = cell->y;
 
 					for (int id = 0; id < ids.size(); id++){
 						std::string name = spec.getSpeciesName(ids[id]);
 						double con = spec.getSpecies(i, j, ids[id]);
 						fprintf(pOutputFile, "%17.16e ", con);
+						printf("%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
 						solData(index, k) = con;
 						index ++;
 					}
 					fprintf(pOutputFile, "\n");
 				}
 			}
-			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
+			//VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
@@ -980,7 +983,7 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 	std::vector<std::string> wallTransNames={"Nb-93", "Mo-95", "Mo-97", "Mo-98", "Mo-99",
 													     "Mo-100", "Tc-99", "Ru-101", "Ru-102", "Ru-103", 
 														  "Ru-104", "Ru-106", "Rh-105", "Rh-103", "Pd-105",
-														  "Pd-107", "Pd-108", "Ag-109"};
+														  "Pd-107", "Pd-108", "Ag-109", "Sn-126"};
 	std::vector<std::string> gasNames = {"H-1Gas", "N-14Gas", "O-16Gas", "Kr-83Gas", 
 													 "Xe-131Gas", "Xe-133Gas", "Xe-135Gas"};
 	// {graphite, heat exchanger, piping}
@@ -999,9 +1002,9 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 	}
 
 	// Sets file paths for the input data	
-	std::string speciesNamesFile = path + "speciesInputNamesMSRMedium.dat";
-	std::string speciesDecayFile = path + "speciesInputDecayMSRMedium.dat";
-	std::string speciesTransFile = path + "speciesInputTransMSRMedium.dat";
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMassTransportMedium.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMassTransportMedium.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMassTransportMedium.dat";
 
 	// Builds the model
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -1031,6 +1034,7 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 
 	// Adds the speices
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
+	spec.setGasSpargingFromFile(path + "speciesInputGasSpargingMedium.txt");
 
 	// Loops through to build the liqIDs and wallIDs for wall deposition 
 	std::vector<int> liqIDs = {}, wallIDs = {};
@@ -1063,7 +1067,7 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 			// Adds the gas removal
 			if (j == 3){
 				for (int k = 0; k < gasNames.size(); k++){
-					spec.setRemoval(i, j, spec.getSpeciesID(gasNames[k]), 2.05e-4);
+					spec.setRemoval(i, j, spec.getSpeciesID(gasNames[k]), -2.05e-4);
 				}
 			}
 		}
@@ -1121,19 +1125,21 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 			int index = 0;
 			for (int i = 0; i < xCells; i++){
 				for (int j = 0; j < yCells; j++){
+					cell = model.getCellByLoc(i,j); xc = cell->x; yc = cell->y;
 					fprintf(pOutputFile, "%5.4e %5.4e ", xc, yc);
 
 					for (int id = 0; id < ids.size(); id++){
 						std::string name = spec.getSpeciesName(ids[id]);
 						double con = spec.getSpecies(i, j, ids[id]);
 						fprintf(pOutputFile, "%17.16e ", con);
+						printf("%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
 						solData(index, k) = con;
 						index ++;
 					}
 					fprintf(pOutputFile, "\n");
 				}
 			}
-			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
+			//VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
@@ -1178,7 +1184,7 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 	FILE * pOutputFile;
 	meshCell* cell = nullptr;
 	std::vector<std::string> wallTransNames={"Nb-93", "Mo-95", "Tc-99", "Ru-106", "Rh-103",
-													     "Rh-105", "Ag-109"};
+													     "Rh-105", "Ag-109", "Sn-126"};
 	std::vector<std::string> gasNames = {"H-1Gas", "N-14Gas", "O-16Gas", "Kr-83Gas", 
 													 "Xe-131Gas", "Xe-135Gas"};
 	// {graphite, heat exchanger, piping}
@@ -1197,9 +1203,9 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 	}
 
 	// Sets file paths for the input data	
-	std::string speciesNamesFile = path + "speciesInputNamesMSRSmall.dat";
-	std::string speciesDecayFile = path + "speciesInputDecayMSRSmall.dat";
-	std::string speciesTransFile = path + "speciesInputTransMSRSmall.dat";
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMassTransportSmall.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMassTransportSmall.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMassTransportSmall.dat";
 
 	// Builds the model
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -1229,6 +1235,8 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 
 	// Adds the speices
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
+	spec.setGasSpargingFromFile(path + "speciesInputGasSpargingSmall.txt");
+
 	// Loops through to build the liqIDs and wallIDs for wall deposition 
 	std::vector<int> liqIDs = {}, wallIDs = {};
 	std::vector<bool> infSinks = {};
@@ -1260,7 +1268,7 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 			// Adds the gas removal
 			if (j == 10){
 				for (int k = 0; k < gasNames.size(); k++){
-					spec.setRemoval(i, j, spec.getSpeciesID(gasNames[k]), 2.05e-4);
+					spec.setRemoval(i, j, spec.getSpeciesID(gasNames[k]), -2.05e-4);
 				}
 			}
 		}
@@ -1318,18 +1326,20 @@ void msr2DDepletionSmall9x27(int myid, std::string solverType){
 			for (int i = 0; i < xCells; i++){
 				for (int j = 0; j < yCells; j++){
 					fprintf(pOutputFile, "%5.4e %5.4e ", xc, yc);
+					cell = model.getCellByLoc(i,j); xc = cell->x; yc = cell->y;
 
 					for (int id = 0; id < ids.size(); id++){
 						std::string name = spec.getSpeciesName(ids[id]);
 						double con = spec.getSpecies(i, j, ids[id]);
 						fprintf(pOutputFile, "%17.16e ", con);
+						printf("%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
 						solData(index, k) = con;
 						index ++;
 					}
 					fprintf(pOutputFile, "\n");
 				}
 			}
-			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
+			//VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
@@ -1376,7 +1386,7 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 	std::vector<std::string> wallTransNames={"Nb-93", "Mo-95", "Mo-97", "Mo-98", "Mo-99",
 													     "Mo-100", "Tc-99", "Ru-101", "Ru-102", "Ru-103", 
 														  "Ru-104", "Ru-106", "Rh-105", "Rh-103", "Pd-105",
-														  "Pd-107", "Pd-108", "Ag-109"};
+														  "Pd-107", "Pd-108", "Ag-109", "Sn-126"};
 	std::vector<std::string> gasNames = {"H-1Gas", "N-14Gas", "O-16Gas", "Kr-83Gas", 
 													 "Xe-131Gas", "Xe-133Gas", "Xe-135Gas"};
 	// {graphite, heat exchanger, piping}
@@ -1395,9 +1405,9 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 	}
 
 	// Sets file paths for the input data	
-	std::string speciesNamesFile = path + "speciesInputNamesMSRMedium.dat";
-	std::string speciesDecayFile = path + "speciesInputDecayMSRMedium.dat";
-	std::string speciesTransFile = path + "speciesInputTransMSRMedium.dat";
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMassTransportMedium.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMassTransportMedium.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMassTransportMedium.dat";
 
 	// Builds the model
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -1428,6 +1438,8 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 
 	// Adds the speices
 	ids = spec.addSpeciesFromFile(speciesNamesFile);
+	spec.setGasSpargingFromFile(path + "speciesInputGasSpargingMedium.txt");
+
 	// Loops through to build the liqIDs and wallIDs for wall deposition 
 	std::vector<int> liqIDs = {}, wallIDs = {};
 	std::vector<bool> infSinks = {};
@@ -1459,7 +1471,7 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 			// Adds the gas removal
 			if (j == 10){
 				for (int k = 0; k < gasNames.size(); k++){
-					spec.setRemoval(i, j, spec.getSpeciesID(gasNames[k]), 2.05e-4);
+					spec.setRemoval(i, j, spec.getSpeciesID(gasNames[k]), -2.05e-4);
 				}
 			}
 		}
@@ -1518,18 +1530,20 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 			for (int i = 0; i < xCells; i++){
 				for (int j = 0; j < yCells; j++){
 					fprintf(pOutputFile, "%5.4e %5.4e ", xc, yc);
+					cell = model.getCellByLoc(i,j); xc = cell->x; yc = cell->y;
 
 					for (int id = 0; id < ids.size(); id++){
 						std::string name = spec.getSpeciesName(ids[id]);
 						double con = spec.getSpecies(i, j, ids[id]);
 						fprintf(pOutputFile, "%17.16e ", con);
+						printf("%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
 						solData(index, k) = con;
 						index ++;
 					}
 					fprintf(pOutputFile, "\n");
 				}
 			}
-			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
+			//VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
 			//double E1 = computeRelativeE1(refSol, sol);
 			//double E2 = computeRelativeE2(refSol, sol);
 			//double Einf = computeRelativeEinfty(refSol, sol);
@@ -1569,9 +1583,9 @@ int main(){
 		//msr2DDepletion(myid, solverType);
 
 		// These are for my dissertation these include mass transport
-		msrDepletionSmallLumped(myid, solverType);
+		//msrDepletionSmallLumped(myid, solverType);
 		//msrDepletionMediumLumped(myid, solverType);
-		//msr2DDepletionSmall3x9(myid, solverType);
+		msr2DDepletionSmall3x9(myid, solverType);
 		//msr2DDepletionMedium3x9(myid, solverType);
 		//msr2DDepletionSmall9x27(myid, solverType);
 		//msr2DDepletionMedium9x27(myid, solverType);
