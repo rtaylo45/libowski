@@ -98,6 +98,20 @@ void species::addGasSpargingSourceTerm(double k, double H, int mID, int lID,
 	// Add model 
 	addSourceTerm(model);	
 }
+//**************************************************************************
+// Adds a generic removal term to the species
+//
+// @param coeff		Removal rate [1/s]
+// @param mID			My species ID
+//**************************************************************************
+void species::addGenericRemovalSourceTerm(double coeff, int mID){
+	// Generate model
+	physicsModel* model = physicsModelFactory::getPhysicsModel("genericRemoval");
+	// Set model coefficients
+	model->setModel(mID, coeff);
+	// Add model 
+	addSourceTerm(model);	
+}
 
 //**************************************************************************
 // Addes a source term model 

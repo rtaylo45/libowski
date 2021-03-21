@@ -409,6 +409,38 @@ void speciesDriver::setGasSparging(std::vector<double> mCoeffs,
 }
 
 //*****************************************************************************
+// Internal function that sets the generic removal term
+//
+// The name is passed in so that an assertion is made that the species name 
+// equals the name in the file
+//
+// @param i					x index
+// @param j					y index
+// @param specID			Species ID
+// @param name				Species name
+// @param coeff			The removal coeff [1/s]
+//*****************************************************************************
+void speciesDriver::setRemovalSource(int i, int j, int specID, std::string name,
+		double coeff){
+   species* spec = getSpeciesPtr(i, j, specID);
+	assert(spec->name == name);
+   spec->addGenericRemovalSourceTerm(coeff, specID);
+}
+
+//*****************************************************************************
+// Function that sets the generic removal term
+//
+// @param i					x index
+// @param j					y index
+// @param specID			Species ID
+// @param coeff			The removal coeff [1/s]
+//*****************************************************************************
+void speciesDriver::setRemoval(int i, int j, int specID, double coeff){
+   species* spec = getSpeciesPtr(i, j, specID);
+	setRemovalSource(i, j, specID, spec->name, coeff);
+}
+
+//*****************************************************************************
 // Sets the source terms for a species in the entire problem domain
 //
 // @param decayfname		File location of the decay file

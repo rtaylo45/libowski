@@ -26,6 +26,8 @@ class physicsModel {
 	virtual void setModel(double, int, int, int, bool){};
 	// Sets coefficients for the gas sparging model
 	virtual void setModel(double, double, double, int, int, int){};
+	// Sets coefficients for the generic removalmodel
+	virtual void setModel(int, double){};
 
 };
 

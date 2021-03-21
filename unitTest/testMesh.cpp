@@ -138,6 +138,8 @@ void testAddSpeciesFromFile(){
 			assert(testTranCoeff == tranVector[otherID]);
 		}
 	}
+	model.clean();
+	spec.clean();
 }
 
 //*****************************************************************************
@@ -188,6 +190,32 @@ void testSetGasSpargingAndWallDepositionFromFile(){
 			index ++;
 		}
 	}
+
+	model.clean();
+	spec.clean();
+}
+//*****************************************************************************
+// Test setting up generic removal coeff
+//*****************************************************************************
+void testSetGenericRemoval(){
+	int xCells = 1, yCells = 1;
+	double xLength = 1.0, yLength = 1.0;
+	int specID1;
+
+	modelMesh model(xCells, yCells, xLength, yLength);
+	speciesDriver spec = speciesDriver(&model);
+	specID1 = spec.addSpecies(1.0, 0.0, 0.0, "spec1");
+	spec.setRemoval(0, 0, specID1, 0.001);
+
+	for (int i = 0; i < 1; i++){
+		species* thisSpec = spec.getSpeciesPtr(0, 0, i);
+		meshCell* cell = model.getCellByLoc(0, 0);
+		int otherID = specID1;
+		double removalCoeff = thisSpec->getTransitionCoeff(i, otherID, cell->getScalarData());
+		assert(removalCoeff == 0.001);
+	}
+	model.clean();
+	spec.clean();
 }
 
 //*****************************************************************************
@@ -201,6 +229,7 @@ int main(){
 	testSpeciesDriver();
 	testAddSpeciesFromFile();
 	testSetGasSpargingAndWallDepositionFromFile();
+	testSetGenericRemoval();
 
 	mpi.finalize();
 }
