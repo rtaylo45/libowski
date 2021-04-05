@@ -784,7 +784,7 @@ void msrDepletionMediumLumped(int myid, std::string solverType){
 //*****************************************************************************
 void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	double t = 0.0;
-	int steps = 10000;
+	int steps = 1;
 	double coreLength = 1.92024;
 	double xLength = 0.6858, yLength = 3.*coreLength;		// Meters
 	double v_y = 0.25;											// m/s
@@ -850,8 +850,8 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	speciesDriver spec = speciesDriver(&model);
 
 	// Sets the matrix exp solver
-	//spec.setMatrixExpSolver(solverType);
-	spec.setIntegratorSolver("implicit", solverType);
+	spec.setMatrixExpSolver(solverType);
+	//spec.setIntegratorSolver("implicit", solverType);
 
 	// Sets the flux limiter type
 	spec.setFluxLimiter(limiter);
@@ -937,8 +937,8 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 	for (int k = 0; k < steps; k++){
 		auto start = std::chrono::high_resolution_clock::now();
 		t = t + dt;
-		//spec.solve(t);
-		spec.solveImplicit(t);
+		spec.solve(t);
+		//spec.solveImplicit(t);
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
 			end - start);
@@ -968,24 +968,24 @@ void msr2DDepletionSmall3x9(int myid, std::string solverType){
 					fprintf(pOutputFile, "\n");
 				}
 			}
-			//VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
-			//double E1 = computeRelativeE1(refSolVect, solVect);
-			//double E2 = computeRelativeE2(refSolVect, solVect);
-			//double Einf = computeRelativeEinfty(refSolVect, solVect);
-			////double E1 = 0.;
-			////double E2 = 0.;
-			////double Einf  = 0.;
-			//printf("%e %e %e\n", Einf, E1, E2);
+			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
+			double E1 = computeRelativeE1(refSolVect, solVect);
+			double E2 = computeRelativeE2(refSolVect, solVect);
+			double Einf = computeRelativeEinfty(refSolVect, solVect);
+			//double E1 = 0.;
+			//double E2 = 0.;
+			//double Einf  = 0.;
+			printf("%e %e %e\n", Einf, E1, E2);
 		}
 	}
 	if (myid == 0){
-		VectorD refSol = refSolData.col(0), sol = solData.col(steps-1);
-		double E1 = computeRelativeE1(refSol, sol);
-		double E2 = computeRelativeE2(refSol, sol);
-		double Einf = computeRelativeEinfty(refSol, sol);
-		//printf("%s Solve Time: %f \n", solverType.c_str(), totalSolveTime);
-		printf("%s Solve Time: %f %e %e %e \n", solverType.c_str(), 
-			totalSolveTime, Einf, E1, E2);
+		//VectorD refSol = refSolData.col(0), sol = solData.col(steps-1);
+		//double E1 = computeRelativeE1(refSol, sol);
+		//double E2 = computeRelativeE2(refSol, sol);
+		//double Einf = computeRelativeEinfty(refSol, sol);
+		printf("%s Solve Time: %f \n", solverType.c_str(), totalSolveTime);
+		//printf("%s Solve Time: %f %e %e %e \n", solverType.c_str(), 
+		//	totalSolveTime, Einf, E1, E2);
 		fprintf(pOutputFile, "end\n");
 		writeCSV(solData, outputFileNameMatrix);
 	}
@@ -1009,7 +1009,7 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 	double xc, yc, s;
 	std::vector<int> ids;
 	std::string path = getDataPath() + "msr/";
-	std::string solPath = getDataPath() + "caseStudy/msrLumpDepletion/";
+	std::string solPath = getDataPath() + "caseStudy/2DMSRTransport/";
 	std::string outputFileName = "msr2DDepletionMedium3x9.out";
 	std::string outputFileNameMatrix = solverType+"MSR2DDepletionMedium3x9.csv";
 	std::string limiter = "First order upwind";
@@ -1115,7 +1115,7 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 	std::vector<double> bcs = {};
 
 	MatrixD solData = MatrixD::Zero(xCells*yCells*ids.size()+1, steps);
-	//readCSV(refSolData, std::string(path + "solutionMSR2DDepletionSmall.csv"));
+	readCSV(refSolData, std::string(solPath + "solutionMSR2DDepletionMedium3x9.csv"));
 
 	// Print species name to file
 	if (myid == 0){
@@ -1169,27 +1169,27 @@ void msr2DDepletionMedium3x9(int myid, std::string solverType){
 					double temp = cell->getTemperature(), fract = cell->getGasVoidFraction();
 					double flux = cell->getNeutronFlux(), wallInt = cell->getWallInterfacialAreaCon();
 					double gasInt = cell->getGasInterfacialAreaCon();
-					printf("%i %i %5.4e %5.4e %8.7e %8.7e %8.7e %8.7e %8.7e \n", 
-						i, j, xc, yc, temp, fract, flux, wallInt, gasInt);
+					//printf("%i %i %5.4e %5.4e %8.7e %8.7e %8.7e %8.7e %8.7e \n", 
+					//	i, j, xc, yc, temp, fract, flux, wallInt, gasInt);
 
 					for (int id = 0; id < ids.size(); id++){
 						std::string name = spec.getSpeciesName(ids[id]);
 						double con = spec.getSpecies(i, j, ids[id]);
 						fprintf(pOutputFile, "%17.16e ", con);
-						printf("%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
+						//printf("%5.4e %5.4e %s %17.16e \n", xc, yc, name.c_str(), con);
 						solData(index, k) = con;
 						index ++;
 					}
 					fprintf(pOutputFile, "\n");
 				}
 			}
-			//VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
-			//double E1 = computeRelativeE1(refSol, sol);
-			//double E2 = computeRelativeE2(refSol, sol);
-			//double Einf = computeRelativeEinfty(refSol, sol);
-			double E1 = 0.;
-			double E2 = 0.;
-			double Einf  = 0.;
+			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
+			double E1 = computeRelativeE1(refSolVect, solVect);
+			double E2 = computeRelativeE2(refSolVect, solVect);
+			double Einf = computeRelativeEinfty(refSolVect, solVect);
+			//double E1 = 0.;
+			//double E2 = 0.;
+			//double Einf  = 0.;
 			printf("%s %e %e %e %e\n", solverType.c_str(), t, Einf, E1, E2);
 		}
 	}
@@ -1613,15 +1613,15 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
-	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic",
-	//"pade-method1", "pade-method2", "taylor"};
+	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic",
+	"pade-method1", "pade-method2", "taylor"};
 	//std::vector<std::string> solvers {"BDF1", "BDF2", "BDF3", "BDF4", "BDF5", "BDF6"};
 	//std::vector<std::string> solvers {"BDF1"};
 	//std::vector<std::string> solvers {"forward euler", "explicit midpoint", "kutta third-order", 
 	//"classic fourth-order"};
 	//std::vector<std::string> solvers {"explicit midpoint", "forward euler"};
 	//std::vector<std::string> solvers {"taylor"};
-	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
+	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
 	//std::vector<std::string> solvers {"hyperbolic", "parabolic"};
 
 	// Loops over different solvers
@@ -1636,9 +1636,9 @@ int main(){
 		//neutronPrecursors(myid, solverType);
 		// These are for my dissertation these include mass transport
 		//msrDepletionSmallLumped(myid, solverType);
-		msrDepletionMediumLumped(myid, solverType);
+		//msrDepletionMediumLumped(myid, solverType);
 		//msr2DDepletionSmall3x9(myid, solverType);
-		//msr2DDepletionMedium3x9(myid, solverType);
+		msr2DDepletionMedium3x9(myid, solverType);
 		//msr2DDepletionSmall9x27(myid, solverType);
 		//msr2DDepletionMedium9x27(myid, solverType);
 	}
