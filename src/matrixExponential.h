@@ -214,7 +214,7 @@ class cauchy : public matrixExponential{
 	// Limit of r at infinity
 	long double alpha_0 = 0.0L;
 	// Number of sub steps to take during a solve
-	int substeps = 4;
+	int substeps = 0;
 
 	public:
 	//**************************************************************************
@@ -302,6 +302,9 @@ class hyperbolic : public cauchy{
 //
 // "Using Generalized Laguerre Polynomials to Compute the Matrix
 // Exponential in Burnup Equations" - Ding She
+//
+// I would not use this method. Its very unstable, im not sure if I implemented
+// it wrong. The documentation for its implementation is not very good. 
 //*****************************************************************************
 class LPAM : public matrixExponential{
 	private:
