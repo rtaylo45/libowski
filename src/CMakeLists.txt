@@ -24,7 +24,9 @@ target_link_libraries(liblibowski PUBLIC utillibowski)
 add_subdirectory(sourceTerms)
 
 # The main program
-add_executable(libowski main.cpp)
+add_executable(libowski libowski.cpp)
+set_target_properties(libowski PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
 if(${MPI_FOUND})
 	target_link_libraries(liblibowski PRIVATE ${MPI_LIBRARIES})
 	target_link_libraries(libowski PRIVATE liblibowski ${MPI_LIBRARIES})
