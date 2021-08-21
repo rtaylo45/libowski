@@ -8,4 +8,4 @@ target_sources(liblibowski
 	wallDeposition.cpp
 	gasSparging.cpp
 )
-target_include_directories(liblibowski PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+#target_include_directories(liblibowski PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
