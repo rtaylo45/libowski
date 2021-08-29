@@ -119,13 +119,13 @@ int speciesDriver::addSpecies(double molarMass, double initCon,
 	if (name == "None"){
 		name = "spec" + std::to_string(specID);
 	}
-   for (int i = 0; i < modelPtr->numOfxCells; i++){
-      for (int j = 0; j < modelPtr->numOfyCells; j++){
-         meshCell* cell = modelPtr->getCellByLoc(i,j);
+  for (size_t i = 0; i < modelPtr->numOfxCells; i++){
+     for (size_t j = 0; j < modelPtr->numOfyCells; j++){
+        meshCell* cell = modelPtr->getCellByLoc(i,j);
 
-         cell->addSpecies(molarMass, initCon, diffCoeff, name, transport);
-      }
-   }
+        cell->addSpecies(molarMass, initCon, diffCoeff, name, transport);
+     }
+  }
 
 	// Map the name to the spec ID
 	specNameToID.insert(std::pair<std::string, int>(name, specID));
@@ -156,21 +156,21 @@ std::vector<int> speciesDriver::addSpeciesFromFile(std::string fname){
 	checkFileExists(fname);
 		
 	// Loop though lines
-   for (std::string line; getline(infile, line);){
-      std::istringstream iss(line);
-      std::vector<std::string> result;
-		// Split line and loop though it
-      for (std::string s; iss >> s;){
-         result.push_back(s);
-      }
-		// Skips comments
-		if (result.at(0) != "#"){
-			name = result.at(0); mm = stod(result.at(1)); initCon = stod(result.at(2)); 
-			D = stod(result.at(3));
-			// Adds the species
-			specIDs.push_back(addSpecies(mm, initCon, D, name, true));
-		}
-   }
+  for (std::string line; getline(infile, line);){
+     std::istringstream iss(line);
+     std::vector<std::string> result;
+	 // Split line and loop though it
+     for (std::string s; iss >> s;){
+        result.push_back(s);
+     }
+	 // Skips comments
+	 if (result.at(0) != "#"){
+	 	name = result.at(0); mm = stod(result.at(1)); initCon = stod(result.at(2)); 
+	 	D = stod(result.at(3));
+	 	// Adds the species
+	 	specIDs.push_back(addSpecies(mm, initCon, D, name, true));
+	 }
+  }
 	return specIDs;
 }
 
@@ -235,7 +235,7 @@ std::string speciesDriver::getSpeciesName(int specID){
 	// Makes sure the name is in the map
 	assert(specIDToName.count(specID) == 1);
 	std::string name = specIDToName[specID];
-   return name;
+  return name;
 }
 
 //*****************************************************************************
@@ -250,10 +250,10 @@ std::string speciesDriver::getSpeciesName(int specID){
 //*****************************************************************************
 void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<double>
       coeffs, double s){
-   assert(coeffs.size() == numOfSpecs);
-   species* spec = getSpeciesPtr(i, j, specID);
+  assert(coeffs.size() == numOfSpecs);
+  species* spec = getSpeciesPtr(i, j, specID);
 	spec->addGenericSourceTerm(coeffs);
-   spec->s = s;
+  spec->s = s;
 }
 
 //*****************************************************************************
@@ -271,10 +271,10 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 //*****************************************************************************
 void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
 		std::vector<double> coeffs){
-   species* spec = getSpeciesPtr(i, j, specID);
+  species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
 	assert(numOfSpecs == coeffs.size());
-   spec->addGenericSourceTerm(coeffs);
+  spec->addGenericSourceTerm(coeffs);
 }
 
 //*****************************************************************************
@@ -292,10 +292,10 @@ void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
 //*****************************************************************************
 void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
 		std::vector<double> coeffs){
-   species* spec = getSpeciesPtr(i, j, specID);
+  species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
 	assert(numOfSpecs == coeffs.size());
-   spec->addNIRSourceTerm(coeffs);
+  spec->addNIRSourceTerm(coeffs);
 }
 
 //*****************************************************************************
@@ -320,10 +320,10 @@ void speciesDriver::setWallDeposition(int i, int j, std::vector<double> coeffs,
 		infSinks_ = infSinks;
 	}
 	else {
-		for (int i = 0; i < coeffs.size(); i++){infSinks_.push_back(false);};
+	  for (size_t i = 0; i < coeffs.size(); i++){infSinks_.push_back(false);};
 	}
 
-	for (int index = 0; index < coeffs.size(); index++){
+	for (size_t index = 0; index < coeffs.size(); index++){
 		species* specLiq = getSpeciesPtr(i, j, liquidIDs[index]);
 		species* specSurf = getSpeciesPtr(i, j, surfaceIDs[index]);
 		specLiq->addWallDepositionSourceTerm(coeffs[index], liquidIDs[index], 
@@ -349,8 +349,8 @@ void speciesDriver::setWallDeposition(std::vector<double> coeffs,
 		infSinks){
 
 	// Loop over cells
-	for (int i = 0; i < modelPtr->numOfxCells; i++){
-		for (int j = 0; j < modelPtr->numOfyCells; j++){
+	for (size_t i = 0; i < modelPtr->numOfxCells; i++){
+		for (size_t j = 0; j < modelPtr->numOfyCells; j++){
 			setWallDeposition(i, j, coeffs, liquidIDs, surfaceIDs, infSinks);
 		}
 	}
@@ -375,7 +375,7 @@ void speciesDriver::setGasSparging(int i, int j, std::vector<double> mCoeffs,
 	assert(liquidIDs.size() == mCoeffs.size());
 	assert(liquidIDs.size() == HCoeffs.size());
 
-	for (int index = 0; index < mCoeffs.size(); index++){
+	for (size_t index = 0; index < mCoeffs.size(); index++){
 		species* specLiq = getSpeciesPtr(i, j, liquidIDs[index]);
 		species* specGas = getSpeciesPtr(i, j, gasIDs[index]);
 		specLiq->addGasSpargingSourceTerm(mCoeffs[index], HCoeffs[index], liquidIDs[index], 
@@ -400,8 +400,8 @@ void speciesDriver::setGasSparging(std::vector<double> mCoeffs,
 		std::vector<int> gasIDs){
 
 	// Loop over cells
-	for (int i = 0; i < modelPtr->numOfxCells; i++){
-		for (int j = 0; j < modelPtr->numOfyCells; j++){
+	for (size_t i = 0; i < modelPtr->numOfxCells; i++){
+		for (size_t j = 0; j < modelPtr->numOfyCells; j++){
 			setGasSparging(i, j, mCoeffs, HCoeffs, liquidIDs, gasIDs);
 		}
 	}
@@ -422,9 +422,9 @@ void speciesDriver::setGasSparging(std::vector<double> mCoeffs,
 //*****************************************************************************
 void speciesDriver::setRemovalSource(int i, int j, int specID, std::string name,
 		double coeff){
-   species* spec = getSpeciesPtr(i, j, specID);
+  species* spec = getSpeciesPtr(i, j, specID);
 	assert(spec->name == name);
-   spec->addGenericRemovalSourceTerm(coeff, specID);
+  spec->addGenericRemovalSourceTerm(coeff, specID);
 }
 
 //*****************************************************************************
@@ -490,8 +490,8 @@ void speciesDriver::setSpeciesSourceFromFile(std::string decayfname, std::string
    	   }
 
 			// Loop over cells
-			for (int i = 0; i < modelPtr->numOfxCells; i++){
-				for (int j = 0; j < modelPtr->numOfyCells; j++){
+			for (size_t i = 0; i < modelPtr->numOfxCells; i++){
+				for (size_t j = 0; j < modelPtr->numOfyCells; j++){
 					if (findex == 0){ 
 						setDecaySource(i, j, specID, name, v);
 					}
@@ -701,7 +701,7 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 
 		// North location
 		case 0: {
-			for (int i = 0; i < modelPtr->numOfxCells; i++){
+			for (size_t i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* cell = modelPtr->getCellByLoc(i,yCellMax);
 				connection* northCon = cell->getConnection(0);
 				northCon->boundary = true;
@@ -714,7 +714,7 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		}
 		// South location
 		case 1: {
-			for (int i = 0; i < modelPtr->numOfxCells; i++){
+			for (size_t i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* cell = modelPtr->getCellByLoc(i,yCellMin);
 				connection* southCon = cell->getConnection(1);
 				southCon->boundary = true;
@@ -727,7 +727,7 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		}
 		// East location
 		case 2: {
-			for (int j = 0; j < modelPtr->numOfyCells; j++){
+			for (size_t j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* cell = modelPtr->getCellByLoc(xCellMax,j);
 				connection* eastCon = cell->getConnection(2);
 				eastCon->boundary = true;
@@ -740,7 +740,7 @@ void speciesDriver::setGeneralBoundaryCondition(std::string type, int locID,
 		}
 		// West location
 		case 3: {
-			for (int j = 0; j < modelPtr->numOfyCells; j++){
+			for (size_t j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* cell = modelPtr->getCellByLoc(xCellMin,j);
 				connection* westCon = cell->getConnection(3);
 				westCon->boundary = true;
@@ -770,7 +770,7 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 
 		// North location
 		case 0: {
-			for (int i = 0; i < modelPtr->numOfxCells; i++){
+			for (size_t i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* thisCell = modelPtr->getCellByLoc(i,yCellMax);
 				meshCell* southCell = modelPtr->getCellByLoc(i,yCellMin);
 				connection* thisCellCon = thisCell->getConnection(0);
@@ -781,7 +781,7 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 		}
 		// South location
 		case 1: {
-			for (int i = 0; i < modelPtr->numOfxCells; i++){
+			for (size_t i = 0; i < modelPtr->numOfxCells; i++){
 				meshCell* thisCell = modelPtr->getCellByLoc(i,yCellMin);
 				meshCell* northCell = modelPtr->getCellByLoc(i,yCellMax);
 				connection* thisCellCon = thisCell->getConnection(1);
@@ -792,7 +792,7 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 		}
 		// East location
 		case 2: {
-			for (int j = 0; j < modelPtr->numOfyCells; j++){
+			for (size_t j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* thisCell = modelPtr->getCellByLoc(xCellMax,j);
 				meshCell* westCell = modelPtr->getCellByLoc(xCellMin,j);
 				connection* thisCellCon = thisCell->getConnection(2);
@@ -803,7 +803,7 @@ void speciesDriver::setPeriodicBoundaryCondition(int locID){
 		}
 		// West location
 		case 3: {
-			for (int j = 0; j < modelPtr->numOfyCells; j++){
+			for (size_t j = 0; j < modelPtr->numOfyCells; j++){
 				meshCell* thisCell = modelPtr->getCellByLoc(xCellMin,j);
 				meshCell* eastCell = modelPtr->getCellByLoc(xCellMax,j);
 				connection* thisCellCon = thisCell->getConnection(3);
@@ -927,12 +927,12 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	SparseMatrixD A(totalCells*totalSpecs + dummySpec, totalCells*totalSpecs + 
 		dummySpec);
 	// Loop over cells
-	for (int cellID = 0; cellID < totalCells; cellID++){
+	for (size_t cellID = 0; cellID < totalCells; cellID++){
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
 
 		// Loop over species
-		for (int specID = 0; specID < totalSpecs; specID++){
+		for (size_t specID = 0; specID < totalSpecs; specID++){
 			// Gets the species pointer
 			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
 			diffusionCoeff = thisSpecPtr->D;
@@ -947,7 +947,7 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 			thisCoeff = 0.0;
 
 			// loop over cell connections
-			for (int conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
+			for (size_t conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
 				// Sets the deferred correction source
 				defCor = 0.0;
 				// Sets the matrix coefficient to zero
@@ -1010,8 +1010,8 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				aP += (-a + ab);
 			}
 			// Sets the coefficients for linear source terms
-			for (int phyModel = 0; phyModel < thisSpecPtr->sourceTerms.size(); phyModel++){
-				for (int specCounter = 0; specCounter < totalSpecs; specCounter++){
+			for (size_t phyModel = 0; phyModel < thisSpecPtr->sourceTerms.size(); phyModel++){
+				for (size_t specCounter = 0; specCounter < totalSpecs; specCounter++){
 					coeff = thisSpecPtr->getTransitionCoeff(specCounter, phyModel,
 						thisCellPtr->getScalarData());
 					if (specCounter == specID){
@@ -1050,12 +1050,12 @@ VectorD speciesDriver::buildInitialConditionVector(bool augmented){
 	VectorD N0(totalSpecs*totalCells + dummySpec);
 
 	// Loops over cells
-	for (int cellID = 0; cellID < totalCells; cellID++){
+	for (size_t cellID = 0; cellID < totalCells; cellID++){
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
 
 		// Loop over species
-		for (int specID = 0; specID < totalSpecs; specID++){
+		for (size_t specID = 0; specID < totalSpecs; specID++){
 			// Gets the species pointer
 			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
 			i = getAi(cellID, totalCells, specID, totalSpecs);
@@ -1076,12 +1076,12 @@ VectorD speciesDriver::buildbVector(){
 	VectorD b(totalSpecs*totalCells);
 
 	// Loops over cells
-	for (int cellID = 0; cellID < totalCells; cellID++){
+	for (size_t cellID = 0; cellID < totalCells; cellID++){
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
 
 		// Loop over species
-		for (int specID = 0; specID < totalSpecs; specID++){
+		for (size_t specID = 0; specID < totalSpecs; specID++){
 			// Gets the species pointer
 			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
 			i = getAi(cellID, totalCells, specID, totalSpecs);
@@ -1100,12 +1100,12 @@ void speciesDriver::unpackSolution(const VectorD& sol){
 	int totalCells = modelPtr->numOfTotalCells;
 
 	// Loops over cells
-	for (int cellID = 0; cellID < totalCells; cellID++){
+	for (size_t cellID = 0; cellID < totalCells; cellID++){
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
 
 		// Loop over species
-		for (int specID = 0; specID < totalSpecs; specID++){
+		for (size_t specID = 0; specID < totalSpecs; specID++){
 			// Gets the species pointer
 			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
 			i = getAi(cellID, totalCells, specID, totalSpecs);
@@ -1344,19 +1344,19 @@ VectorD speciesDriver::calcDefSourceVector(){
 
 	// Loop over cells
 	i = 0;
-	for (int cellID = 0; cellID < totalCells; cellID++){
+	for (size_t cellID = 0; cellID < totalCells; cellID++){
 		// Gets cell pointer
 		meshCell* thisCellPtr = modelPtr->getCellByLoc(cellID);
 
 		// Loop over species
-		for (int specID = 0; specID < totalSpecs; specID++){
+		for (size_t specID = 0; specID < totalSpecs; specID++){
 			// Gets the species pointer
 			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
 			// Set coefficients to zero
 			tran = 0.0;
 
 			// loop over cell connections
-			for (int conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
+			for (size_t conCount = 0; conCount < thisCellPtr->connections.size(); conCount ++){
 				// Gets cell connection object pointer
 				connection* thisCon = thisCellPtr->getConnection(conCount);
 				// Gets pointer to connected cell
@@ -1401,8 +1401,8 @@ void speciesDriver::clean(){
 	matrixInit = false;
 	lastSolveTime = 0.0;
 	intSolver->clean();
-   for (int i = 0; i < modelPtr->numOfxCells; i++){
-      for (int j = 0; j < modelPtr->numOfyCells; j++){
+   for (size_t i = 0; i < modelPtr->numOfxCells; i++){
+      for (size_t j = 0; j < modelPtr->numOfyCells; j++){
          meshCell* cell = modelPtr->getCellByLoc(i,j);
          cell->cleanSpecies();
       }

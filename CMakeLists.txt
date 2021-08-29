@@ -8,7 +8,6 @@ set(UTIL_DIR ${LIB_DIR}/utils)
 set(UTIL_INCLUDE_DIR ${UTIL_DIR}/include)
 set(INCLUDE_DIR include)
 set(PHYSICS_MODELS_INCLUDE_DIR ${INCLUDE_DIR}/sourceTerms)
-
 set(EIGEN3_INCLUDE_DIR ${LIB_DIR}/eigen3)
 
 find_package(MPI)

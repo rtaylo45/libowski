@@ -53,7 +53,7 @@ void meshCell::addSpecies(double molarMass, double initCon, double diffCoeff,
 	species spec(molarMass, initCon, diffCoeff, name, transport);
 	// loop over connections to see if the species needs to be added
 	// to a surface
-	for (int conCount = 0; conCount < connections.size(); conCount ++){
+	for (size_t conCount = 0; conCount < connections.size(); conCount ++){
 		connection* thisCon = getConnection(conCount);
 		surface* conSurface = thisCon->getSurface();
 		// if the pointer is not null then add species to that surface

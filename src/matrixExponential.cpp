@@ -426,7 +426,7 @@ VectorD pade::apply(const SparseMatrixD& A, const VectorD& v0, double t){
 //*****************************************************************************
 SparseMatrixD pade::compute(const SparseMatrixD& A, double t){
 	// The sparse LU solver object
-	Eigen::SparseLU<SparseMatrixD, COLAMDOrdering<int> > solver;
+	Eigen::SparseLU<SparseMatrixD, COLAMDOrdering<int>> solver;
 	SparseMatrixD U, V, H, At, denominator, numerator, R;
 	MatrixD Q;
 	int alpha;

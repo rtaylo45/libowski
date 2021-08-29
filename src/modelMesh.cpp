@@ -47,8 +47,8 @@ void modelMesh::buildGeometry(){
 void modelMesh::createCells(){
 	int absIndex = 0;
 
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			double x = i*dx + dx/2.; // x-coordinate
 			double y = j*dy + dy/2.; // y-coordinate
 
@@ -64,14 +64,14 @@ void modelMesh::createCells(){
 void modelMesh::createCellFaces(){
 	int absIndex = 0, jmax;
 	
-	for (int i = 0; i <= 2*numOfxCells; i++){
+	for (size_t i = 0; i <= 2*numOfxCells; i++){
 		if (i%2){
 			jmax = numOfyCells+1;
 		}
 		else{
 			jmax = numOfyCells;
 		}
-		for (int j = 0; j < jmax; j++){
+		for (size_t j = 0; j < jmax; j++){
 			meshCellFace face(i, j, absIndex);
 			meshCellFaces.push_back(face);
 			absIndex++;
@@ -88,8 +88,8 @@ void modelMesh::connectCells(){
 	int kEast, kWest, kSouth, kNorth;
 	double dxFlowArea, dyFlowArea;
 
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			cellPtr = getCellByLoc(i,j);
 
 			// Sets pointer to the cells
@@ -194,12 +194,12 @@ bool modelMesh::checkCellLoc(int i, int j){
 // @param velocity	x velocity [m/s]
 //*****************************************************************************
 void modelMesh::setConstantXVelocity(double velocity){
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 
 			// loop over connections
-			for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+			for (size_t conCount = 0; conCount < cell->connections.size(); conCount ++){
 				connection thisCon = cell->connections[conCount];
 				// sets the face velocity for east and west faces
 				if (thisCon.loc == 2 or thisCon.loc == 3){
@@ -216,11 +216,11 @@ void modelMesh::setConstantXVelocity(double velocity){
 // @param velocity	x velocity [m/s]
 //*****************************************************************************
 void modelMesh::setConstantXVelocity(double velocity, int row){
-	for (int i = 0; i < numOfxCells; i++){
+	for (size_t i = 0; i < numOfxCells; i++){
 		meshCell* cell = getCellByLoc(i,row);
 		
 		// loop over connections
-		for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+		for (size_t conCount = 0; conCount < cell->connections.size(); conCount ++){
 			connection thisCon = cell->connections[conCount];
 			// sets the face velocity for east and west faces
 			if (thisCon.loc == 2 or thisCon.loc == 3){
@@ -236,12 +236,12 @@ void modelMesh::setConstantXVelocity(double velocity, int row){
 // @param velocity	y velocity [m/s]
 //*****************************************************************************
 void modelMesh::setConstantYVelocity(double velocity){
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			
 			// loop over connections
-			for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+			for (size_t conCount = 0; conCount < cell->connections.size(); conCount ++){
 				connection thisCon = cell->connections[conCount];
 				// sets the face velocity for north and south faces
 				if (thisCon.loc == 0 or thisCon.loc == 1){
@@ -258,11 +258,11 @@ void modelMesh::setConstantYVelocity(double velocity){
 // @param velocity	y velocity [m/s]
 //*****************************************************************************
 void modelMesh::setConstantYVelocity(double velocity, int column){
-	for (int j = 0; j < numOfyCells; j++){
+	for (size_t j = 0; j < numOfyCells; j++){
 		meshCell* cell = getCellByLoc(column,j);
 		
 		// loop over connections
-		for (int conCount = 0; conCount < cell->connections.size(); conCount ++){
+		for (size_t conCount = 0; conCount < cell->connections.size(); conCount ++){
 			connection thisCon = cell->connections[conCount];
 			// sets the face velocity for north and south faces
 			if (thisCon.loc == 0 or thisCon.loc == 1){
@@ -278,8 +278,8 @@ void modelMesh::setConstantYVelocity(double velocity, int column){
 // @param temp		Temperature in kelvin
 //*****************************************************************************
 void modelMesh::setSystemTemperature(double temp){
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setTemperature(temp);
 		}
@@ -308,8 +308,8 @@ void modelMesh::setSystemTemperature(const std::string path){
 	// read in the csv file
 	readCSV(tempatureMat, path);	
 
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			double temp = tempatureMat(j,i);
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setTemperature(temp);
@@ -323,8 +323,8 @@ void modelMesh::setSystemTemperature(const std::string path){
 // @param pressure		Pressure in Pa
 //*****************************************************************************
 void modelMesh::setSystemPressure(double pressure){
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setPressure(pressure);
 		}
@@ -353,8 +353,8 @@ void modelMesh::setSystemPressure(const std::string path){
 	// read in the csv file
 	readCSV(pressureMat, path);	
 
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			double pres = pressureMat(j,i);
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setPressure(pres);
@@ -368,8 +368,8 @@ void modelMesh::setSystemPressure(const std::string path){
 // @param phi		Neutron flux in 1/cm^2/s
 //*****************************************************************************
 void modelMesh::setSystemNeutronFlux(double phi){
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setNeutronFlux(phi);
 		}
@@ -398,8 +398,8 @@ void modelMesh::setSystemNeutronFlux(const std::string path){
 	// read in the csv file
 	readCSV(neutronMat, path);	
 
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			double phi = neutronMat(j,i);
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setNeutronFlux(phi);
@@ -413,8 +413,8 @@ void modelMesh::setSystemNeutronFlux(const std::string path){
 // @param intAreaCon	Interfacial area concentration [1/m]
 //*****************************************************************************
 void modelMesh::setSystemGasInterfacialAreaCon(double intAreaCon){
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setGasInterfacialAreaCon(intAreaCon);
 		}
@@ -444,8 +444,8 @@ void modelMesh::setSystemGasInterfacialAreaCon(const std::string path){
 	// read in the csv file
 	readCSV(gasIntAreaMat, path);	
 
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			double intAreaCon = gasIntAreaMat(j,i);
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setGasInterfacialAreaCon(intAreaCon);
@@ -459,8 +459,8 @@ void modelMesh::setSystemGasInterfacialAreaCon(const std::string path){
 // @param intAreaCon	Interfacial area concentration [1/m]
 //*****************************************************************************
 void modelMesh::setSystemWallInterfacialAreaCon(double intAreaCon){
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setWallInterfacialAreaCon(intAreaCon);
 		}
@@ -490,8 +490,8 @@ void modelMesh::setSystemWallInterfacialAreaCon(const std::string path){
 	// read in the csv file
 	readCSV(wallIntAreaMat, path);	
 
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			double wallAreaCon = wallIntAreaMat(j,i);
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setWallInterfacialAreaCon(wallAreaCon);
@@ -505,8 +505,8 @@ void modelMesh::setSystemWallInterfacialAreaCon(const std::string path){
 // @param fract	Gas void fraction
 //*****************************************************************************
 void modelMesh::setSystemGasVoidFraction(double fract){
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setGasVoidFraction(fract);
 		}
@@ -536,8 +536,8 @@ void modelMesh::setSystemGasVoidFraction(const std::string path){
 	// read in the csv file
 	readCSV(voidMat, path);	
 
-	for (int i = 0; i < numOfxCells; i++){
-		for (int j = 0; j < numOfyCells; j++){
+	for (size_t i = 0; i < numOfxCells; i++){
+		for (size_t j = 0; j < numOfyCells; j++){
 			double fract = voidMat(j,i);
 			meshCell* cell = getCellByLoc(i,j);
 			cell->setGasVoidFraction(fract);
@@ -667,28 +667,28 @@ void modelMesh::addBoundarySurface(std::string loc){
 
 		// North location
 		case 0: {
-			for (int i = 0; i < numOfxCells; i++){
+			for (size_t i = 0; i < numOfxCells; i++){
 				addSurface(i, yCellMax, "north");
 			}
 			break;
 		}
 		// South location
 		case 1: {
-			for (int i = 0; i < numOfxCells; i++){
+			for (size_t i = 0; i < numOfxCells; i++){
 				addSurface(i, yCellMin, "south");
 			}
 			break;
 		}
 		// East location
 		case 2: {
-			for (int j = 0; j < numOfyCells; j++){
+			for (size_t j = 0; j < numOfyCells; j++){
 				addSurface(xCellMax, j, "east");
 			}
 			break;
 		}
 		// West location
 		case 3: {
-			for (int j = 0; j < numOfyCells; j++){
+			for (size_t j = 0; j < numOfyCells; j++){
 				addSurface(xCellMin, j, "west");
 			}
 			break;
