@@ -123,9 +123,9 @@ int speciesDriver::addSpecies(double molarMass, double initCon,
       for (int j = 0; j < modelPtr->numOfyCells; j++){
          meshCell* cell = modelPtr->getCellByLoc(i,j);
 
-         cell->addSpecies(molarMass, initCon, diffCoeff, name, transport);
-      }
-   }
+        cell->addSpecies(molarMass, initCon, diffCoeff, name, transport);
+     }
+  }
 
   // Map the name to the spec ID
   specNameToID.insert(std::pair<std::string, int>(name, specID));
@@ -235,7 +235,7 @@ std::string speciesDriver::getSpeciesName(int specID){
   // Makes sure the name is in the map
   assert(specIDToName.count(specID) == 1);
   std::string name = specIDToName[specID];
-   return name;
+  return name;
 }
 
 //*****************************************************************************
@@ -249,11 +249,11 @@ std::string speciesDriver::getSpeciesName(int specID){
 // @param s          Constant source in cell [kg/m^3/s]
 //*****************************************************************************
 void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<double>
-      coeffs, double s){
-   assert(coeffs.size() == numOfSpecs);
-   species* spec = getSpeciesPtr(i, j, specID);
+  coeffs, double s){
+  assert(coeffs.size() == numOfSpecs);
+  species* spec = getSpeciesPtr(i, j, specID);
   spec->addGenericSourceTerm(coeffs);
-   spec->s = s;
+  spec->s = s;
 }
 
 //*****************************************************************************
@@ -270,11 +270,11 @@ void speciesDriver::setSpeciesSource(int i, int j, int specID, std::vector<doubl
 //                [1/s]
 //*****************************************************************************
 void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
-    std::vector<double> coeffs){
-   species* spec = getSpeciesPtr(i, j, specID);
+  std::vector<double> coeffs){
+  species* spec = getSpeciesPtr(i, j, specID);
   assert(spec->name == name);
   assert(numOfSpecs == coeffs.size());
-   spec->addGenericSourceTerm(coeffs);
+  spec->addGenericSourceTerm(coeffs);
 }
 
 //*****************************************************************************
@@ -291,11 +291,11 @@ void speciesDriver::setDecaySource(int i, int j, int specID, std::string name,
 //                [cm^2]
 //*****************************************************************************
 void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
-    std::vector<double> coeffs){
-   species* spec = getSpeciesPtr(i, j, specID);
+  std::vector<double> coeffs){
+  species* spec = getSpeciesPtr(i, j, specID);
   assert(spec->name == name);
   assert(numOfSpecs == coeffs.size());
-   spec->addNIRSourceTerm(coeffs);
+  spec->addNIRSourceTerm(coeffs);
 }
 
 //*****************************************************************************
@@ -310,8 +310,8 @@ void speciesDriver::setTransSource(int i, int j, int specID, std::string name,
 //  @param infSink      Bools for infinite sink assumption [false]
 //*****************************************************************************
 void speciesDriver::setWallDeposition(int i, int j, std::vector<double> coeffs,
-    std::vector<int> liquidIDs, std::vector<int> surfaceIDs,
-    std::vector<bool> infSinks){
+  std::vector<int> liquidIDs, std::vector<int> surfaceIDs,
+  std::vector<bool> infSinks){
   std::vector<bool> infSinks_;
   assert(liquidIDs.size() == surfaceIDs.size());
   assert(liquidIDs.size() == coeffs.size());
@@ -369,8 +369,8 @@ void speciesDriver::setWallDeposition(std::vector<double> coeffs,
 //                liquid IDs
 //*****************************************************************************
 void speciesDriver::setGasSparging(int i, int j, std::vector<double> mCoeffs,
-    std::vector<double> HCoeffs, std::vector<int> liquidIDs,
-    std::vector<int> gasIDs){
+  std::vector<double> HCoeffs, std::vector<int> liquidIDs,
+  std::vector<int> gasIDs){
   assert(liquidIDs.size() == gasIDs.size());
   assert(liquidIDs.size() == mCoeffs.size());
   assert(liquidIDs.size() == HCoeffs.size());
@@ -396,8 +396,8 @@ void speciesDriver::setGasSparging(int i, int j, std::vector<double> mCoeffs,
 //                liquid IDs
 //*****************************************************************************
 void speciesDriver::setGasSparging(std::vector<double> mCoeffs,
-    std::vector<double> HCoeffs, std::vector<int> liquidIDs,
-    std::vector<int> gasIDs){
+  std::vector<double> HCoeffs, std::vector<int> liquidIDs,
+  std::vector<int> gasIDs){
 
   // Loop over cells
   for (int i = 0; i < modelPtr->numOfxCells; i++){
@@ -421,10 +421,10 @@ void speciesDriver::setGasSparging(std::vector<double> mCoeffs,
 // @param coeff      The removal coeff [1/s]
 //*****************************************************************************
 void speciesDriver::setRemovalSource(int i, int j, int specID, std::string name,
-    double coeff){
-   species* spec = getSpeciesPtr(i, j, specID);
+  double coeff){
+  species* spec = getSpeciesPtr(i, j, specID);
   assert(spec->name == name);
-   spec->addGenericRemovalSourceTerm(coeff, specID);
+  spec->addGenericRemovalSourceTerm(coeff, specID);
 }
 
 //*****************************************************************************
