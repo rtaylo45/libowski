@@ -4,8 +4,8 @@
 //*****************************************************************************
 #ifndef PARSER_H
 #define PARSER_H
-#include <memory>
 
+#include <memory>
 #include "modelMesh.h"
 #include "speciesDriver.h"
 
@@ -34,12 +34,12 @@ struct dataBlock {
 
 class parser {
 
-  public:
+  private:
   std::map<std::string, dataBlock> inputDeckBlocks;
 
   public:
   // Constructor
-  parser();
+  parser(){};
   // Reads the file and builds the input blocks
   void parseFile(std::string); 
   // Gets the mesh model for the problem
