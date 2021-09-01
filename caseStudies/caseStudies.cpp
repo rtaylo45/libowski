@@ -334,7 +334,7 @@ void msrLumpDepletion(int myid, std::string solverType){
 //*****************************************************************************
 void msr2DDepletion(int myid, std::string solverType){
 	double t = 0.0;
-	int steps = 10;
+	int steps = 1;
 	double coreLength = 1.92024;
 	double xLength = 0.6858, yLength = 3.*coreLength;		// Meters
 	double v_y = 0.25;											// m/s
@@ -345,7 +345,7 @@ void msr2DDepletion(int myid, std::string solverType){
 	double xc, yc, s;
 	std::vector<int> ids;
 	std::string path = getDataPath() + "msr/";
-	std::string outputFileName = "msr2DDepletionSmall.out";
+	std::string outputFileName = "msr2DDepletionMedium.out";
 	std::string limiter = "First order upwind";
 	std::string outputFileNameMatrix = solverType+"MSR2DDepletion.csv";
 	std::ofstream outputFile;
@@ -367,9 +367,9 @@ void msr2DDepletion(int myid, std::string solverType){
 	}
 
 	// Sets file paths for the input data	
-	std::string speciesNamesFile = path + "speciesInputNamesMSRSmall.dat";
-	std::string speciesDecayFile = path + "speciesInputDecayMSRSmall.dat";
-	std::string speciesTransFile = path + "speciesInputTransMSRSmall.dat";
+	std::string speciesNamesFile = path + "speciesInputNamesMSRMedium.dat";
+	std::string speciesDecayFile = path + "speciesInputDecayMSRMedium.dat";
+	std::string speciesTransFile = path + "speciesInputTransMSRMedium.dat";
 
 	// Builds the model
 	modelMesh model(xCells, yCells, xLength, yLength);
@@ -471,22 +471,24 @@ void msr2DDepletion(int myid, std::string solverType){
 					for (int id = 0; id < ids.size(); id++){
 						std::string name = spec.getSpeciesName(ids[id]);
 						double con = spec.getSpecies(i, j, ids[id]);
-						fprintf(pOutputFile, "%17.16e ", con);
+				    fprintf(pOutputFile, "%d %d %5.4e %5.4e %s %17.16e\n", i, j, xc, yc, name.c_str(), con);
 						solData(index, k) = con;
 						index ++;
 					}
-					fprintf(pOutputFile, "\n");
 				}
 			}
+			fprintf(pOutputFile, "\n");
 			VectorD refSolVect = refSolData.col(k), solVect = solData.col(k);
 			//double rmse = computeRelativeRMSE(refSolVect, solVect);
-			double Einf = computeRelativeEinfty(refSolVect, solVect);
+			//double Einf = computeRelativeEinfty(refSolVect, solVect);
+			double Einf = 0;
 			double rmse = 0;
 			printf("Solve Step: %d %s Solve Time: %f Einf %e\n", k, solverType.c_str(), solveTime, Einf);
 		}
 	}
 	if (myid == 0){
-		double Einf = computeRelativeEinfty(refSolData, solData);
+		//double Einf = computeRelativeEinfty(refSolData, solData);
+		double Einf = 0;
 		printf("%s Solve Time: %f Einf %e\n", solverType.c_str(), totalSolveTime, Einf);
 		fprintf(pOutputFile, "end\n");
 		//writeCSV(solData, outputFileNameMatrix);
@@ -1614,8 +1616,8 @@ void msr2DDepletionMedium9x27(int myid, std::string solverType){
 int main(){
 	int myid = mpi.rank;
 	int numprocs = mpi.size;
-	std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic",
-	"pade-method1", "pade-method2", "taylor"};
+	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic",
+	//"pade-method1", "pade-method2", "taylor"};
 	//std::vector<std::string> solvers {"BDF1", "BDF2", "BDF3", "BDF4", "BDF5", "BDF6"};
 	//std::vector<std::string> solvers {"BDF1"};
 	//std::vector<std::string> solvers {"forward euler", "explicit midpoint", "kutta third-order", 
@@ -1624,7 +1626,7 @@ int main(){
 	//std::vector<std::string> solvers {"CRAM"};
 	//std::vector<std::string> solvers {"CRAM", "hyperbolic", "parabolic"};
 	//std::vector<std::string> solvers {"hyperbolic", "parabolic"};
-	//std::vector<std::string> solvers {"pade-method1"};
+	std::vector<std::string> solvers {"pade-method1"};
 
 	// Loops over different solvers
 	for (std::string &solverType : solvers){
@@ -1632,14 +1634,14 @@ int main(){
 		//msrLumpDepletion(myid, solverType);
 
 		// For my M&C paper this does not include mass transport
-		//msr2DDepletion(myid, solverType);
+		msr2DDepletion(myid, solverType);
 
 		// Neutron precursor problem from my dissertation
 		//neutronPrecursors(myid, solverType);
 		// These are for my dissertation these include mass transport
 		//msrDepletionSmallLumped(myid, solverType);
 		//msrDepletionMediumLumped(myid, solverType);
-		msr2DDepletionSmall3x9(myid, solverType);
+		//msr2DDepletionSmall3x9(myid, solverType);
 		//msr2DDepletionMedium3x9(myid, solverType);
 		//msr2DDepletionSmall9x27(myid, solverType);
 		//msr2DDepletionMedium9x27(myid, solverType);
