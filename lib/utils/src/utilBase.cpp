@@ -482,6 +482,25 @@ derived erfi(derived x){
 	return Faddeeva::erfi(x);	
 }
 
+//*****************************************************************************
+// Splits a string into a vector based on a delimiter
+// 
+// @param str   String to split
+// @param delim Delimiter to split the string
+//*****************************************************************************
+//std::vector<std::string> splitStr(std::string s, std::string delim){
+//  size_t pos_start = 0, pos_end, delim_len = delim.length();
+//  std::string token;
+//  std::vector<std::string> v;
+//  while ((pos_end = s.find(delim, po_start)) != std::string::npos_{
+//    toekn = s.substr(pos_start, pos_end - pos_start);
+//    pos_start = pos_end + delim_len;
+//    v.push_back (token);
+//  }
+//  v.push_back(s.substr(pos_start));
+//  return v;
+//}
+
 // Data types that can use the template functions
 template bool isApprox(double goalVal, double testVal, double rtol, double atol);
 template bool isApprox(float goalVal, float testVal, float rtol, float atol);

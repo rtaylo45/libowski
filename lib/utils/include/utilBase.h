@@ -9,6 +9,8 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <vector>
 #include "sys.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
@@ -148,4 +150,11 @@ derived erfc(derived x);
 template <typename derived>
 derived erfi(derived x);
 
+//*****************************************************************************
+// Splits a string into a vector based on a delimiter
+// 
+// @param str   String to split
+// @param delim Delimiter to split the string
+//*****************************************************************************
+std::vector<std::string> splitStr(std::string, std::string);
 #endif

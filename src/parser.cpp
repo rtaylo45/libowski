@@ -5,8 +5,10 @@
 #include <fstream>
 #include <algorithm>
 #include <string>
+#include <vector>
 #include "parser.h"
 #include "sys.h"
+#include "utilBase.h"
 using namespace std;
 
 //**************************************************************************
@@ -21,9 +23,10 @@ void parser::parseFile(std::string fname){
 
 	ifstream inFile(fname);
 	bool inBlock = false;
+  string blockName;
 	while (inFile){
 
-		string line, blockName;
+		string line;
 		getline(inFile, line);
 		if (line.size() > 0){
 			// This is a comment line
@@ -43,8 +46,14 @@ void parser::parseFile(std::string fname){
 			}
 			else {
 				if (inBlock){
-					cout << blockName << " " << line << endl;
-
+          if (blockName == "Mesh"){
+            string delimiter = "=";
+            size_t pos = 0;
+            // Get rid of white space
+            line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
+            //vector<string> splitLine splitStr(line, delimiter);
+            //for (auto i : splitLine) cout << i << endl;
+          }  
 				}
 			}
 		}
