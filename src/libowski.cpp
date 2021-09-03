@@ -20,7 +20,6 @@ int main(int argc, char *argv[]){
 
 	// Gets the file name
 	string inputFile = argv[1];
-  cout << inputFile << endl;
 	parser fileParser;
 	fileParser.parseFile(inputFile);
 	// Creats the problem object
