@@ -9,14 +9,23 @@
 #include "parser.h"
 #include "sys.h"
 #include "utilBase.h"
+
 using namespace std;
+
+//**************************************************************************
+//
+// @param blockName Name of the data block
+//**************************************************************************
+dataBlock parser::getDataBlock(const & std::string blockName){
+
+}
 
 //**************************************************************************
 // Parses a file
 //
 // @param fname Input file to read
 //**************************************************************************
-void parser::parseFile(std::string fname){
+void parser::parseFile(const & std::string fname){
 
 	// Checks to see if the file exist
 	checkFileExists(fname);
@@ -46,19 +55,36 @@ void parser::parseFile(std::string fname){
 			}
 			else {
 				if (inBlock){
+          // Parses info specific to the mesh block
           if (blockName == "Mesh"){
-            string delimiter = "=";
+            dataBlock dat = getDataBlock(blockName);
+            string delimiter = "[=]";
             size_t pos = 0;
             // Get rid of white space
             line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
-            //vector<string> splitLine splitStr(line, delimiter);
-            //for (auto i : splitLine) cout << i << endl;
+            vector<string> splitLine = splitStr(line, delimiter);
+            for (auto i : splitLine) {
+              dat.addVariable(splitLine[0], {splitLine[1]});
+            }
+            dat.print();
+            //inputDeckBlocks[blockName] = dat;
+          }
+          else if (blockName == "Species"){
+            dataBlock dat = getDataBlock(blockName);
+            size_t pos = 0;
+            // Get rid of white space
+            line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
+            vector<string> splitLine = splitStr(line, string("[=,]"));
+            string varName = string(splitLine[0]);
+            splitLine.erase(splitLine.begin());
+            dat.addVariable(varName, splitLine);
+            dat.print();
+            //inputDeckBlocks[blockName] = dat;
           }  
 				}
 			}
 		}
 	}
-	
 	inFile.close();	
 }
 

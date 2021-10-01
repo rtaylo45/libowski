@@ -11,6 +11,8 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <regex>
+#include <iterator>
 #include "sys.h"
 #include "matrixTypes.h"
 #include "vectorTypes.h"
