@@ -592,6 +592,40 @@ void speciesDriver::setWallDepositionFromFile(std::string wallfname){
 }
 
 //*****************************************************************************
+// Sets all the species diffusion coeffients from a function. The function
+// must take in the x location and the first variable and y as the second and 
+// return a double.
+//*****************************************************************************
+//void speciesDriver::setSpeciesDiffusionCoefficient(double (*func)(double x, double y)){
+//	// Loop over cells
+//	for (int i = 0; i < modelPtr->numOfxCells; i++){
+//		for (int j = 0; j < modelPtr->numOfyCells; j++){
+//		  // Gets x cell center
+//		  double xc = modelPtr->getCellByLoc(i, j)->x;
+//		  // Gets y cell center
+//		  double yc = modelPtr->getCellByLoc(i, j)->y;
+//      // Compute the diffusion coefficient
+//      double diffCoeff = func(xc, yc);
+//		  // Loop over species
+//		  for (int specID = 0; specID < totalSpecs; specID++){
+//        species* spec = getSpeciesPtr(i, j, specID);
+//        spec->D = diffCoeff;
+//      }
+//    }
+//  }
+//}
+//*****************************************************************************
+// Sets species diffusion coeffients from a function. The function
+// must take in the x location and the first variable and y as the second and 
+// return a double.
+//*****************************************************************************
+//void speciesDriver::setSpeciesDiffusionCoefficient(std::string, double 
+//  (*func)(double x, double y)){
+//  //if (l == 0){liqID = getSpeciesID(s);};
+//
+//}
+
+//*****************************************************************************
 // Sets a boundary condition in a cell
 //
 //	@param Loc		Location 
@@ -912,7 +946,6 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 	int totalSpecs = numOfSpecs;
 	int totalCells = modelPtr->numOfTotalCells;
 	int nonZeros = totalCells*totalSpecs*totalSpecs;
-	double diffusionCoeff = 0.0;
 	double rCon, psi, a, tran, thisCoeff, conDirection, conDist;
 	double aP, ab, coeff, defCor, thisSpecSource;
 	tripletList.reserve(nonZeros);	
@@ -933,9 +966,9 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 
 		// Loop over species
 		for (int specID = 0; specID < totalSpecs; specID++){
-			// Gets the species pointer
+			// Gets the pointer to the current cell species
 			species* thisSpecPtr = thisCellPtr->getSpecies(specID);
-			diffusionCoeff = thisSpecPtr->D;
+			double thisDiffusionCoeff = thisSpecPtr->D;
 			thisSpecSource = thisSpecPtr->s;
 			// Gets the i matrix index
 			i = getAi(cellID, totalCells, specID, totalSpecs);
@@ -968,11 +1001,17 @@ SparseMatrixD speciesDriver::buildTransMatrix(bool Augmented, double dt){
 				// direction and the transition rate is zero. This will happen 
 				// when modeling 1D cases.
 				if (conDist and thisSpecPtr->transport){
+          // Gets the connected cells diffusion coefficient
+          if (otherCellPtr){
+            double otherDiffusionCoeff = otherCellPtr->getSpecies(specID)->D;
+            // Modify the diffusion coeff to be an average of the two cell centers.
+            thisDiffusionCoeff = (thisDiffusionCoeff + otherDiffusionCoeff)/2.;
+          }
 					// Computes the transition coefficient for convection
 					tran = thisCon->connectionFacePtr->vl*thisCon->area/thisCellPtr->volume;
 					// matrix coefficient
 					a = std::max(conDirection*tran, 0.0) + 
-						diffusionCoeff*thisCon->area/thisCellPtr->volume/conDist;
+						thisDiffusionCoeff*thisCon->area/thisCellPtr->volume/conDist;
 					// sets the flow coefficients if the pointer is not null
 					if (otherCellPtr){
 						j = getAi(otherCellPtr->absIndex, totalCells, specID, 
