@@ -1,7 +1,7 @@
 //*****************************************************************************
-// Author: Zack Taylor 
+// Author: Zack Taylor
 //
-//	Defines the source term for neutron induced reactions
+//  Defines the source term for neutron induced reactions
 //*****************************************************************************
 #ifndef PHYSICSMODELNIR_H
 #define PHYSICSMODELNIR_H
@@ -10,18 +10,18 @@
 
 class neutronInducedReactions : public physicsModel {
 
-	// Class attributes
-	protected:
-	// Vector of reaction cross section [cm^2]
-	std::vector<double> crossSections;
+  // Class attributes
+  protected:
+  // Vector of reaction cross section [cm^2]
+  std::vector<double> crossSections;
 
-	public:
-	// Constructor
-	neutronInducedReactions();
-	// Sets the coefficients for reaction cross sections
-	void setModel(std::vector<double>);
-	// Gets the mass transfer coefficient
-	double getTransitionCoeff(int, scalarData*);
+  public:
+  // Constructor
+  neutronInducedReactions();
+  // Sets the coefficients for reaction cross sections
+  void setModel(std::vector<double>);
+  // Gets the mass transfer coefficient
+  double getTransitionCoeff(int, scalarData*);
 };
 
 #endif

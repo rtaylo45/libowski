@@ -12,24 +12,24 @@
 
 class surface {
 
-	public:
-	// Constructure
-	surface();
-	// Initilizes the surface
-	void set();
-	// Add species
-	void addSpecies(double, double = 0.0, double = 0.0, std::string = "None", 
-		bool = true);
-	// Gets a pointer to the species
-	species* getSpeciesPtr(int);
-	// Clean
-	void clean();
-	// Logical to set if the surface is initilized (exist)
-	bool isInit = false;
+  public:
+  // Constructure
+  surface();
+  // Initilizes the surface
+  void set();
+  // Add species
+  void addSpecies(double, double = 0.0, double = 0.0, std::string = "None",
+    bool = true);
+  // Gets a pointer to the species
+  species* getSpeciesPtr(int);
+  // Clean
+  void clean();
+  // Logical to set if the surface is initilized (exist)
+  bool isInit = false;
 
-	private:
-	// Vector of the species on the surface
-	std::vector<species> speciesVector;
+  private:
+  // Vector of the species on the surface
+  std::vector<species> speciesVector;
 
 };
 #endif

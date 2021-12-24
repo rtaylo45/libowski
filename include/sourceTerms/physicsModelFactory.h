@@ -16,9 +16,9 @@
 //*****************************************************************************
 // Physics model factory
 //*****************************************************************************
-class	physicsModelFactory{
-	public:
-	static physicsModel *getPhysicsModel(std::string);
+class  physicsModelFactory{
+  public:
+  static physicsModel *getPhysicsModel(std::string);
 
 };
 
