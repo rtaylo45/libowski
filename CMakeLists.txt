@@ -13,21 +13,21 @@ set(EIGEN3_INCLUDE_DIR ${LIB_DIR}/eigen3)
 
 find_package(MPI)
 if(${MPI_FOUND})
-	include_directories(${MPI_INCLUDE_PATH})
+  include_directories(${MPI_INCLUDE_PATH})
 endif()
 
 # Includes the directories
-include_directories(${UTIL_INCLUDE_DIR}) 
+include_directories(${UTIL_INCLUDE_DIR})
 include_directories(${PHYSICS_MODELS_INCLUDE_DIR})
 include_directories(${INCLUDE_DIR})
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 if(${MPI_FOUND})
-	set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
-	set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+  set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+  set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
 endif()
 
-# Links the file system library 
+# Links the file system library
 link_libraries(stdc++fs)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -44,4 +44,3 @@ add_subdirectory(${SRC_DIR})
 add_subdirectory(unitTest)
 # Add case studie directory
 add_subdirectory(caseStudies)
-
