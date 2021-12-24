@@ -39,7 +39,7 @@ int binomialCoeff(int, int);
 int factorial(int);
 
 //*****************************************************************************
-// Creates a linear line space 
+// Creates a linear line space
 //*****************************************************************************
 template <typename T>
 std::vector<T> lineSpace(T, T, std::size_t);
@@ -69,81 +69,81 @@ template <typename derived>
 void readCSV(Matrix<derived, Dynamic, 1>&, const std::string);
 
 //*****************************************************************************
-// Computes the relative RMSE between two matrices 
+// Computes the relative RMSE between two matrices
 //*****************************************************************************
 template <typename derived>
-derived computeRelativeRMSE(const Matrix<derived, Dynamic, Dynamic>&, 
-	const Matrix<derived, Dynamic, Dynamic>&);
+derived computeRelativeRMSE(const Matrix<derived, Dynamic, Dynamic>&,
+  const Matrix<derived, Dynamic, Dynamic>&);
 
 //*****************************************************************************
 // Computes the relative RMSE between two vectors
 //*****************************************************************************
 template <typename derived>
-derived computeRelativeRMSE(const Matrix<derived, Dynamic, 1>&, 
-	const Matrix<derived, Dynamic, 1>&);
+derived computeRelativeRMSE(const Matrix<derived, Dynamic, 1>&,
+  const Matrix<derived, Dynamic, 1>&);
 
 //*****************************************************************************
 // Computes the relative E infty between two vectors
 //*****************************************************************************
 template <typename derived>
-derived computeRelativeEinfty(const Matrix<derived, Dynamic, 1>&, 
-	const Matrix<derived, Dynamic, 1>&);
+derived computeRelativeEinfty(const Matrix<derived, Dynamic, 1>&,
+  const Matrix<derived, Dynamic, 1>&);
 
 //*****************************************************************************
 // Computes the relative E1 between two vectors
 //*****************************************************************************
 template <typename derived>
-derived computeRelativeE1(const Matrix<derived, Dynamic, 1>&, 
-	const Matrix<derived, Dynamic, 1>&);
+derived computeRelativeE1(const Matrix<derived, Dynamic, 1>&,
+  const Matrix<derived, Dynamic, 1>&);
 
 //*****************************************************************************
 // Computes the relative E2 between two vectors
 //*****************************************************************************
 template <typename derived>
-derived computeRelativeE2(const Matrix<derived, Dynamic, 1>&, 
-	const Matrix<derived, Dynamic, 1>&);
+derived computeRelativeE2(const Matrix<derived, Dynamic, 1>&,
+  const Matrix<derived, Dynamic, 1>&);
 
 //*****************************************************************************
 // Computes the relative E infty between two matricies
 //*****************************************************************************
 template <typename derived>
-derived computeRelativeEinfty(const Matrix<derived, Dynamic, Dynamic>&, 
-	const Matrix<derived, Dynamic, Dynamic>&);
+derived computeRelativeEinfty(const Matrix<derived, Dynamic, Dynamic>&,
+  const Matrix<derived, Dynamic, Dynamic>&);
 
 //*****************************************************************************
 // Computes the relative E1 between two matricies
 //*****************************************************************************
 template <typename derived>
-derived computeRelativeE1(const Matrix<derived, Dynamic, Dynamic>&, 
-	const Matrix<derived, Dynamic, Dynamic>&);
+derived computeRelativeE1(const Matrix<derived, Dynamic, Dynamic>&,
+  const Matrix<derived, Dynamic, Dynamic>&);
 
 //*****************************************************************************
 // Computes the relative E2 between two matricies
 //*****************************************************************************
 template <typename derived>
-derived computeRelativeE2(const Matrix<derived, Dynamic, Dynamic>&, 
-	const Matrix<derived, Dynamic, Dynamic>&);
+derived computeRelativeE2(const Matrix<derived, Dynamic, Dynamic>&,
+  const Matrix<derived, Dynamic, Dynamic>&);
 
 //*****************************************************************************
 // Computes error function using the Faddeeva library
-// 
-// @param x		Value to be computed
+//
+// @param x    Value to be computed
 //*****************************************************************************
 template <typename derived>
 derived erf(derived x);
 
 //*****************************************************************************
 // Computes complementary error function using the Faddeeva library
-// 
-// @param x		Value to be computed
+//
+// @param x    Value to be computed
 //*****************************************************************************
 template <typename derived>
 derived erfc(derived x);
 
 //*****************************************************************************
 // Computes imanginary error function using the Faddeeva library
-// 
-// @param x		Value to be computed
+//
+// @param x    Value to be computed
 //*****************************************************************************
 template <typename derived>
 derived erfi(derived x);

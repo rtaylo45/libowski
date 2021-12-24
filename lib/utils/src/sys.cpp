@@ -29,12 +29,12 @@ std::string getDataPath(){
 //*****************************************************************************
 // Checks to see if a file exist or not
 //
-// @param fname	absolute location of the file
+// @param fname  absolute location of the file
 //*****************************************************************************
 void checkFileExists(std::string fname){
-	if (not fs::exists(fname)){
-	   std::string errorMessage =
-	      " Unable to find the file " + fname +"\n";
-	   libowskiException::runtimeError(errorMessage);
-	}
+  if (not fs::exists(fname)){
+     std::string errorMessage =
+        " Unable to find the file " + fname +"\n";
+     libowskiException::runtimeError(errorMessage);
+  }
 }
