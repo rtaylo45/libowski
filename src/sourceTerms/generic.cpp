@@ -1,7 +1,7 @@
 //*****************************************************************************
-// Author: Zack Taylor 
+// Author: Zack Taylor
 //
-//	Defines the generic source term model
+//  Defines the generic source term model
 //*****************************************************************************
 #include "generic.h"
 
@@ -15,18 +15,18 @@ generic::generic(){
 //*****************************************************************************
 // Sets the coefficients for the model
 //
-// @param coefficientVector	Vector of coefficients for the source term [1/s]
+// @param coefficientVector  Vector of coefficients for the source term [1/s]
 //*****************************************************************************
 void generic::setModel(std::vector<double> coefficientVector){
-	coeffs = coefficientVector;
+  coeffs = coefficientVector;
 }
 
 //*****************************************************************************
 // Gets the coefficient for a species relation
 //
-// @param otherSpecID		specID of the mass transfer coefficient to find.
-// @param scalarVariables	Pointer to scalar data object for the mesh cell
+// @param otherSpecID    specID of the mass transfer coefficient to find.
+// @param scalarVariables  Pointer to scalar data object for the mesh cell
 //*****************************************************************************
 double generic::getTransitionCoeff(int otherSpecID, scalarData* scalarVariables){
-	return coeffs[otherSpecID];
+  return coeffs[otherSpecID];
 }
