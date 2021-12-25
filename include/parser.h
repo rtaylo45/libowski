@@ -1,6 +1,6 @@
 //*****************************************************************************
 // Author: Zack Taylor
-// 
+//
 //*****************************************************************************
 #ifndef PARSER_H
 #define PARSER_H
@@ -30,6 +30,15 @@ struct dataBlock {
   std::vector<std::string> getVariableValues(std::string varName){
     return variableValueMap[varName];
   }
+  void print(){
+    for (auto const & element : variableValueMap){
+      printf("Variable Name: %s Varaible Values: ", element.first.c_str());
+      for (auto const & var : element.second){
+        printf("%s ", var.c_str());
+      }
+    }
+    printf("\n");
+  }
 };
 
 class parser {
@@ -41,13 +50,17 @@ class parser {
   // Constructor
   parser(){};
   // Reads the file and builds the input blocks
-  void parseFile(std::string); 
+  void parseFile(std::string);
+  // Gets the data block from its name
+  dataBlock getDataBlock(const std::string);
   // Gets the mesh model for the problem
   std::unique_ptr<modelMesh> getModelMesh();
   // Gets the species driver for the problem
   //unique_ptr<speciesDriver> getSpeciesDriver();
 
   private:
+  // List of the accepted block names
+  const std::vector<std::string> = {"Mesh", "Species"}
   // Parses the mesh block and creates a pointer
   std::unique_ptr<modelMesh> parseMeshBlock();
   // Parse Mesh variable block and adds it to the model mesh pointer

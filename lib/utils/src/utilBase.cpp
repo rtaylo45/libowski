@@ -484,7 +484,7 @@ derived erfi(derived x){
 
 //*****************************************************************************
 // Splits a string into a vector based on a delimiter
-// 
+//
 // @param str   String to split
 // @param delim Delimiter to split the string
 //*****************************************************************************

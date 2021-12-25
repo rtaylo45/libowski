@@ -1401,12 +1401,12 @@ void speciesDriver::clean(){
   matrixInit = false;
   lastSolveTime = 0.0;
   intSolver->clean();
-   for (int i = 0; i < modelPtr->numOfxCells; i++){
-      for (int j = 0; j < modelPtr->numOfyCells; j++){
-         meshCell* cell = modelPtr->getCellByLoc(i,j);
-         cell->cleanSpecies();
-      }
-   }
+  for (int i = 0; i < modelPtr->numOfxCells; i++){
+    for (int j = 0; j < modelPtr->numOfyCells; j++){
+      meshCell* cell = modelPtr->getCellByLoc(i,j);
+      cell->cleanSpecies();
+    }
+  }
 }
 
 //*****************************************************************************
