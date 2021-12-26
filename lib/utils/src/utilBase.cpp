@@ -489,16 +489,10 @@ derived erfi(derived x){
 // @param delim Delimiter to split the string
 //*****************************************************************************
 std::vector<std::string> splitStr(std::string s, std::string delim){
-  size_t pos_start = 0, pos_end, delim_len = delim.length();
-  std::string token;
-  std::vector<std::string> v;
-  while ((pos_end = s.find(delim, pos_start)) != std::string::npos){
-    token = s.substr(pos_start, pos_end - pos_start);
-    pos_start = pos_end + delim_len;
-    v.push_back (token);
-  }
-  v.push_back(s.substr(pos_start));
-  return v;
+  std::regex re(delim);
+  std::sregex_token_iterator first{s.begin(), s.end(), re, -1}, last;//the '-1' is what makes the regex split (-1 := what was not matched)
+  std::vector<std::string> tokens{first, last};
+  return tokens;
 }
 
 // Data types that can use the template functions
