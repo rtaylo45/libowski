@@ -6,6 +6,7 @@
 #define PARSER_H
 
 #include <memory>
+#include <string>
 #include "modelMesh.h"
 #include "speciesDriver.h"
 
@@ -50,9 +51,9 @@ class parser {
   // Constructor
   parser(){};
   // Reads the file and builds the input blocks
-  void parseFile(std::string);
+  void parseFile(const std::string&);
   // Gets the data block from its name
-  dataBlock getDataBlock(const std::string);
+  dataBlock* getDataBlock(const std::string&);
   // Gets the mesh model for the problem
   std::unique_ptr<modelMesh> getModelMesh();
   // Gets the species driver for the problem
@@ -60,7 +61,7 @@ class parser {
 
   private:
   // List of the accepted block names
-  const std::vector<std::string> = {"Mesh", "Species"}
+  const std::vector<std::string> blockNames = {"Mesh", "Species"};
   // Parses the mesh block and creates a pointer
   std::unique_ptr<modelMesh> parseMeshBlock();
   // Parse Mesh variable block and adds it to the model mesh pointer

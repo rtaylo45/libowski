@@ -8,14 +8,14 @@ int main(int argc, char *argv[]){
 
 	// Error checking for passed arguments
 	if (argc == 0){
-		string errorMessage = 
+		string errorMessage =
 			" No input file\n";
-		libowskiException::runtimeError(errorMessage);	
+		libowskiException::runtimeError(errorMessage);
 	}
 	else if (argc > 2){
-		string errorMessage = 
+		string errorMessage =
 			" Too many arguments passed\n";
-		libowskiException::runtimeError(errorMessage);	
+		libowskiException::runtimeError(errorMessage);
 	}
 
 	// Gets the file name
@@ -32,6 +32,6 @@ int main(int argc, char *argv[]){
 	// problem.output()
 	// Cleans up the problem
 	// problem.clean()
-	
+
 	return 0;
 }

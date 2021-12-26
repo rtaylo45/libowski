@@ -13,6 +13,7 @@ set(PROJECT_SOURCES
   cellConnection.cpp
   surface.cpp
   scalarData.cpp
+  parser.cpp
 )
 
 # All sources that also need to be tested in unit tests go into a static library

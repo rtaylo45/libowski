@@ -16,8 +16,13 @@ using namespace std;
 //
 // @param blockName Name of the data block
 //**************************************************************************
-dataBlock parser::getDataBlock(const & std::string blockName){
-
+dataBlock* parser::getDataBlock(const std::string &blockName ){
+  try {
+    return &inputDeckBlocks.at(blockName);
+  }
+  catch (const std::out_of_range& e) {
+    return new dataBlock(blockName);
+  }
 }
 
 //**************************************************************************
@@ -25,7 +30,7 @@ dataBlock parser::getDataBlock(const & std::string blockName){
 //
 // @param fname Input file to read
 //**************************************************************************
-void parser::parseFile(const & std::string fname){
+void parser::parseFile(const std::string &fname){
 
   // Checks to see if the file exist
   checkFileExists(fname);
@@ -57,28 +62,28 @@ void parser::parseFile(const & std::string fname){
         if (inBlock){
           // Parses info specific to the mesh block
           if (blockName == "Mesh"){
-            dataBlock dat = getDataBlock(blockName);
+            dataBlock* datPtr = getDataBlock(blockName);
             string delimiter = "[=]";
             size_t pos = 0;
             // Get rid of white space
             line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
             vector<string> splitLine = splitStr(line, delimiter);
             for (auto i : splitLine) {
-              dat.addVariable(splitLine[0], {splitLine[1]});
+              datPtr->addVariable(splitLine[0], {splitLine[1]});
             }
-            dat.print();
+            datPtr->print();
             //inputDeckBlocks[blockName] = dat;
           }
           else if (blockName == "Species"){
-            dataBlock dat = getDataBlock(blockName);
+            dataBlock* datPtr = getDataBlock(blockName);
             size_t pos = 0;
             // Get rid of white space
             line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
             vector<string> splitLine = splitStr(line, string("[=,]"));
             string varName = string(splitLine[0]);
             splitLine.erase(splitLine.begin());
-            dat.addVariable(varName, splitLine);
-            dat.print();
+            datPtr->addVariable(varName, splitLine);
+            datPtr->print();
             //inputDeckBlocks[blockName] = dat;
           }
         }
