@@ -75,7 +75,6 @@ void parser::parseFile(const std::string &fname){
               datPtr->addVariable(splitLine[0], {splitLine[1]});
             }
             datPtr->print();
-            //inputDeckBlocks[blockName] = dat;
           }
           else if (blockName == "Species"){
             dataBlock* datPtr = getDataBlock(blockName);
@@ -87,7 +86,6 @@ void parser::parseFile(const std::string &fname){
             splitLine.erase(splitLine.begin());
             datPtr->addVariable(varName, splitLine);
             datPtr->print();
-            //inputDeckBlocks[blockName] = dat;
           }
         }
       }
