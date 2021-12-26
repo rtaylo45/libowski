@@ -37,6 +37,7 @@ struct dataBlock {
       for (auto const & var : element.second){
         printf("%s ", var.c_str());
       }
+      printf("\n");
     }
     printf("\n");
   }

@@ -21,7 +21,10 @@ dataBlock* parser::getDataBlock(const std::string &blockName ){
     return &inputDeckBlocks.at(blockName);
   }
   catch (const std::out_of_range& e) {
-    return new dataBlock(blockName);
+    dataBlock newDat = dataBlock(blockName);
+    inputDeckBlocks.insert({blockName, newDat});
+    return &inputDeckBlocks.at(blockName);
+
   }
 }
 
