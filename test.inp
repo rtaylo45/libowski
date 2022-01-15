@@ -1,7 +1,18 @@
 [Mesh]
   xLength = 1
   yLength = 2
-  xCells = 10
-  yCells = 20
+  xCells = 5
+  yCells = 10
 []
 
+[Species]
+  names = Xe-135, Xe-135, I-135, U-235, UO2
+  phase = liq, gas, liq, liq, liq
+  diffusivity = 1.0, 2.0, 3.1, 4.2, 4.3
+  molar_mass =
+[]
+
+[AuxVariables]
+  temperature: 0, 0 = 850
+  temperature: 0, 1 = 900
+  temperature: all, 2 = 700

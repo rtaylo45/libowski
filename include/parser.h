@@ -32,6 +32,7 @@ struct dataBlock {
     return variableValueMap[varName];
   }
   void print(){
+    printf("Block Name %s: \n", blockName.c_str());
     for (auto const & element : variableValueMap){
       printf("Variable Name: %s Varaible Values: ", element.first.c_str());
       for (auto const & var : element.second){

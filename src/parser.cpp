@@ -9,6 +9,7 @@
 #include "parser.h"
 #include "sys.h"
 #include "utilBase.h"
+#include "exception.h"
 
 using namespace std;
 
@@ -67,7 +68,6 @@ void parser::parseFile(const std::string &fname){
           if (blockName == "Mesh"){
             dataBlock* datPtr = getDataBlock(blockName);
             string delimiter = "[=]";
-            size_t pos = 0;
             // Get rid of white space
             line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
             vector<string> splitLine = splitStr(line, delimiter);
@@ -76,9 +76,8 @@ void parser::parseFile(const std::string &fname){
             }
             datPtr->print();
           }
-          else if (blockName == "Species"){
+          else if (blockName == "Species" or blockName == "AuxVariables"){
             dataBlock* datPtr = getDataBlock(blockName);
-            size_t pos = 0;
             // Get rid of white space
             line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
             vector<string> splitLine = splitStr(line, string("[=,]"));
@@ -86,6 +85,11 @@ void parser::parseFile(const std::string &fname){
             splitLine.erase(splitLine.begin());
             datPtr->addVariable(varName, splitLine);
             datPtr->print();
+          }
+          else {
+            string errorMessage =
+              " The input block you have passed is not recognized by libowski.";
+              libowskiException::runtimeError(errorMessage);
           }
         }
       }
