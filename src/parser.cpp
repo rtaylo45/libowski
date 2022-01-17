@@ -86,3 +86,30 @@ void parser::parseFile(const std::string &fname){
   }
   inFile.close();
 }
+
+//**************************************************************************
+// Parses the variables in the mesh block and returns a pointer to the
+// created mesh variable.
+//**************************************************************************
+modelMesh* parser::parseMeshBlock(){
+  dataBlock* datPtr = getDataBlock(string("Mesh"));
+  // Gets the data
+  double xLength = stod(datPtr->getVariableValues(string("xLength"))[0]);
+  double yLength = stod(datPtr->getVariableValues(string("yLength"))[0]);
+  int xCells = stoi(datPtr->getVariableValues(string("xCells"))[0]);
+  int yCells = stoi(datPtr->getVariableValues(string("yCells"))[0]);
+  // Creates the pointer
+  modelMesh* meshPtr = new modelMesh(xCells, yCells, xLength, yLength);
+  return meshPtr;
+}
+
+//**************************************************************************
+// Parses the variables in the species block and returns a pointer to the
+// created speciesDriver variable.
+//**************************************************************************
+speciesDriver* parser::parseSpeciesBlock(modelMesh* modelMeshPtr){
+  dataBlock* datPtr = getDataBlock(string("Species"));
+  // Creates the pointer
+  speciesDriver* speciesDriverPtr = new speciesDriver(modelMeshPtr);
+  return speciesDriverPtr;
+}

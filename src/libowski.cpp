@@ -2,6 +2,8 @@
 #include "sys.h"
 #include "exception.h"
 #include "parser.h"
+#include "modelMesh.h"
+#include "speciesDriver.h"
 using namespace std;
 
 int main(int argc, char *argv[]){
@@ -22,6 +24,8 @@ int main(int argc, char *argv[]){
 	string inputFile = argv[1];
 	parser fileParser;
 	fileParser.parseFile(inputFile);
+  modelMesh* meshPtr = fileParser.parseMeshBlock();
+  //speciesDriver* speciesdriverPtr = fileParser.parseSpeciesBlock(meshPtr);
 	// Creats the problem object
 	// Problem problem;
 	// Parses the file and builds the objects

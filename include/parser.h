@@ -67,15 +67,13 @@ class parser {
   // Gets the data block from its name
   dataBlock* getDataBlock(const std::string&);
   // Gets the mesh model for the problem
-  std::unique_ptr<modelMesh> getModelMesh();
+  modelMesh* parseMeshBlock();
   // Gets the species driver for the problem
-  //unique_ptr<speciesDriver> getSpeciesDriver();
+  speciesDriver* parseSpeciesBlock(modelMesh*);
 
   private:
   // List of the accepted block names
   const std::vector<std::string> blockNames = {"Mesh", "Species", "AuxVariables", "Solve"};
-  // Parses the mesh block and creates a pointer
-  std::unique_ptr<modelMesh> parseMeshBlock();
   // Parse Mesh variable block and adds it to the model mesh pointer
   //void parseMeshVariableBlock(unique_ptr<modelMesh>&);
   // Parse species block and creates a pointer
