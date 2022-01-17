@@ -76,6 +76,8 @@ class parser {
   modelMesh* parseMeshBlock();
   // Gets the species driver for the problem
   speciesDriver* parseSpeciesBlock(modelMesh*);
+  // Adds the auxvariables to the mesh block
+  void parseAuxVariableBlock(modelMesh*);
 
   private:
   // List of the accepted block names

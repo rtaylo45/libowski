@@ -105,6 +105,8 @@ modelMesh* parser::parseMeshBlock(){
 //**************************************************************************
 // Parses the variables in the species block and returns a pointer to the
 // created speciesDriver variable.
+//
+// @param modelMeshPtr  Pointer to the model mesh
 //**************************************************************************
 speciesDriver* parser::parseSpeciesBlock(modelMesh* modelMeshPtr){
   dataBlock* datPtr = getDataBlock(string("Species"));
@@ -145,8 +147,19 @@ speciesDriver* parser::parseSpeciesBlock(modelMesh* modelMeshPtr){
     bool transported = true;
     if (speciesPhases[i] == "solid")
       transported = false;
-    int specID = speciesDriverPtr->addSpecies(molarMass, ititialCondition,
+    int specID = speciesDriverPtr->addSpecies(molarMass, initialCondition,
       diffusivity, spec_name, transported);
   }
   return speciesDriverPtr;
+}
+
+//**************************************************************************
+// Parses the variables in the auxvariable block and adds them to the mesh
+//
+// @param modelMeshPtr  Pointer to the model mesh
+//**************************************************************************
+void parser::parseAuxVariableBlock(modelMesh* modelMeshPtr){
+  dataBlock* datPtr = getDataBlock(string("Mesh"));
+  // Gets the data
+
 }
