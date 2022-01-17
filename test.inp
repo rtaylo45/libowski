@@ -6,7 +6,7 @@
 []
 
 [Species]
-  names = Xe-135, Xe-135, I-135, U-235, UO2
+  name = Xe-135, Xe-135, I-135, U-235, UO2
   phase = liq, gas, liq, liq, liq
   diffusivity = 1.0, 2.0, 3.1, 4.2, 4.3
   molar_mass = 135, 135, 135, 235, 270

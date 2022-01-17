@@ -73,7 +73,6 @@ void parser::parseFile(const std::string &fname){
             string varName = string(splitLine[0]);
             splitLine.erase(splitLine.begin());
             datPtr->addVariable(varName, splitLine);
-            datPtr->print();
           }
           else {
             string errorMessage =
@@ -109,7 +108,45 @@ modelMesh* parser::parseMeshBlock(){
 //**************************************************************************
 speciesDriver* parser::parseSpeciesBlock(modelMesh* modelMeshPtr){
   dataBlock* datPtr = getDataBlock(string("Species"));
+  // Gets data
+  vector<string> speciesNames = datPtr->getVariableValues(string("name"));
+  vector<string> speciesPhases = datPtr->getVariableValues(string("phase"));
+  vector<string> speciesDiffusivity = datPtr->getVariableValues(string("diffusivity"));
+  vector<string> speciesMolarMasses = datPtr->getVariableValues(string("molar_mass"));
+  vector<string> speciesInitialCon = datPtr->getVariableValues(string("initial_condition"));
+
+  // Does some checks on the variables
+  if (speciesNames.size() != speciesPhases.size())
+    libowskiException::runtimeError("Species names and phases are not the same size");
+  if (speciesNames.size() != speciesMolarMasses.size())
+    libowskiException::runtimeError("Species names and molar masses are not the same size");
+  if (speciesDiffusivity.size() != 0 ){
+    if (speciesDiffusivity.size() != speciesNames.size())
+      libowskiException::runtimeError("Species names and diffusivity are not the same size");
+  }
+  if (speciesInitialCon.size() != 0 ){
+    if (speciesInitialCon.size() != speciesNames.size())
+      libowskiException::runtimeError("Species names and initial condition are not the same size");
+  }
+
   // Creates the pointer
   speciesDriver* speciesDriverPtr = new speciesDriver(modelMeshPtr);
+
+  // Adds the species to the problem
+  for (int i = 0; i < speciesNames.size(); i++){
+    string spec_name = speciesNames[i] + "_" + speciesPhases[i];
+    double molarMass = stod(speciesMolarMasses[i]);
+    double diffusivity = 0.0;
+    if (speciesDiffusivity.size())
+      diffusivity = stod(speciesDiffusivity[i]);
+    double initialCondition = 0.0;
+    if (speciesInitialCon.size())
+      initialCondition = stod(speciesInitialCon[i]);
+    bool transported = true;
+    if (speciesPhases[i] == "solid")
+      transported = false;
+    int specID = speciesDriverPtr->addSpecies(molarMass, ititialCondition,
+      diffusivity, spec_name, transported);
+  }
   return speciesDriverPtr;
 }

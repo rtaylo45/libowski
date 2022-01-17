@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
 	parser fileParser;
 	fileParser.parseFile(inputFile);
   modelMesh* meshPtr = fileParser.parseMeshBlock();
-  //speciesDriver* speciesdriverPtr = fileParser.parseSpeciesBlock(meshPtr);
+  speciesDriver* speciesdriverPtr = fileParser.parseSpeciesBlock(meshPtr);
 	// Creats the problem object
 	// Problem problem;
 	// Parses the file and builds the objects

@@ -39,7 +39,13 @@ struct dataBlock {
     return vars;
   }
   std::vector<std::string> getVariableValues(std::string varName){
-    return variableValueMap[varName];
+    std::vector<std::string> varVector;
+    try {
+      varVector = variableValueMap.at(varName);
+    }
+    catch (const std::out_of_range& e){
+    }
+    return varVector;
   }
   void print(){
     printf("Block Name %s: \n", blockName.c_str());
