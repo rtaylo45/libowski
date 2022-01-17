@@ -20,6 +20,11 @@
 using namespace Eigen;
 
 //*****************************************************************************
+// Checks to see if a key is in a vector string
+//*****************************************************************************
+bool anyIn(const std::string & key, const std::vector<std::string> & vect);
+
+//*****************************************************************************
 // Is approx function to test if two numbers are close to one another
 //*****************************************************************************
 template <typename derived>

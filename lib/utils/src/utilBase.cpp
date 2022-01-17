@@ -9,6 +9,21 @@
 using namespace Eigen;
 
 //*****************************************************************************
+// Checks to see if a key is in a vector string
+//
+// @param key   The string to check
+// @param vect  The vector to check
+//*****************************************************************************
+bool anyIn(const std::string & key, const std::vector<std::string> & vect){
+
+  for (int i = 0; i < vect.size(); i++){
+    if (key == vect[i])
+      return true; 
+  }
+  return false;
+}
+
+//*****************************************************************************
 // Test if two number are approx equal
 //
 // @param goalVal    The real solution value
