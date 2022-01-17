@@ -65,32 +65,11 @@ void parser::parseFile(const std::string &fname){
       else {
         if (inBlock){
           // Parses info specific to the mesh block
-          if (blockName == "Mesh"){
-            dataBlock* datPtr = getDataBlock(blockName);
-            string delimiter = "[=]";
-            // Get rid of white space
-            line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
-            vector<string> splitLine = splitStr(line, delimiter);
-            for (auto i : splitLine) {
-              datPtr->addVariable(splitLine[0], {splitLine[1]});
-            }
-            datPtr->print();
-          }
-          else if (blockName == "Species"){
+          if (anyIn(blockName, blockNames)){
             dataBlock* datPtr = getDataBlock(blockName);
             // Get rid of white space
             line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
-            vector<string> splitLine = splitStr(line, string("[=,]"));
-            string varName = string(splitLine[0]);
-            splitLine.erase(splitLine.begin());
-            datPtr->addVariable(varName, splitLine);
-            datPtr->print();
-          }
-          else if (blockName == "AuxVariables"){
-            dataBlock* datPtr = getDataBlock(blockName);
-            // Get rid of white space
-            line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
-            vector<string> splitLine = splitStr(line, string("[:=,]"));
+            vector<string> splitLine = splitStr(line, string("[:,=]"));
             string varName = string(splitLine[0]);
             splitLine.erase(splitLine.begin());
             datPtr->addVariable(varName, splitLine);

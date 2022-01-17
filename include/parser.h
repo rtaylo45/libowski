@@ -19,7 +19,17 @@ struct dataBlock {
     blockName = _blockName;
   }
   void addVariable(std::string varName, std::vector<std::string> varVal){
-    variableValueMap[varName] = varVal;
+    // The variable is not found. Adds the variable to the list
+    if (variableValueMap.find(varName) == variableValueMap.end()){
+      variableValueMap[varName] = varVal;
+    }
+    // Variable is found. Need to append the variable value to the string
+    else {
+      for (auto ele : varVal){
+        variableValueMap[varName].push_back(ele);
+      }
+    }
+
   }
   std::vector<std::string> getVariableNames(){
     std::vector<std::string> vars;
@@ -63,7 +73,7 @@ class parser {
 
   private:
   // List of the accepted block names
-  const std::vector<std::string> blockNames = {"Mesh", "Species"};
+  const std::vector<std::string> blockNames = {"Mesh", "Species", "AuxVariables", "Solve"};
   // Parses the mesh block and creates a pointer
   std::unique_ptr<modelMesh> parseMeshBlock();
   // Parse Mesh variable block and adds it to the model mesh pointer

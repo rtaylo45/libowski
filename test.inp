@@ -17,3 +17,12 @@
   temperature: 0, 1 = 900
   temperature: all, 2 = 700
 []
+
+[Solve]
+  solver = CRAM
+  substeps = 2
+  order = 16
+
+  dt = 5
+  tend = 150
+[]
