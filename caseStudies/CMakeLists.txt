@@ -2,7 +2,7 @@ project(caseStudies)
 
 add_executable(caseStudies caseStudies.cpp)
 
-if(${MPI_FOUND})
+if(${PARALLEL})
   target_link_libraries(caseStudies PRIVATE liblibowski ${MPI_LIBRARIES})
   target_compile_definitions(caseStudies PRIVATE HAVE_MPI)
 else()

@@ -11,7 +11,7 @@ add_executable(unitTestSpatialConvergence testSpatialConvergence.cpp)
 
 # Unit test path
 set(TEST_PATH ${CMAKE_CURRENT_BINARY_DIR})
-if(${MPI_FOUND})
+if(${PARALLEL})
   # Integrator Solver test
   target_link_libraries(unitTestIntegratorSolvers PRIVATE liblibowski ${MPI_LIBRARIES})
   target_compile_definitions(unitTestIntegratorSolvers PRIVATE HAVE_MPI)
@@ -73,6 +73,6 @@ else()
   add_test(test_Mole ${TEST_PATH}/unitTestMoleProblems)
 
   # Flux convergence problems
-  target_link_libraries(unitTestSpatailConvergence PRIVATE liblibowski)
+  target_link_libraries(unitTestSpatialConvergence PRIVATE liblibowski)
   add_test(test_Spatial_convergence ${TEST_PATH}/unitTestSpatialConvergence)
 endif()

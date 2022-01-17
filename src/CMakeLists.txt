@@ -28,7 +28,7 @@ add_subdirectory(sourceTerms)
 add_executable(libowski libowski.cpp)
 set_target_properties(libowski PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
-if(${MPI_FOUND})
+if(${PARALLEL})
   target_link_libraries(liblibowski PRIVATE ${MPI_LIBRARIES})
   target_link_libraries(libowski PRIVATE liblibowski ${MPI_LIBRARIES})
   target_compile_definitions(libowski PRIVATE HAVE_MPI)
