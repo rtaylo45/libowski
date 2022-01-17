@@ -76,11 +76,21 @@ void parser::parseFile(const std::string &fname){
             }
             datPtr->print();
           }
-          else if (blockName == "Species" or blockName == "AuxVariables"){
+          else if (blockName == "Species"){
             dataBlock* datPtr = getDataBlock(blockName);
             // Get rid of white space
             line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
             vector<string> splitLine = splitStr(line, string("[=,]"));
+            string varName = string(splitLine[0]);
+            splitLine.erase(splitLine.begin());
+            datPtr->addVariable(varName, splitLine);
+            datPtr->print();
+          }
+          else if (blockName == "AuxVariables"){
+            dataBlock* datPtr = getDataBlock(blockName);
+            // Get rid of white space
+            line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
+            vector<string> splitLine = splitStr(line, string("[:=,]"));
             string varName = string(splitLine[0]);
             splitLine.erase(splitLine.begin());
             datPtr->addVariable(varName, splitLine);
