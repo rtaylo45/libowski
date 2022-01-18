@@ -9,6 +9,25 @@
 using namespace Eigen;
 
 //*****************************************************************************
+// Checks to see if a string is a number
+//
+// @param num             String to check
+// @param [floatingPoint] Bool to set if the number is a floating point
+//*****************************************************************************
+bool isNumber(const std::string & num, const bool & floatingPoint){
+  for (int i = 0; i < num.length(); i++){
+    bool charDigit = std::isdigit(num[i]);
+    if (i == 0 and num[0] == '-')
+      charDigit = true;
+    else if (num[i] == '.' and floatingPoint)
+      charDigit = true;
+    if (not charDigit)
+      return false;
+  }
+  return true;
+}
+
+//*****************************************************************************
 // Checks to see if a key is in a vector string
 //
 // @param key   The string to check
@@ -18,7 +37,7 @@ bool anyIn(const std::string & key, const std::vector<std::string> & vect){
 
   for (int i = 0; i < vect.size(); i++){
     if (key == vect[i])
-      return true; 
+      return true;
   }
   return false;
 }

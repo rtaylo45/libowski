@@ -20,6 +20,10 @@
 using namespace Eigen;
 
 //*****************************************************************************
+// Checks to see if a passes string is a number
+//*****************************************************************************
+bool isNumber(const std::string & num, const bool & floatingPoint = false);
+//*****************************************************************************
 // Checks to see if a key is in a vector string
 //*****************************************************************************
 bool anyIn(const std::string & key, const std::vector<std::string> & vect);
