@@ -17,6 +17,7 @@
   temperature: 0, 0 = 850
   temperature: 0, 1 = 900
   temperature: all, 2 = 700
+  temperature: 3, all = 650
 []
 
 [Solve]

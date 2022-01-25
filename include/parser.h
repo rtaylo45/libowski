@@ -82,6 +82,10 @@ class parser {
   private:
   // List of the accepted block names
   const std::vector<std::string> blockNames = {"Mesh", "Species", "AuxVariables", "Solve"};
+  // List of accepcted AuxVariable names
+  const std::vector<std::string> auxVariableNames = {
+    "temperature", "pressure", "neutron_flux", "gas_interfacial_area_concentration",
+    "gas_void_fraction", "wall_interfacial_area_concentration"};
   // Parse Mesh variable block and adds it to the model mesh pointer
   //void parseMeshVariableBlock(unique_ptr<modelMesh>&);
   // Parse species block and creates a pointer

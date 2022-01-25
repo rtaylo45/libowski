@@ -159,7 +159,47 @@ speciesDriver* parser::parseSpeciesBlock(modelMesh* modelMeshPtr){
 // @param modelMeshPtr  Pointer to the model mesh
 //**************************************************************************
 void parser::parseAuxVariableBlock(modelMesh* modelMeshPtr){
-  dataBlock* datPtr = getDataBlock(string("Mesh"));
-  // Gets the data
+  dataBlock* datPtr = getDataBlock(string("AuxVariables"));
+  // Gets the data. This data is different, the values come in triplits. The first
+  // entry is the xindex, second is yindex third is the variable value. Not all
+  // of the variables need to be set to do a simulation. So some of the vectors
+  // may be empty.
+  vector<string> temps = datPtr->getVariableValues(string("temperature"));
+  vector<string> pressures = datPtr->getVariableValues(string("pressure"));
+  vector<string> neturonFluxs = datPtr->getVariableValues(string("neutron_flux"));
+  vector<string> gasIntAreaCons = datPtr->getVariableValues(string("gas_interfacial_area_concentration"));
+  vector<string> gasVoidFractions = datPtr->getVariableValues(string("gas_void_fraction"));
+  vector<string> wallIntAreaCons = datPtr->getVariableValues(string("wall_interfacial_area_concentration"));
+
+  // Sets the AuxVariable data
+  for (int j = 0; j < auxVariableNames.size(); j++){
+    string scalarVarName = auxVariableNames[j];
+    for (int i = 0; i < temps.size(); i++){
+      if (i%3 or i == temps.size() - 1){
+        continue;
+      }
+      else{
+        cout << temps[i] << " " << temps[i+1] << " " << temps[i+2] << endl;
+        string xIndex = temps[i];
+        string yIndex = temps[i+1];
+        double tempValue = stod(temps[i+2]);
+        // Constant variable value in the whole system
+        if (xIndex == "all" and yIndex == "all"){
+          cout << "Setting system variable" << endl;
+          modelMeshPtr->setSystemVariableValue(scalarVarName, tempValue);
+        }
+        // Setting variable value across a y column
+        else if (xIndex == "all" and isNumber(yIndex)){
+          //modelMeshPtr->setRowScalarVariable(yIndex, tempValue, scalarVarName);
+          cout << "setting x mesh row" << endl;
+        }
+        // Setting variable value across a x row
+        else if (isNumber(xIndex) and yIndex == "all"){
+          //modelMeshPtr->setColumnScalarVariable(xIndex, scalarVarValue, scalarVarName);
+          cout << "setting y mesh column" << endl;
+        }
+      }
+    }
+  }
 
 }

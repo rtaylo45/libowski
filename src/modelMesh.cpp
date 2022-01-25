@@ -544,6 +544,42 @@ void modelMesh::setSystemGasVoidFraction(const std::string path){
     }
   }
 }
+//*****************************************************************************
+// Set system variable value
+//
+// @param variable  Name of the variable to set
+// @param value     Variable value
+//*****************************************************************************
+void modelMesh::setSystemVariableValue(const std::string variable, const double value){
+  if (variable == "x_velocity"){
+    setConstantXVelocity(value);
+  }
+  else if (variable == "y_velocity"){
+    setConstantYVelocity(value);
+  }
+  else if (variable == "temperature"){
+    setSystemTemperature(value);
+  }
+  else if (variable == "pressure"){
+    setSystemPressure(value);
+  }
+  else if (variable == "neturon_flux"){
+    setSystemNeutronFlux(value);
+  }
+  else if (variable == "gas_interfacial_area_concentration"){
+    setSystemGasInterfacialAreaCon(value);
+  }
+  else if (variable == "wall_interfacial_area_concentration"){
+    setSystemWallInterfacialAreaCon(value);
+  }
+  else if (variable == "gas_volume_fraction"){
+    setSystemGasVoidFraction(value);
+  }
+  else{
+    std::string errorMessage = "Variable " + variable + " is not a supported type.";
+    libowskiException::runtimeError(errorMessage);
+  }
+}
 
 //*****************************************************************************
 // Set cell temperature

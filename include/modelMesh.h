@@ -13,6 +13,7 @@
 #include <vector>
 #include <assert.h>
 #include <string>
+#include "exception.h"
 
 class modelMesh {
 
@@ -79,6 +80,8 @@ class modelMesh {
   void setSystemGasVoidFraction(double);
   // Sets the gas void fraction in the whole system from a file
   void setSystemGasVoidFraction(const std::string);
+  // Sets a scalar varible thoughout the system
+  void setSystemVariableValue(const std::string, const double);
   // Set temperature in a cell
   void setCellTemperature(int, int, double);
   // Set pressure in a cell
